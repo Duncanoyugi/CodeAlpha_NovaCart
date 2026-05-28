@@ -1,1 +1,2 @@
-from .base import User
+# backend/users/models/__init__.py
+from .base import *
