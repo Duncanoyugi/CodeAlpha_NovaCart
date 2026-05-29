@@ -46,14 +46,9 @@ urlpatterns = [
     # API routes
     path('api/auth/', include('authentication.urls')),
     path('api/products/', include('products.urls')),
-    path('api/cart/', include('cart.urls')),  # ✅ ENABLED - Shopping cart
-    # path('api/users/', include('users.urls')),  # Will enable later
-    path('api/orders/', include('orders.urls')), # ✅ ENABLED - Order management
-    path('api/payments/', include('payments.urls')),  # ✅ ENABLED - Payment processing
-    # path('api/reviews/', include('reviews.urls')),  # Will enable later
-    # path('api/wishlist/', include('wishlist.urls')),  # Will enable later
-    # path('api/analytics/', include('analytics.urls')),  # Will enable later
-    # path('api/mail/', include('mail.urls')),  # Will enable later
+    path('api/cart/', include('cart.urls')),
+    path('api/orders/', include('orders.urls')),
+    path('api/payments/', include('payments.urls')),
 ]
 
 # Serve media files in development

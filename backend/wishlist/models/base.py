@@ -4,6 +4,7 @@ from django.conf import settings
 import uuid
 
 class Wishlist(models.Model):
+    """User wishlist model"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wishlist')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -23,6 +24,7 @@ class Wishlist(models.Model):
         return f"Wishlist for {self.user.email}"
 
 class WishlistItem(models.Model):
+    """Individual wishlist item"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     wishlist = models.ForeignKey(Wishlist, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey('products.Product', on_delete=models.CASCADE)
