@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Your Email - NovaCart</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .otp-code {
+            background: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            font-size: 32px;
+            letter-spacing: 5px;
+            font-weight: bold;
+            color: #667eea;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Verify Your Email</h1>
+        </div>
+        <div class="content">
+            <h2>Hello {{ user_name }},</h2>
+            <p>Thank you for registering with NovaCart! Please use the OTP code below to verify your email address.</p>
+            
+            <div class="otp-code">
+                {{ otp_code }}
+            </div>
+            
+            <p>This OTP is valid for <strong>10 minutes</strong>. If you didn't request this, please ignore this email.</p>
+            
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                Best regards,<br>
+                <strong>NovaCart Team</strong>
+            </p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ year }} NovaCart. All rights reserved.</p>
+            <p>This is an automated message, please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>

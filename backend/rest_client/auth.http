@@ -1,0 +1,96 @@
+```http
+##################################################
+# NovaCart Auth API - REST Client
+##################################################
+
+@baseUrl = http://127.0.0.1:8000/api/auth
+@email = duncanoyugi2001@gmail.com
+@password = Dante@1234
+
+##################################################
+# USER REGISTRATION
+##################################################
+
+###
+POST {{baseUrl}}/register/
+Content-Type: application/json
+
+{
+  "email": "duncanoyugi2001@gmail.com",
+  "full_name": "Duncan Ochieng",
+  "phone_number": "+254711592572",
+  "password": "Dante@1234",
+  "password2": "Dante@1234"
+}
+
+##################################################
+# OTP VERIFICATION
+##################################################
+
+###
+POST {{baseUrl}}/verify-otp/
+Content-Type: application/json
+
+{
+  "email": "duncanoyugi2001@gmail.com",
+  "otp_code": "355624"
+}
+
+##################################################
+# RESEND OTP
+##################################################
+
+###
+POST {{baseUrl}}/resend-otp/
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}
+
+##################################################
+# USER LOGIN
+##################################################
+
+###
+POST {{baseUrl}}/login/
+Content-Type: application/json
+
+{
+  "email": "duncanoyugi2001@gmail.com",
+  "password": "Dante@1234"
+}
+
+##################################################
+# GET CURRENT USER
+##################################################
+
+###
+GET {{baseUrl}}/me/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwMDUwMDU0LCJpYXQiOjE3ODAwNDkxNTQsImp0aSI6IjU1MmE5YTQyNzhlMDQyYzc5OTY1YWU2NTkwMDk3NmZhIiwidXNlcl9pZCI6ImNlY2E0ZTQ1LWRhYzYtNGNlOS1iNTkwLTFiNjExMjc1MjJiNyIsImVtYWlsIjoiZHVuY2Fub3l1Z2kyMDAxQGdtYWlsLmNvbSIsInJvbGUiOiJDVVNUT01FUiJ9.8dfNG7KNc9B4dor1yakbbzoG4d6C95BC19ZBL5M0x1Y
+
+##################################################
+# REFRESH TOKEN
+##################################################
+
+###
+POST {{baseUrl}}/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "YOUR_REFRESH_TOKEN"
+}
+
+##################################################
+# LOGOUT USER
+##################################################
+
+###
+POST {{baseUrl}}/logout/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwMDUwMDU0LCJpYXQiOjE3ODAwNDkxNTQsImp0aSI6IjU1MmE5YTQyNzhlMDQyYzc5OTY1YWU2NTkwMDk3NmZhIiwidXNlcl9pZCI6ImNlY2E0ZTQ1LWRhYzYtNGNlOS1iNTkwLTFiNjExMjc1MjJiNyIsImVtYWlsIjoiZHVuY2Fub3l1Z2kyMDAxQGdtYWlsLmNvbSIsInJvbGUiOiJDVVNUT01FUiJ9.8dfNG7KNc9B4dor1yakbbzoG4d6C95BC19ZBL5M0x1Y
+
+{
+  "refresh": "YOUR_REFRESH_TOKEN"
+}
+```

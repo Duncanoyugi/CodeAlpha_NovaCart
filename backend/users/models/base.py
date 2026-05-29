@@ -25,6 +25,7 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('role', 'ADMIN')
         extra_fields.setdefault('is_verified', True)
+        extra_fields.setdefault('is_active', True)
         
         return self.create_user(email, full_name, password, **extra_fields)
 
@@ -39,13 +40,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be in international format")]
     )
     avatar = models.URLField(blank=True, null=True)
-    avatar_public_id = models.CharField(max_length=255, blank=True, null=True)  # For Cloudinary
+    avatar_public_id = models.CharField(max_length=255, blank=True, null=True)
     
     class Role(models.TextChoices):
         CUSTOMER = 'CUSTOMER', 'Customer'
         STAFF = 'STAFF', 'Staff'
         ADMIN = 'ADMIN', 'Admin'
-        VENDOR = 'VENDOR', 'Vendor'  # For future marketplace expansion
+        VENDOR = 'VENDOR', 'Vendor'
     
     role = models.CharField(
         max_length=20,
@@ -58,7 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True, db_index=True)
     is_staff = models.BooleanField(default=False)
     
-    # Address fields (denormalized for quick access)
+    # Address fields
     address_line1 = models.CharField(max_length=255, blank=True)
     address_line2 = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -75,9 +76,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     reset_token = models.CharField(max_length=255, blank=True, null=True)
     reset_token_expiry = models.DateTimeField(blank=True, null=True)
     
-    # Email verification
-    email_verification_token = models.CharField(max_length=255, blank=True, null=True)
-    email_verification_sent_at = models.DateTimeField(blank=True, null=True)
+    # OTP Verification fields (ADD THESE)
+    otp_code = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
+    otp_attempts = models.IntegerField(default=0)
     
     objects = UserManager()
     
@@ -116,7 +118,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         return ', '.join(filter(None, parts))
 
 class UserAddress(models.Model):
-    """Separate model for multiple addresses per user"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
     address_line1 = models.CharField(max_length=255)

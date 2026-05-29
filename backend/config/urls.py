@@ -41,13 +41,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health_check'),
     
-    # API routes (will be uncommented as we build modules)
-    # path('api/auth/', include('auth.urls')),
-    # path('api/users/', include('users.urls')),
-    # path('api/products/', include('products.urls')),
-    # path('api/cart/', include('cart.urls')),
-    # path('api/orders/', include('orders.urls')),
-    # path('api/payments/', include('payments.urls')),
+    # API routes
+    path('api/auth/', include('authentication.urls')),
 ]
 
 # Serve media files in development

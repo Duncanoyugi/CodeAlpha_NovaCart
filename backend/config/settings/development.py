@@ -29,7 +29,7 @@ DB_SSLMODE = os.getenv('DB_SSLMODE', 'require')
 # Verify critical credentials exist
 if not DB_PASSWORD:
     raise ValueError(
-        "❌ Database password not found in environment variables!\n"
+        "Database password not found in environment variables!\n"
         "Please ensure DB_PASSWORD is set in your .env file"
     )
 
@@ -60,11 +60,11 @@ DATABASES = {
 # )
 
 # Print database configuration for verification (only in development)
-print(f"✅ Database configured:")
-print(f"   📍 Host: {DB_HOST}")
-print(f"   💾 Database: {DB_NAME}")
-print(f"   👤 User: {DB_USER}")
-print(f"   🔒 SSL Mode: {DB_SSLMODE}")
+print("Database configured:")
+print(f"   Host: {DB_HOST}")
+print(f"   Database: {DB_NAME}")
+print(f"   User: {DB_USER}")
+print(f"   SSL Mode: {DB_SSLMODE}")
 
 # CORS settings for development
 CORS_ALLOWED_ORIGINS = [
