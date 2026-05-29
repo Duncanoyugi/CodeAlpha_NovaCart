@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Order Confirmation - NovaCart</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .order-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .total {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: right;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Order Confirmation</h1>
+        </div>
+        <div class="content">
+            <h2>Thank you for your order!</h2>
+            <p>Dear {{ order.shipping_full_name }},</p>
+            <p>Your order has been successfully placed. Here are your order details:</p>
+            
+            <div class="order-details">
+                <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+                <p><strong>Order Date:</strong> {{ order.placed_at|date:"F j, Y, g:i a" }}</p>
+                <p><strong>Payment Status:</strong> {{ order.get_payment_status_display }}</p>
+            </div>
+            
+            <h3>Order Items:</h3>
+            <table>
+                <thead>
+                    <tr><th>Product</th><th>Quantity</th><th>Price</th><th>Total</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>${{ item.price_per_unit }}</td>
+                        <td>${{ item.total_price }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="order-details">
+                <p><strong>Subtotal:</strong> ${{ order.subtotal }}</p>
+                <p><strong>Shipping:</strong> ${{ order.shipping_cost }}</p>
+                <p><strong>Tax:</strong> ${{ order.tax_amount }}</p>
+                <p class="total"><strong>Total:</strong> ${{ order.total_amount }}</p>
+            </div>
+            
+            <h3>Shipping Address:</h3>
+            <p>{{ order.shipping_full_name }}<br>
+            {{ order.shipping_address_line1 }}<br>
+            {% if order.shipping_address_line2 %}{{ order.shipping_address_line2 }}<br>{% endif %}
+            {{ order.shipping_city }}, {{ order.shipping_state }} {{ order.shipping_postal_code }}<br>
+            {{ order.shipping_country }}</p>
+            
+            <p>We'll send you another email when your order ships.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {{ year }} NovaCart. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

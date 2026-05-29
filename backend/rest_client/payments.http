@@ -1,0 +1,43 @@
+### Payments API Tests
+@baseUrl = http://localhost:8000
+@contentType = application/json
+
+### First, login and create an order
+# @name login
+POST {{baseUrl}}/api/auth/login/
+Content-Type: {{contentType}}
+
+{
+    "email": "testuser@example.com",
+    "password": "Test@123456"
+}
+
+@access_token = {{login.response.body.data.tokens.access}}
+
+### 1. Create a Payment Intent for an Order
+POST {{baseUrl}}/api/payments/create-intent/
+Authorization: Bearer {{access_token}}
+Content-Type: {{contentType}}
+
+{
+    "order_id": "your-order-id-here",
+    "payment_method": "stripe"
+}
+
+### Save client_secret from response
+@client_secret = {{create_payment_intent.response.body.data.client_secret}}
+
+### 2. Get Payment Status
+GET {{baseUrl}}/api/payments/status/{{payment_intent_id}}/
+Authorization: Bearer {{access_token}}
+
+### 3. Admin: Refund a Payment (Admin only)
+POST {{baseUrl}}/api/payments/refund/
+Authorization: Bearer {{admin_token}}
+Content-Type: {{contentType}}
+
+{
+    "payment_id": "payment-id-here",
+    "amount": 50.00,
+    "reason": "Customer requested refund"
+}

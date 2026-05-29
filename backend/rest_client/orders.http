@@ -1,0 +1,73 @@
+##################################################
+# NovaCart Orders API - REST Client
+##################################################
+
+@baseUrl = http://127.0.0.1:8000/api/orders
+
+# Get tokens by:
+# 1. Open auth.http
+# 2. Login as customer (duncanoyugi2001@gmail.com) -> get {{access_token}}
+# 3. Login as admin (admin@novacart.com) -> get {{admin_access_token}}
+
+##################################################
+# CUSTOMER ENDPOINTS
+##################################################
+
+### Create Order (Checkout from Cart)
+POST {{baseUrl}}/checkout/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+    "shipping_full_name": "Duncan Ochieng",
+    "shipping_email": "duncanoyugi2001@gmail.com",
+    "shipping_phone": "+254711592572",
+    "shipping_address_line1": "123 Main Street",
+    "shipping_address_line2": "",
+    "shipping_city": "Nairobi",
+    "shipping_state": "Nairobi",
+    "shipping_postal_code": "00100",
+    "shipping_country": "KE",
+    "billing_same_as_shipping": true,
+    "payment_method": "stripe",
+    "customer_notes": "Please leave at front door"
+}
+
+### Get My Orders
+GET {{baseUrl}}/my-orders/
+Authorization: Bearer {{access_token}}
+
+### Get Order Details
+GET {{baseUrl}}/ORDER-ID-HERE/
+Authorization: Bearer {{access_token}}
+
+### Cancel Order
+POST {{baseUrl}}/ORDER-ID-HERE/cancel/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+    "reason": "Changed my mind"
+}
+
+##################################################
+# ADMIN ENDPOINTS
+##################################################
+
+### Admin: List All Orders
+GET {{baseUrl}}/admin/orders/
+Authorization: Bearer {{admin_access_token}}
+
+### Admin: Get Order Statistics
+GET {{baseUrl}}/admin/statistics/
+Authorization: Bearer {{admin_access_token}}
+
+### Admin: Update Order Status
+PUT {{baseUrl}}/admin/orders/ORDER-ID-HERE/status/
+Authorization: Bearer {{admin_access_token}}
+Content-Type: application/json
+
+{
+    "status": "processing",
+    "admin_notes": "Order verified and processing"
+}

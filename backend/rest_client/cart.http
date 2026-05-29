@@ -1,0 +1,151 @@
+### Cart API Tests
+@baseUrl = http://localhost:8000
+@contentType = application/json
+
+### ============================================
+### First, Login to get access token
+### ============================================
+# @name login
+POST {{baseUrl}}/api/auth/login/
+Content-Type: {{contentType}}
+
+{
+    "email": "testuser@example.com",
+    "password": "Test@123456"
+}
+
+### Save tokens
+@access_token = {{login.response.body.data.tokens.access}}
+@refresh_token = {{login.response.body.data.tokens.refresh}}
+
+### ============================================
+### Alternative: Login as Admin
+### ============================================
+# @name adminLogin
+POST {{baseUrl}}/api/auth/login/
+Content-Type: {{contentType}}
+
+{
+    "email": "admin@novacart.com",
+    "password": "Admin@2024Secure!"
+}
+
+@admin_token = {{adminLogin.response.body.data.tokens.access}}
+
+### ============================================
+### First, get a product ID to add to cart
+### ============================================
+# @name listProducts
+GET {{baseUrl}}/api/products/
+
+### Save first product ID from response
+@product_id = c3d4e5f6-7890-1234-5678-90abcdef1234  # Replace with actual ID
+
+### ============================================
+### 1. Get Cart (Empty)
+### ============================================
+GET {{baseUrl}}/api/cart/
+Authorization: Bearer {{access_token}}
+
+### ============================================
+### 2. Add Item to Cart (Authenticated)
+### ============================================
+POST {{baseUrl}}/api/cart/add/
+Authorization: Bearer {{access_token}}
+Content-Type: {{contentType}}
+
+{
+    "product_id": "{{product_id}}",
+    "quantity": 2
+}
+
+### ============================================
+### 3. Add Another Item to Cart
+### ============================================
+POST {{baseUrl}}/api/cart/add/
+Authorization: Bearer {{access_token}}
+Content-Type: {{contentType}}
+
+{
+    "product_id": "{{product_id}}",
+    "quantity": 1
+}
+
+### ============================================
+### 4. Get Cart with Items
+### ============================================
+# @name getCart
+GET {{baseUrl}}/api/cart/
+Authorization: Bearer {{access_token}}
+
+### Save cart item ID for later updates
+@cart_item_id = {{getCart.response.body.data.items[0].id}}
+
+### ============================================
+### 5. Update Cart Item Quantity
+### ============================================
+PUT {{baseUrl}}/api/cart/item/{{cart_item_id}}/
+Authorization: Bearer {{access_token}}
+Content-Type: {{contentType}}
+
+{
+    "quantity": 3
+}
+
+### ============================================
+### 6. Get Cart After Update
+### ============================================
+GET {{baseUrl}}/api/cart/
+Authorization: Bearer {{access_token}}
+
+### ============================================
+### 7. Guest Cart Test (No Auth)
+### ============================================
+### Get guest cart (creates new session)
+GET {{baseUrl}}/api/cart/
+
+### Add to guest cart
+POST {{baseUrl}}/api/cart/add/
+Content-Type: {{contentType}}
+
+{
+    "product_id": "{{product_id}}",
+    "quantity": 1
+}
+
+### ============================================
+### 8. Remove Item from Cart
+### ============================================
+DELETE {{baseUrl}}/api/cart/item/{{cart_item_id}}/remove/
+Authorization: Bearer {{access_token}}
+
+### ============================================
+### 9. Get Cart After Removal
+### ============================================
+GET {{baseUrl}}/api/cart/
+Authorization: Bearer {{access_token}}
+
+### ============================================
+### 10. Clear Entire Cart
+### ============================================
+DELETE {{baseUrl}}/api/cart/clear/
+Authorization: Bearer {{access_token}}
+
+### ============================================
+### 11. Verify Cart is Empty
+### ============================================
+GET {{baseUrl}}/api/cart/
+Authorization: Bearer {{access_token}}
+
+### ============================================
+### 12. Merge Guest Cart After Login
+### ============================================
+# First, get guest cart session key (from cookie or response)
+# Then login and merge
+POST {{baseUrl}}/api/cart/merge/
+Authorization: Bearer {{access_token}}
+Content-Type: {{contentType}}
+
+{
+    "session_key": "guest-session-key-here"
+}
