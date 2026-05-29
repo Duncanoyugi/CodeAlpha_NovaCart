@@ -1,3 +1,4 @@
+# backend/config/urls.py
 """
 URL configuration for NovaCart project.
 
@@ -38,11 +39,21 @@ def health_check(request):
     })
 
 urlpatterns = [
+    # Admin and health check
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health_check'),
     
     # API routes
     path('api/auth/', include('authentication.urls')),
+    path('api/products/', include('products.urls')),
+    # path('api/users/', include('users.urls')),
+    # path('api/cart/', include('cart.urls')),
+    # path('api/orders/', include('orders.urls')),
+    # path('api/payments/', include('payments.urls')),
+    # path('api/reviews/', include('reviews.urls')),
+    # path('api/wishlist/', include('wishlist.urls')),
+    # path('api/analytics/', include('analytics.urls')),
+    # path('api/mail/', include('mail.urls')),
 ]
 
 # Serve media files in development

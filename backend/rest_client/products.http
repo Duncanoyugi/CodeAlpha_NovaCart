@@ -1,0 +1,126 @@
+##################################################
+# NovaCart Products API - REST Client
+##################################################
+
+@baseUrl = http://127.0.0.1:8000/api/products
+
+# Get admin access token by:
+# 1. Opening auth.http
+# 2. Sending the "Login Admin" request
+# 3. Copying the access token from the response to {{admin_access_token}}
+
+##################################################
+# CATEGORY ENDPOINTS
+##################################################
+
+### List All Categories
+GET {{baseUrl}}/categories/
+
+### Get Category Tree
+GET {{baseUrl}}/categories/tree/
+
+### Get Category Detail
+GET {{baseUrl}}/categories/electronics/
+
+##################################################
+# CATEGORY ADMIN ENDPOINTS
+##################################################
+
+### Create Category (Admin Only)
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgwMDU1NzQ5LCJpYXQiOjE3ODAwNTQ4NDksImp0aSI6IjA4YjQwMjUxYTg4MzRjMWQ5MTg2OTVhNTdkZjY0ZDgwIiwidXNlcl9pZCI6ImE4NWY0YzAyLTgwYTYtNDM4Zi04ZjNiLWM5ZjBhNjU4OTFiNSIsImVtYWlsIjoiYWRtaW5Abm92YWNhcnQuY29tIiwicm9sZSI6IkFETUlOIn0.AFxyJGAbP6IJu6ShC6KMnUM2SbKY4BqukGyTiXVGpOU
+Content-Type: application/json
+
+{
+    "name": "Electronics",
+    "slug": "electronics",
+    "description": "Electronic devices and gadgets",
+    "is_active": true,
+    "order": 1
+}
+
+### Update Category (Admin Only)
+PUT {{baseUrl}}/admin/categories/123e4567-e89b-12d3-a456-426614174000/
+Authorization: Bearer {{admin_access_token}}
+Content-Type: application/json
+
+{
+    "name": "Updated Electronics",
+    "description": "Updated description"
+}
+
+### Delete Category (Admin Only)
+DELETE {{baseUrl}}/admin/categories/123e4567-e89b-12d3-a456-426614174000/delete/
+Authorization: Bearer {{admin_access_token}}
+
+##################################################
+# PRODUCT ENDPOINTS (Public)
+##################################################
+
+### List Products (with filters)
+GET {{baseUrl}}/?search=phone&page=1&page_size=10
+
+### Get Featured Products
+GET {{baseUrl}}/featured/
+
+### Get Best Selling Products
+GET {{baseUrl}}/best-selling/
+
+### Get New Arrivals
+GET {{baseUrl}}/new-arrivals/
+
+### Get Product Detail
+GET {{baseUrl}}/iphone-15-pro/
+
+##################################################
+# PRODUCT ADMIN ENDPOINTS
+##################################################
+
+### Create Product (Admin Only)
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{admin_access_token}}
+Content-Type: application/json
+
+{
+    "name": "iPhone 15 Pro",
+    "slug": "iphone-15-pro",
+    "short_description": "Latest iPhone with titanium design",
+    "description": "Detailed product description here...",
+    "price": 999.99,
+    "compare_price": 1099.99,
+    "cost_per_item": 750.00,
+    "category": "123e4567-e89b-12d3-a456-426614174000",
+    "image_url": "https://example.com/iphone.jpg",
+    "sku": "IPHONE-15-PRO-128",
+    "stock_quantity": 100,
+    "tags": ["phone", "apple", "smartphone"],
+    "weight": 0.187,
+    "discount_percentage": 10,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": false,
+    "is_new_arrival": true
+}
+
+### Update Product (Admin Only)
+PUT {{baseUrl}}/admin/products/123e4567-e89b-12d3-a456-426614174000/
+Authorization: Bearer {{admin_access_token}}
+Content-Type: application/json
+
+{
+    "price": 899.99,
+    "stock_quantity": 150
+}
+
+### Delete Product (Admin Only)
+DELETE {{baseUrl}}/admin/products/123e4567-e89b-12d3-a456-426614174000/delete/
+Authorization: Bearer {{admin_access_token}}
+
+### Update Inventory (Admin/Staff Only)
+POST {{baseUrl}}/admin/products/123e4567-e89b-12d3-a456-426614174000/inventory/
+Authorization: Bearer {{admin_access_token}}
+Content-Type: application/json
+
+{
+    "stock_quantity": 200
+}
