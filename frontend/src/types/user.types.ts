@@ -8,6 +8,7 @@ export interface User {
   avatar?: string;
   role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
   is_verified: boolean;
+  is_active: boolean;
   address?: Address;
   created_at: string;
   last_login: string;

@@ -3,7 +3,7 @@ import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { store } from './redux/store';
-import AppRoutes from './routes/AppRoutes';
+import { AppRoutes } from './routes/AppRoutes';
 import { setupInterceptors } from './services';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';

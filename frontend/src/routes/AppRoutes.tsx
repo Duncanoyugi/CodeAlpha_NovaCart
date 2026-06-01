@@ -1,7 +1,131 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { ROUTES } from '../utils/constants';
+import { DashboardPage } from '../features/admin/pages/DashboardPage';
+import { ProductsManagementPage } from '../features/admin/pages/ProductsManagementPage';
+import { OrdersManagementPage } from '../features/admin/pages/OrdersManagementPage';
+import { UsersManagementPage } from '../features/admin/pages/UsersManagementPage';
+import { WishlistPage } from '../features/wishlist/pages/WishlistPage';
+import { ProfilePage } from '../features/auth/pages/ProfilePage';
+import { ProductDetailsPage } from '../features/products/pages/ProductDetailsPage';
+import { CategoryPage } from '../features/products/pages/CategoryPage';
 
-const AppRoutes: React.FC = () => {
-  return null;
+// Pages
+import { HomePage } from '../pages/HomePage';
+import { NotFoundPage } from '../pages/NotFoundPage';
+
+// Auth Pages
+import {
+  LoginPage,
+  RegisterPage,
+  VerifyOTPPage,
+} from '../features/auth';
+
+// Orders
+import {
+  OrdersPage,
+  OrderDetailPage,
+} from '../features/orders';
+
+// Checkout
+import {
+  CheckoutPage,
+  OrderSuccessPage,
+  OrderCancelPage,
+} from '../features/checkout';
+
+// Layouts
+import { MainLayout } from '../layouts/MainLayout';
+
+// Protected Routes
+import { ProtectedRoute } from './ProtectedRoute';
+import { AdminRoute } from './AdminRoute';
+
+export const AppRoutes: React.FC = () => {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          Loading...
+        </div>
+      }
+    >
+      <Routes>
+        {/* Public Routes */}
+        <Route element={<MainLayout />}>
+          <Route path={ROUTES.HOME} element={<HomePage />} />
+          <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
+          <Route path={ROUTES.PRODUCT_DETAIL(':slug')} element={<ProductDetailsPage />} />
+          <Route path={ROUTES.CATEGORY(':slug')} element={<CategoryPage />} />
+          <Route path={ROUTES.CART} element={<CartPage />} />
+        </Route>
+
+        {/* Authentication Routes */}
+        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+        <Route path={ROUTES.VERIFY_OTP} element={<VerifyOTPPage />} />
+
+        {/* Protected Customer Routes */}
+        <Route
+          element={
+            <ProtectedRoute
+              allowedRoles={['CUSTOMER', 'STAFF', 'ADMIN']}
+            />
+          }
+        >
+          <Route element={<MainLayout />}>
+            <Route
+              path={ROUTES.CHECKOUT}
+              element={<CheckoutPage />}
+            />
+
+            <Route
+              path={ROUTES.ORDER_SUCCESS}
+              element={<OrderSuccessPage />}
+            />
+
+            <Route
+              path={ROUTES.ORDER_CANCEL}
+              element={<OrderCancelPage />}
+            />
+
+            <Route
+              path={ROUTES.ORDERS}
+              element={<OrdersPage />}
+            />
+
+            <Route
+              path={ROUTES.ORDER_DETAIL(':id')}
+              element={<OrderDetailPage />}
+            />
+            <Route path={ROUTES.WISHLIST} element={<WishlistPage />} />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+          </Route>
+          <Route element={<AdminRoute />}>
+            <Route path={ROUTES.ADMIN_DASHBOARD} element={<DashboardPage />} />
+            <Route path={ROUTES.ADMIN_PRODUCTS} element={<ProductsManagementPage />} />
+            <Route path={ROUTES.ADMIN_ORDERS} element={<OrdersManagementPage />} />
+            <Route path={ROUTES.ADMIN_USERS} element={<UsersManagementPage />} />
+            <Route path={ROUTES.ADMIN_ANALYTICS} element={<DashboardPage />} />
+          </Route>
+        </Route>
+
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </React.Suspense>
+  );
 };
 
-export default AppRoutes;
+// Lazy-loaded pages
+const ProductsPage = React.lazy(() =>
+  import('../features/products/pages/ProductPage').then((module) => ({
+    default: module.ProductsPage,
+  }))
+);
+
+const CartPage = React.lazy(() =>
+  import('../pages/CartPage').then((module) => ({
+    default: module.CartPage,
+  }))
+);
