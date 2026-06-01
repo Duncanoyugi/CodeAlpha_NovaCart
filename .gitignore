@@ -1,5 +1,24 @@
-backend/.env
+# Node
+node_modules/
 
-frontend/.env
-frontend/.env.development
-frontend/.env.production
+# React/Vite
+dist/
+.vite/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Environment
+.env
+.env.local
+.env.development
+.env.production
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
