@@ -1,19 +1,53 @@
+// import React from 'react';
+import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { store } from './redux/store';
+import AppRoutes from './routes/AppRoutes';
+import { setupInterceptors } from './services';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
+import './index.css';
 
-import './App.css'
+// Setup axios interceptors
+setupInterceptors();
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">
-          Hello, Tailwind CSS!
-        </h1>
-        <p className="text-gray-700">
-          Your React + TypeScript + Vite + Tailwind setup is ready!
-        </p>
-      </div>
-    </div>
-  )
+    <Provider store={store}>
+      <BrowserRouter>
+        <ThemeProvider>
+          <NotificationProvider>
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+                success: {
+                  duration: 3000,
+                  iconTheme: {
+                    primary: '#22c55e',
+                    secondary: '#fff',
+                  },
+                },
+                error: {
+                  duration: 4000,
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#fff',
+                  },
+                },
+              }}
+            />
+            <AppRoutes />
+          </NotificationProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </Provider>
+  );
 }
 
-export default App
+export default App;
