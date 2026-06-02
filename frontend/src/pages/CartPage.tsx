@@ -63,28 +63,59 @@ export const CartPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="container-custom py-12">
-        <h1 className="text-2xl font-bold mb-8">Shopping Cart ({totalItems} items)</h1>
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-4xl font-bold text-gray-900">Shopping Cart</h1>
+          <p className="mt-2 text-gray-600">{totalItems} item{totalItems !== 1 ? 's' : ''} in your cart</p>
+        </div>
+
+        {/* Benefits Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-2xl border border-green-200">
+            <span className="text-2xl">🚚</span>
+            <div>
+              <p className="font-semibold text-gray-900">Free delivery</p>
+              <p className="text-sm text-gray-600">On orders over $50</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-2xl border border-blue-200">
+            <span className="text-2xl">🛡️</span>
+            <div>
+              <p className="font-semibold text-gray-900">Secure checkout</p>
+              <p className="text-sm text-gray-600">Protected payments</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-2xl border border-orange-200">
+            <span className="text-2xl">↩️</span>
+            <div>
+              <p className="font-semibold text-gray-900">30-day returns</p>
+              <p className="text-sm text-gray-600">Easy, hassle-free</p>
+            </div>
+          </div>
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Cart Items */}
           <div className="flex-1">
-            <div className="bg-white rounded-xl">
-              {items.map((item) => (
-                <CartItem
-                  key={item.id}
-                  item={item}
-                  onUpdateQuantity={updateItemQuantity}
-                  onRemove={removeItemFromCart}
-                  isUpdating={isUpdatingCart}
-                />
-              ))}
+            <div className="rounded-3xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div className="divide-y divide-gray-200">
+                {items.map((item) => (
+                  <CartItem
+                    key={item.id}
+                    item={item}
+                    onUpdateQuantity={updateItemQuantity}
+                    onRemove={removeItemFromCart}
+                    isUpdating={isUpdatingCart}
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Continue Shopping Link */}
-            <div className="mt-6">
+            <div className="mt-8">
               <button
                 onClick={() => navigate(ROUTES.PRODUCTS)}
-                className="text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                className="inline-flex items-center gap-2 text-[#ff902b] hover:text-[#e67e1f] font-semibold transition"
               >
                 ← Continue Shopping
               </button>

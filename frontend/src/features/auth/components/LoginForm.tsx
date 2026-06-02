@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Mail, Lock } from 'lucide-react';
 import { useLoginMutation } from '../api/authApi';
+import toast from 'react-hot-toast';
 import { loginSchema } from '../schemas/authSchema';
 import type { LoginFormData } from '../schemas/authSchema';
 import { ROUTES } from '../../../utils/constants';
 
 export const LoginForm: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [login, { isLoading }] = useLoginMutation();
 
@@ -28,8 +30,11 @@ export const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       const result = await login(data).unwrap();
-      if (result.user) {
-        navigate(ROUTES.HOME);
+      // onQueryStarted in authApi will set tokens and user in store
+      if (result?.user) {
+        const from = (location.state as any)?.from?.pathname || ROUTES.HOME;
+        toast.success('Login successful — redirecting...');
+        setTimeout(() => navigate(from, { replace: true }), 900);
       }
     } catch (error) {
       // Error is handled by the API interceptor and toast

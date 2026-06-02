@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductGrid } from '../components/product/ProductGrid';
 import { useGetFeaturedProductsQuery, useGetBestSellingProductsQuery, useGetNewArrivalsQuery } from '../features/products/api/productApi';
 import { ROUTES } from '../utils/constants';
 import { formatPrice } from '../utils';
+import heroImg from '../assets/hero.png';
 
 export const HomePage: React.FC = () => {
   const { data: featuredProducts = [], isLoading: featuredLoading } = useGetFeaturedProductsQuery();
@@ -18,89 +19,99 @@ export const HomePage: React.FC = () => {
     return [];
   };
 
-  const featuredList = normalizeProducts(featuredProducts);
-  const bestSellingList = normalizeProducts(bestSellingProducts);
-  const newArrivalsList = normalizeProducts(newArrivals);
+   const featuredList = normalizeProducts(featuredProducts);
+   const bestSellingList = normalizeProducts(bestSellingProducts);
+   const newArrivalsList = normalizeProducts(newArrivals);
 
-  const previewGroups = [featuredList, bestSellingList, newArrivalsList];
+  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    // set a target 8 hours from now (example)
+    const target = new Date();
+    target.setHours(target.getHours() + 8);
+
+    const tick = () => {
+      const now = new Date();
+      const diff = target.getTime() - now.getTime();
+      if (diff <= 0) {
+        setCountdown({ hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setCountdown({ hours, minutes, seconds });
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-700 via-primary-700 to-slate-950 text-white pt-20 pb-24">
-        <div className="container-custom grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
-          <div className="space-y-8">
-            <span className="inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-2 text-sm uppercase tracking-[0.32em] text-white/80">
-              Curated for modern shoppers
-            </span>
-            <div className="space-y-4 max-w-2xl">
-              <h1 className="text-5xl font-semibold leading-tight sm:text-6xl">
-                Shop premium finds with fast checkout and effortless delivery.
-              </h1>
-              <p className="text-lg leading-8 text-slate-200">
-                NovaCart brings you curated categories, exclusive deals, and seamless shopping from browse to buy. Discover trending products handpicked for style, quality, and value.
-              </p>
-            </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <Link
-                to={ROUTES.PRODUCTS}
-                className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-sm font-semibold text-primary-700 shadow-lg shadow-white/10 transition hover:bg-slate-100"
-              >
-                Start shopping
-              </Link>
-              <Link
-                to={ROUTES.WISHLIST}
-                className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/10 px-8 py-4 text-sm font-semibold text-white transition hover:bg-white/15"
-              >
-                View wishlist
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-3xl bg-white/10 p-4 text-center">
-                <p className="text-2xl font-semibold">4.9/5</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.28em] text-white/60">Customer rating</p>
-              </div>
-              <div className="rounded-3xl bg-white/10 p-4 text-center">
-                <p className="text-2xl font-semibold">Free</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.28em] text-white/60">Delivery on orders</p>
-              </div>
-              <div className="rounded-3xl bg-white/10 p-4 text-center">
-                <p className="text-2xl font-semibold">24h</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.28em] text-white/60">Support response</p>
-              </div>
-              <div className="rounded-3xl bg-white/10 p-4 text-center">
-                <p className="text-2xl font-semibold">100+</p>
-                <p className="mt-1 text-xs uppercase tracking-[0.28em] text-white/60">Trusted brands</p>
+      {/* Hero Section - visually matched to prototype */}
+      <section className="relative pt-6">
+        <div className="container-custom">
+          <div className="rounded-2xl overflow-hidden relative">
+            <img src={heroImg} alt="hero" className="w-full h-[420px] object-cover block rounded-2xl" />
+            <div className="absolute inset-0 bg-black/35 rounded-2xl" />
+            <div className="absolute inset-0 flex items-center">
+              <div className="max-w-3xl px-8 py-10">
+                <span className="inline-flex items-center gap-3 rounded-md bg-[#ff902b] px-3 py-2 text-sm font-semibold text-white">MEGA SALE</span>
+                <h1 className="mt-6 text-5xl sm:text-6xl font-extrabold text-white leading-tight">
+                  Up to <span className="text-[#ff902b]">70% OFF</span>
+                  <div className="text-4xl sm:text-5xl">on top brands</div>
+                </h1>
+                <p className="mt-4 text-lg text-white/90">Daily flash deals, fresh arrivals and free delivery on orders over $50.</p>
+                <div className="mt-8">
+                  <Link to={ROUTES.PRODUCTS} className="inline-flex items-center gap-3 rounded-full bg-[#ff902b] px-6 py-3 text-white font-semibold shadow-lg">
+                    SHOP NOW
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+      {/* Top Categories */}
+      <section className="container-custom py-12">
+        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <h2 className="text-3xl font-bold mb-8 text-gray-900">TOP CATEGORIES</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            {[
+              { name: 'Phones & Tablets', icon: '📱', color: 'bg-blue-50' },
+              { name: 'Electronics', icon: '🖥️', color: 'bg-purple-50' },
+              { name: 'Fashion', icon: '👕', color: 'bg-pink-50' },
+              { name: 'Home & Office', icon: '🏠', color: 'bg-orange-50' },
+              { name: 'Health & Beauty', icon: '💅', color: 'bg-red-50' },
+              { name: 'Groceries', icon: '🛒', color: 'bg-green-50' },
+            ].map((cat) => (
+              <div key={cat.name} className={`flex flex-col items-center gap-3 p-6 ${cat.color} rounded-2xl transition hover:shadow-md cursor-pointer`}>
+                <div className="h-16 w-16 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-2xl shadow-sm">{ cat.icon}</div>
+                <div className="text-sm font-medium text-gray-700 text-center">{cat.name}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {previewGroups.map((group, index) => (
-                <div key={index} className="rounded-[32px] border border-white/10 bg-white/10 p-6 shadow-lg backdrop-blur-xl">
-                  <div className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-white/70">
-                    {index === 0 ? 'Featured' : index === 1 ? 'Best sellers' : 'New arrivals'}
-                  </div>
-                  <div className="space-y-3">
-                    {group.slice(0, 2).map((product) => (
-                      <div key={product.id} className="rounded-3xl bg-slate-950/70 p-4 transition hover:bg-slate-900/90">
-                        <p className="text-sm font-semibold text-white line-clamp-2">{product.name}</p>
-                        <div className="mt-2 flex items-center justify-between text-sm text-slate-300">
-                          <span>{product.rating?.toFixed(1)} ★</span>
-                          <span>{formatPrice(product.final_price)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-[32px] border border-white/10 bg-white/10 p-6 text-white/90">
-              <h3 className="text-lg font-semibold">Shop with confidence</h3>
-              <p className="mt-3 text-sm text-slate-200 leading-6">
-                Enjoy curated product drops, easy returns, and a shopping experience built for speed. NovaCart is designed to help you find what you need without the clutter.
-              </p>
+      {/* Flash Sales */}
+      <section className="container-custom py-8">
+        <div className="rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
+          <div className="bg-[#2b2350] text-white px-8 py-5 flex items-center justify-between">
+            <div className="text-2xl font-bold">FLASH SALES</div>
+            <div className="text-sm font-semibold">Ends in <span className="inline-flex items-center gap-2 ml-3">
+              <span className="bg-[#ff902b] text-white px-4 py-2 rounded-lg font-bold min-w-[56px] text-center">{String(Math.max(0, Math.floor((countdown.hours || 0)))).padStart(2, '0')}</span>
+              <span className="text-white">:</span>
+              <span className="bg-[#ff902b] text-white px-4 py-2 rounded-lg font-bold min-w-[56px] text-center">{String(Math.max(0, Math.floor((countdown.minutes || 0)))).padStart(2, '0')}</span>
+              <span className="text-white">:</span>
+              <span className="bg-[#ff902b] text-white px-4 py-2 rounded-lg font-bold min-w-[56px] text-center">{String(Math.max(0, Math.floor((countdown.seconds || 0)))).padStart(2, '0')}</span>
+            </span></div>
+          </div>
+          <div className="bg-white p-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <ProductGrid products={bestSellingList.slice(0, 8)} isLoading={bestSellingLoading} />
             </div>
           </div>
         </div>

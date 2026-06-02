@@ -1,5 +1,7 @@
 import { apiSlice } from '../../../redux/api/apiSlice';
 import { API_ENDPOINTS } from '../../../utils/constants';
+import { tokenService } from '../../../services/tokenService';
+import { setUser } from '../../../redux/slices/authSlice';
 import type { LoginCredentials, RegisterData, VerifyOTPData, AuthResponse, User } from '../../../types';
 
 export const authApi = apiSlice.injectEndpoints({
@@ -10,6 +12,22 @@ export const authApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: credentials,
       }),
+      // backend returns { success, message, data: { user, tokens } }
+      // normalize to return the inner `data` object directly
+      transformResponse: (response: any) => response.data,
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.tokens) {
+            tokenService.setTokens(data.tokens.access, data.tokens.refresh);
+          }
+          if (data?.user) {
+            dispatch(setUser(data.user));
+          }
+        } catch (err) {
+          // swallow - errors handled by callers
+        }
+      },
     }),
     register: builder.mutation<{ email: string; full_name: string }, RegisterData>({
       query: (userData) => ({
@@ -24,6 +42,20 @@ export const authApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: otpData,
       }),
+      transformResponse: (response: any) => response.data,
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.tokens) {
+            tokenService.setTokens(data.tokens.access, data.tokens.refresh);
+          }
+          if (data?.user) {
+            dispatch(setUser(data.user));
+          }
+        } catch (err) {
+          // ignore
+        }
+      },
     }),
     resendOTP: builder.mutation<{ message: string }, { email: string }>({
       query: (data) => ({

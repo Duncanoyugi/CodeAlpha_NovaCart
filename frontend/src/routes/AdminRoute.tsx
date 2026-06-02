@@ -1,13 +1,14 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../redux/hooks';
 import { ROUTES } from '../utils/constants';
 
 export const AdminRoute: React.FC = () => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+    return <Navigate to={ROUTES.LOGIN} replace state={{ from: location }} />;
   }
 
   if (!user || (user.role !== 'ADMIN' && user.role !== 'STAFF')) {

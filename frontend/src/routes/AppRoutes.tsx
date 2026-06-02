@@ -12,6 +12,8 @@ import { CategoryPage } from '../features/products/pages/CategoryPage';
 
 // Pages
 import { HomePage } from '../pages/HomePage';
+import { AboutPage } from '../pages/AboutPage';
+import { ContactPage } from '../pages/ContactPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 // Auth Pages
@@ -54,6 +56,8 @@ export const AppRoutes: React.FC = () => {
         {/* Public Routes */}
         <Route element={<MainLayout />}>
           <Route path={ROUTES.HOME} element={<HomePage />} />
+          <Route path={ROUTES.ABOUT} element={<AboutPage />} />
+          <Route path={ROUTES.CONTACT} element={<ContactPage />} />
           <Route path={ROUTES.PRODUCTS} element={<ProductsPage />} />
           <Route path={ROUTES.PRODUCT_DETAIL(':slug')} element={<ProductDetailsPage />} />
           <Route path={ROUTES.CATEGORY(':slug')} element={<CategoryPage />} />

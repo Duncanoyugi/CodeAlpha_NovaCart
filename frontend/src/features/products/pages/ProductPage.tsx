@@ -63,30 +63,37 @@ export const ProductsPage: React.FC = () => {
   return (
     <MainLayout>
       <div className="container-custom py-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-primary-600">Shop</p>
-            <h1 className="mt-2 text-4xl font-bold text-gray-900">Explore the latest collections</h1>
-            <p className="mt-3 max-w-2xl text-gray-500">Browse trending products, filter by category, and discover the best deals for your cart.</p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="rounded-3xl bg-primary-50 px-4 py-3 text-sm text-primary-700">
-              {products.length} items available
-            </div>
-            <button
-              onClick={() => setIsMobileFiltersOpen(true)}
-              className="hidden lg:inline-flex items-center justify-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:text-gray-900"
-            >
-              Filter Products
-            </button>
+        {/* Hero Section */}
+        <div className="rounded-3xl bg-gradient-to-r from-[#2b2350] to-[#3d2f60] text-white p-8 mb-8 shadow-sm">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#ff902b]">Shop</p>
+            <h1 className="mt-3 text-4xl font-bold">Explore Our Collections</h1>
+            <p className="mt-3 text-white/80">Browse trending products, filter by category, and discover the best deals tailored for you.</p>
           </div>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        {/* Filter & Sort Bar */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-[#ff902b] text-white px-5 py-2 text-sm font-bold">
+              {products.length} items
+            </div>
+            <p className="text-gray-600">Available in our store</p>
+          </div>
+          <button
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="lg:hidden inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 transition"
+          >
+            ☰ Filters
+          </button>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+          {/* Sidebar Filters */}
           <aside className="hidden lg:block">
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900">Refine results</h2>
-              <p className="mt-2 text-sm text-gray-500">Find the perfect product faster with our curated filters.</p>
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sticky top-24">
+              <h2 className="text-xl font-bold text-gray-900">Refine Search</h2>
+              <p className="mt-2 text-sm text-gray-600">Find exactly what you're looking for.</p>
               <div className="mt-6">
                 <ProductFilters
                   categories={categories}
@@ -101,9 +108,11 @@ export const ProductsPage: React.FC = () => {
             </div>
           </aside>
 
+          {/* Main Content */}
           <div>
-            <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            {/* Search & Sort */}
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1 min-w-0">
                   <label htmlFor="product-search" className="sr-only">Search products</label>
                   <div className="relative">
@@ -114,13 +123,13 @@ export const ProductsPage: React.FC = () => {
                       value={filters.search}
                       onChange={(e) => handleSearchChange(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                      className="w-full rounded-3xl border border-gray-200 bg-gray-50 px-5 py-4 text-sm text-gray-900 outline-none transition focus:border-primary-500 focus:bg-white"
+                      className="w-full rounded-2xl border border-gray-300 bg-gray-50 px-5 py-3 text-sm text-gray-900 placeholder-gray-500 outline-none transition focus:border-[#ff902b] focus:bg-white"
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700">
-                    Sorted by <span className="ml-2 font-semibold text-gray-900">{sortOptions.find((option) => option.value === filters.sort_by)?.label}</span>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700">
+                    Sorted by: <span className="ml-2 font-bold text-gray-900">{sortOptions.find((option) => option.value === filters.sort_by)?.label}</span>
                   </span>
                   <ProductSort
                     options={sortOptions}
@@ -131,7 +140,8 @@ export const ProductsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+            {/* Products Grid */}
+            <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
               <ProductGrid
                 products={products}
                 isLoading={isLoading}
@@ -141,6 +151,7 @@ export const ProductsPage: React.FC = () => {
               />
             </div>
 
+            {/* Pagination */}
             {pagination.totalPages > 1 && (
               <div className="mt-8">
                 <Pagination
@@ -152,32 +163,30 @@ export const ProductsPage: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
 
-          {/* Mobile Filters Modal */}
-          {isMobileFiltersOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
-              <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileFiltersOpen(false)} />
-              <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-                <div className="p-4 border-b flex justify-between items-center">
-                  <h3 className="font-semibold">Filters</h3>
-                  <button onClick={() => setIsMobileFiltersOpen(false)} className="text-gray-500">
-                    ✕
-                  </button>
-                </div>
-                <ProductFilters
-                  categories={categories}
-                  selectedCategory={filters.category}
-                  onCategoryChange={handleCategoryChange}
-                  onPriceChange={handlePriceChange}
-                  onRatingChange={handleRatingChange}
-                  onAvailabilityChange={handleAvailabilityChange}
-                  onClearFilters={clearAllFilters}
-                  isMobile
-                />
+        {/* Mobile Filters Modal */}
+        {isMobileFiltersOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileFiltersOpen(false)} />
+            <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h3 className="font-bold text-lg">Filters</h3>
+                <button onClick={() => setIsMobileFiltersOpen(false)} className="text-gray-500 text-2xl">✕</button>
               </div>
+              <ProductFilters
+                categories={categories}
+                selectedCategory={filters.category}
+                onCategoryChange={handleCategoryChange}
+                onPriceChange={handlePriceChange}
+                onRatingChange={handleRatingChange}
+                onAvailabilityChange={handleAvailabilityChange}
+                onClearFilters={clearAllFilters}
+                isMobile
+              />
             </div>
-          )}
+          </div>
+        )}
+      </div>
     </MainLayout>
   );
 };
