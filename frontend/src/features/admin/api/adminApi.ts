@@ -263,6 +263,7 @@ export const {
   useGetAdminUsersQuery,
   useUpdateUserRoleMutation,
   useToggleUserStatusMutation,
+  useVerifyUserMutation,
   useBulkDeleteProductsMutation,
   useBulkUpdateAvailabilityMutation,
 } = adminApi;

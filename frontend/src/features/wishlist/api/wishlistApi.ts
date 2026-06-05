@@ -23,6 +23,13 @@ export const wishlistApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Wishlist'],
     }),
+    clearWishlist: builder.mutation<void, void>({
+      query: () => ({
+        url: API_ENDPOINTS.WISHLIST.CLEAR,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Wishlist'],
+    }),
     checkInWishlist: builder.query<{ in_wishlist: boolean }, string>({
       query: (productId) => API_ENDPOINTS.WISHLIST.CHECK(productId),
       providesTags: ['Wishlist'],
@@ -34,5 +41,6 @@ export const {
   useGetWishlistQuery,
   useAddToWishlistMutation,
   useRemoveFromWishlistMutation,
+  useClearWishlistMutation,
   useCheckInWishlistQuery,
 } = wishlistApi;

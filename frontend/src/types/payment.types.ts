@@ -31,3 +31,9 @@ export interface CreatePaymentIntentData {
 export interface ConfirmPaymentData {
   payment_intent_id: string;
 }
+
+export interface RefundPaymentData {
+  payment_id: string;
+  amount?: number;
+  reason?: string;
+}

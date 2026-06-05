@@ -1,6 +1,6 @@
 import { apiSlice } from '../../../redux/api/apiSlice';
 import { API_ENDPOINTS } from '../../../utils/constants';
-import type { CreatePaymentIntentData, ConfirmPaymentData, PaymentIntent, PaymentResult } from '../../../types';
+import type { CreatePaymentIntentData, ConfirmPaymentData, PaymentIntent, PaymentResult, RefundPaymentData } from '../../../types';
 
 export const paymentApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -21,6 +21,14 @@ export const paymentApi = apiSlice.injectEndpoints({
     getPaymentStatus: builder.query<PaymentIntent, string>({
       query: (paymentIntentId) => API_ENDPOINTS.PAYMENTS.STATUS(paymentIntentId),
     }),
+    refundPayment: builder.mutation<PaymentResult, RefundPaymentData>({
+      query: (data) => ({
+        url: API_ENDPOINTS.PAYMENTS.REFUND,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Order'],
+    }),
   }),
 });
 
@@ -28,4 +36,5 @@ export const {
   useCreatePaymentIntentMutation,
   useConfirmPaymentMutation,
   useGetPaymentStatusQuery,
+  useRefundPaymentMutation,
 } = paymentApi;

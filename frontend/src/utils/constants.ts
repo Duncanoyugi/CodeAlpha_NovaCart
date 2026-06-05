@@ -5,6 +5,8 @@ export const API_ENDPOINTS = {
     REGISTER: '/auth/register/',
     VERIFY_OTP: '/auth/verify-otp/',
     RESEND_OTP: '/auth/resend-otp/',
+    // Used by authApi.resendWelcome
+    RESEND_WELCOME: '/auth/resend-welcome/',
     LOGIN: '/auth/login/',
     LOGOUT: '/auth/logout/',
     ME: '/auth/me/',
@@ -48,12 +50,14 @@ export const API_ENDPOINTS = {
     ADD: '/wishlist/add/',
     REMOVE: (id: string) => `/wishlist/remove/${id}/`,
     CHECK: (id: string) => `/wishlist/check/${id}/`,
+    CLEAR: '/wishlist/clear/',
   },
   // Payments
   PAYMENTS: {
     CREATE_INTENT: '/payments/create-intent/',
     CONFIRM: '/payments/confirm/',
     STATUS: (id: string) => `/payments/status/${id}/`,
+    REFUND: '/payments/refund/',
   },
   // Admin
   ADMIN: {

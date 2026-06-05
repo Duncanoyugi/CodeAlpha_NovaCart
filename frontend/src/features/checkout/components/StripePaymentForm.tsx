@@ -80,13 +80,12 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
       });
 
       if (error) {
-        // Payment failed
-        console.error('Payment error:', error);
+        // Payment failed - do NOT call backend success confirmation.
         toast.error(error.message || 'Payment failed');
         onError(error.message || 'Payment failed');
-        
-        // Record failure
-        await confirmPayment({ payment_intent_id: intentResult.id }).unwrap();
+
+        // If you later add a dedicated "confirmPaymentFailure" endpoint,
+        // call it here. For now we leave the backend order state unchanged.
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Payment succeeded
         toast.success('Payment successful!');
@@ -94,9 +93,11 @@ export const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
         onSuccess();
       }
     } catch (error: any) {
-      console.error('Payment error:', error);
-      toast.error(error.message || 'Payment processing failed');
-      onError(error.message || 'Payment processing failed');
+      // Avoid leaking full error objects to the console.
+      const message = typeof error?.message === 'string' ? error.message : 'Payment processing failed';
+      toast.error(message);
+      onError(message);
+
     } finally {
       setIsLoading(false);
       onProcessing(false);

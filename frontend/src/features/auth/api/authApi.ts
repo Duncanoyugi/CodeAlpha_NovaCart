@@ -64,6 +64,13 @@ export const authApi = apiSlice.injectEndpoints({
         body: data,
       }),
     }),
+    resendWelcome: builder.mutation<{ success: boolean; message: string }, { email: string }>({
+      query: (data) => ({
+        url: API_ENDPOINTS.AUTH.RESEND_WELCOME,
+        method: 'POST',
+        body: data,
+      }),
+    }),
     getCurrentUser: builder.query<User, void>({
       query: () => API_ENDPOINTS.AUTH.ME,
       providesTags: ['User'],
@@ -82,6 +89,7 @@ export const {
   useRegisterMutation,
   useVerifyOTPMutation,
   useResendOTPMutation,
+  useResendWelcomeMutation,
   useGetCurrentUserQuery,
   useLogoutMutation,
 } = authApi;

@@ -49,8 +49,39 @@ export const reviewApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Review'],
     }),
+    // Admin endpoints
+    getAdminPendingReviews: builder.query<Review[], void>({
+      query: () => '/reviews/admin/pending/',
+      providesTags: ['Review'],
+    }),
+    getAdminAllReviews: builder.query<{ reviews: Review[]; pagination: any }, AdminUserFilters>({
+      query: (filters) => {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, String(value));
+          }
+        });
+        return `/reviews/admin/all/?${params.toString()}`;
+      },
+      providesTags: ['Review'],
+    }),
+    adminReviewAction: builder.mutation<Review, { reviewId: string; action: string; admin_response?: string }>({
+      query: ({ reviewId, action, admin_response }) => ({
+        url: `/reviews/admin/${reviewId}/action/`,
+        method: 'POST',
+        body: { action, admin_response },
+      }),
+      invalidatesTags: ['Review', 'Product'],
+    }),
   }),
 });
+
+interface AdminUserFilters {
+  search?: string;
+  page?: number;
+  page_size?: number;
+}
 
 export const {
   useGetProductReviewsQuery,
@@ -59,4 +90,7 @@ export const {
   useUpdateReviewMutation,
   useDeleteReviewMutation,
   useMarkReviewHelpfulMutation,
+  useGetAdminPendingReviewsQuery,
+  useGetAdminAllReviewsQuery,
+  useAdminReviewActionMutation,
 } = reviewApi;
