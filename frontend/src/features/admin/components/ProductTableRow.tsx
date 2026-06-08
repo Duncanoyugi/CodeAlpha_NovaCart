@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 import type { Product } from '../../../types';
 import { formatPrice } from '../../../utils';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useDeleteProductMutation, useUpdateInventoryMutation } from '../api/adminApi';
+import { Button } from '../../../components/common/Button';
 
 interface ProductTableRowProps {
   product: Product;
@@ -28,7 +29,6 @@ export const ProductTableRow: React.FC<ProductTableRowProps> = ({
   const handleQuickStockUpdate = async (increment: number) => {
     const newStock = product.stock_quantity + increment;
     if (newStock < 0) return;
-    
     setIsUpdatingStock(true);
     try {
       await updateInventory({ id: product.id, stock_quantity: newStock }).unwrap();
@@ -50,94 +50,39 @@ export const ProductTableRow: React.FC<ProductTableRowProps> = ({
     }
   };
 
-  const handleToggleAvailability = async () => {
-    try {
-      await updateInventory({ 
-        id: product.id, 
-        stock_quantity: product.stock_quantity 
-      }).unwrap();
-      onRefresh();
-    } catch (error) {
-      console.error('Failed to update availability:', error);
-    }
-  };
-
   return (
     <>
-      <tr className="hover:bg-gray-50 transition">
+      <tr className="hover:bg-[var(--color-bg-muted)] transition-colors">
         <td className="py-3 px-4">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onSelect(product.id)}
-            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-          />
+          <input type="checkbox" checked={isSelected} onChange={() => onSelect(product.id)} className="rounded border-[var(--color-border-medium)] accent-[var(--color-gold-400)]" />
         </td>
         <td className="py-3 px-4">
           <div className="flex items-center gap-3">
-            <img
-              src={product.image_url}
-              alt={product.name}
-              className="w-10 h-10 rounded-lg object-cover"
-            />
+            <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-[var(--radius-md)] object-cover border border-[var(--color-border-light)]" />
             <div>
-              <p className="font-medium text-gray-800">{product.name}</p>
-              <p className="text-xs text-gray-400">SKU: {product.sku}</p>
+              <p className="font-ui text-sm font-medium text-[var(--color-text-primary)]">{product.name}</p>
+              <p className="font-ui text-[11px] text-[var(--color-text-tertiary)]">SKU: {product.sku}</p>
             </div>
           </div>
         </td>
-        <td className="py-3 px-4">{product.category?.name || 'N/A'}</td>
-        <td className="py-3 px-4 font-semibold">{formatPrice(product.price)}</td>
+        <td className="py-3 px-4 font-ui text-sm text-[var(--color-text-secondary)]">{product.category?.name || 'N/A'}</td>
+        <td className="py-3 px-4 font-ui text-sm font-medium text-[var(--color-gold-600)]">{formatPrice(product.price)}</td>
         <td className="py-3 px-4">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleQuickStockUpdate(-1)}
-              disabled={isUpdatingStock || product.stock_quantity <= 0}
-              className="w-6 h-6 rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-            >
-              -
-            </button>
-            <span className="w-12 text-center font-medium">{product.stock_quantity}</span>
-            <button
-              onClick={() => handleQuickStockUpdate(1)}
-              disabled={isUpdatingStock}
-              className="w-6 h-6 rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
-            >
-              +
-            </button>
+            <button onClick={() => handleQuickStockUpdate(-1)} disabled={isUpdatingStock || product.stock_quantity <= 0} className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40 transition-colors">−</button>
+            <span className="w-10 text-center font-ui text-sm font-medium text-[var(--color-text-primary)]">{product.stock_quantity}</span>
+            <button onClick={() => handleQuickStockUpdate(1)} disabled={isUpdatingStock} className="w-7 h-7 flex items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40 transition-colors">+</button>
           </div>
         </td>
         <td className="py-3 px-4">
-          <button
-            onClick={handleToggleAvailability}
-            className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-              product.is_available
-                ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                : 'bg-red-100 text-red-700 hover:bg-red-200'
-            }`}
-          >
-            {product.is_available ? (
-              <Eye className="w-3 h-3" />
-            ) : (
-              <EyeOff className="w-3 h-3" />
-            )}
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-ui text-[11px] font-medium tracking-wider ${product.is_available ? 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] border border-[var(--color-success-border)]' : 'bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border border-[var(--color-danger-border)]'}`}>
             {product.is_available ? 'Active' : 'Inactive'}
-          </button>
+          </span>
         </td>
         <td className="py-3 px-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => onEdit(product)}
-              className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
-            >
-              <Edit2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="p-1 text-red-600 hover:bg-red-50 rounded transition"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(product)} className="!p-2"><Edit2 className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowDeleteModal(true)} className="!p-2 text-[var(--color-danger-text)]"><Trash2 className="w-4 h-4" /></Button>
           </div>
         </td>
       </tr>

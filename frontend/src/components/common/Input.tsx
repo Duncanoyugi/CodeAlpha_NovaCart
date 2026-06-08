@@ -16,7 +16,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
+            className="block text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]"
           >
             {label}
           </label>
@@ -24,33 +24,27 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative">
           {icon && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]">
               {icon}
             </div>
           )}
           <input
             id={inputId}
             ref={ref}
-            className={`w-full rounded-xl border px-4 py-2.5 text-sm bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100 transition-colors placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2b2350] dark:focus:ring-indigo-400 ${
+            className={`w-full rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] transition-all placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-border-focus)] focus:shadow-[0_0_0_3px_rgba(212,165,116,0.15)] focus:outline-none ${
               icon ? 'pl-10' : ''
             } ${
-              error
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 dark:border-slate-700 hover:border-gray-400 dark:hover:border-slate-500 focus:border-[#2b2350]'
+              error ? 'border-[var(--color-danger-border)]' : ''
             } ${className}`}
             {...props}
           />
         </div>
 
         {error && (
-          <p className="text-xs font-medium text-red-600 dark:text-red-400">
-            {error}
-          </p>
+          <p className="text-xs text-[var(--color-danger-text)]">{error}</p>
         )}
         {!error && helperText && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {helperText}
-          </p>
+          <p className="text-xs text-[var(--color-text-tertiary)]">{helperText}</p>
         )}
       </div>
     );

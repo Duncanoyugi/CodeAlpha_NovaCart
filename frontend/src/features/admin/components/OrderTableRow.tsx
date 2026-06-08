@@ -18,65 +18,39 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({ order, onRefresh }
   const getStatusBadge = (status: string, type: 'order' | 'payment') => {
     if (type === 'order') {
       const config = ORDER_STATUS[status as keyof typeof ORDER_STATUS];
-      return config?.color || 'bg-gray-100 text-gray-700';
+      return config?.color || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]';
     }
     const config = PAYMENT_STATUS[status as keyof typeof PAYMENT_STATUS];
-    return config?.color || 'bg-gray-100 text-gray-700';
+    return config?.color || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]';
   };
 
   const getStatusLabel = (status: string, type: 'order' | 'payment') => {
-    if (type === 'order') {
-      const config = ORDER_STATUS[status as keyof typeof ORDER_STATUS];
-      return config?.label || status;
-    }
-    const config = PAYMENT_STATUS[status as keyof typeof PAYMENT_STATUS];
-    return config?.label || status;
+    if (type === 'order') return ORDER_STATUS[status as keyof typeof ORDER_STATUS]?.label || status;
+    return PAYMENT_STATUS[status as keyof typeof PAYMENT_STATUS]?.label || status;
   };
 
   return (
     <>
-      <tr className="hover:bg-gray-50 transition">
+      <tr className="hover:bg-[var(--color-bg-muted)] transition-colors">
         <td className="py-3 px-4">
-          <button
-            onClick={() => setShowDetailModal(true)}
-            className="text-primary-600 hover:text-primary-700 font-mono text-sm"
-          >
+          <button onClick={() => setShowDetailModal(true)} className="font-ui text-sm font-medium text-[var(--color-text-accent)] hover:underline">
             {order.order_number}
           </button>
         </td>
-        <td className="py-3 px-4 text-sm text-gray-600">
-          {order.shipping_address?.full_name || 'N/A'}
-        </td>
-        <td className="py-3 px-4 text-sm text-gray-500">
-          {formatDate(order.placed_at, 'MMM dd, yyyy')}
-        </td>
-        <td className="py-3 px-4 text-right font-semibold">
-          {formatPrice(order.total_amount)}
-        </td>
+        <td className="py-3 px-4 font-ui text-sm text-[var(--color-text-secondary)]">{order.shipping_address?.full_name || 'N/A'}</td>
+        <td className="py-3 px-4 font-ui text-sm text-[var(--color-text-tertiary)]">{formatDate(order.placed_at, 'MMM dd, yyyy')}</td>
+        <td className="py-3 px-4 text-right font-ui text-sm font-medium text-[var(--color-text-primary)]">{formatPrice(order.total_amount)}</td>
         <td className="py-3 px-4">
-          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(order.status, 'order')}`}>
+          <span className={`inline-flex px-2.5 py-1 rounded-full font-ui text-[11px] font-medium tracking-wider ${getStatusBadge(order.status, 'order')}`}>
             {getStatusLabel(order.status, 'order')}
           </span>
         </td>
         <td className="py-3 px-4">
-          <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getStatusBadge(order.payment_status, 'payment')}`}>
-            {getStatusLabel(order.payment_status, 'payment')}
-          </span>
-        </td>
-        <td className="py-3 px-4">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowDetailModal(true)}
-              className="p-1 text-gray-500 hover:text-primary-600 rounded transition"
-              title="View Details"
-            >
+          <div className="flex items-center gap-1">
+            <button onClick={() => setShowDetailModal(true)} className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-accent)] rounded-[var(--radius-md)] hover:bg-[var(--color-bg-muted)] transition-colors" title="View Details">
               <Eye className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => setShowStatusModal(true)}
-              className="p-1 text-gray-500 hover:text-blue-600 rounded transition"
-              title="Update Status"
-            >
+            <button onClick={() => setShowStatusModal(true)} className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-accent)] rounded-[var(--radius-md)] hover:bg-[var(--color-bg-muted)] transition-colors" title="Update Status">
               <Edit2 className="w-4 h-4" />
             </button>
           </div>

@@ -1,50 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MainLayout } from '../../../layouts/MainLayout';
-import { useAuth } from '../../../features/auth/hooks/useAuth';
+import { useAuth } from '../../../features/auth';
 import { ROUTES } from '../../../utils/constants';
+import { Button } from '../../../components/common/Button';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
   return (
-    <MainLayout>
-      <div className="container-custom py-8">
-        <h1 className="text-2xl font-bold mb-6">My Profile</h1>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6 space-y-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Full Name</h3>
-            <p className="text-lg">{user?.full_name}</p>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Email</h3>
-            <p className="text-lg">{user?.email}</p>
-          </div>
-          
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Phone Number</h3>
-            <p className="text-lg">{user?.phone_number || 'Not set'}</p>
-          </div>
+    <div className="container-custom py-12">
+      <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Account</span>
+      <h1 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">My Profile</h1>
 
-          <div className="pt-4 border-t">
-            <button
-              onClick={() => navigate(ROUTES.EDIT_PROFILE)}
-              className="btn-secondary mr-4"
-            >
-              Edit Profile
-            </button>
-            <button
-              onClick={() => navigate(ROUTES.CHANGE_PASSWORD)}
-              className="btn-secondary"
-            >
-              Change Password
-            </button>
-          </div>
+      <div className="mt-8 bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-xl)] p-6 shadow-[var(--shadow-sm)] space-y-6">
+        <div>
+          <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Full Name</span>
+          <p className="font-display text-lg text-[var(--color-text-primary)] mt-1">{user?.full_name}</p>
+        </div>
+        <div>
+          <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Email</span>
+          <p className="font-ui text-sm text-[var(--color-text-primary)] mt-1">{user?.email}</p>
+        </div>
+        <div>
+          <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Phone Number</span>
+          <p className="font-ui text-sm text-[var(--color-text-primary)] mt-1">{user?.phone_number || 'Not set'}</p>
+        </div>
+        <div className="pt-6 border-t border-[var(--color-border-light)] flex gap-3">
+          <Button variant="outline" onClick={() => navigate(ROUTES.EDIT_PROFILE)}>Edit Profile</Button>
+          <Button variant="outline" onClick={() => navigate(ROUTES.CHANGE_PASSWORD)}>Change Password</Button>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };

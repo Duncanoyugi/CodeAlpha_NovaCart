@@ -3,9 +3,17 @@ import { Routes, Route } from 'react-router-dom';
 import { ROUTES } from '../utils/constants';
 
 import { MainLayout } from '../layouts/MainLayout';
+import { AuthLayout } from '../layouts/AuthLayout';
+import { AdminLayout } from '../layouts/AdminLayout';
 
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
+
+
+
+
+
+
 
 // Layoutless pages
 import { HomePage } from '../pages/HomePage';
@@ -85,10 +93,12 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.CART} element={<CartPage />} />
         </Route>
 
-        {/* Authentication Routes (no layout) */}
-        <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
-        <Route path={ROUTES.VERIFY_OTP} element={<VerifyOTPPage />} />
+        {/* Authentication Routes */}
+        <Route element={<AuthLayout />}>
+          <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
+          <Route path={ROUTES.VERIFY_OTP} element={<VerifyOTPPage />} />
+        </Route>
 
         {/* Protected Customer/Admin Routes (single layout mount) */}
         <Route
@@ -117,26 +127,28 @@ export const AppRoutes: React.FC = () => {
 
           {/* Admin-only */}
           <Route element={<AdminRoute />}>
-            <Route
-              path={ROUTES.ADMIN_DASHBOARD}
-              element={<DashboardPage />}
-            />
-            <Route
-              path={ROUTES.ADMIN_PRODUCTS}
-              element={<ProductsManagementPage />}
-            />
-            <Route
-              path={ROUTES.ADMIN_ORDERS}
-              element={<OrdersManagementPage />}
-            />
-            <Route
-              path={ROUTES.ADMIN_USERS}
-              element={<UsersManagementPage />}
-            />
-            <Route
-              path={ROUTES.ADMIN_ANALYTICS}
-              element={<DashboardPage />}
-            />
+            <Route element={<AdminLayout />}>
+              <Route
+                path={ROUTES.ADMIN_DASHBOARD}
+                element={<DashboardPage />}
+              />
+              <Route
+                path={ROUTES.ADMIN_PRODUCTS}
+                element={<ProductsManagementPage />}
+              />
+              <Route
+                path={ROUTES.ADMIN_ORDERS}
+                element={<OrdersManagementPage />}
+              />
+              <Route
+                path={ROUTES.ADMIN_USERS}
+                element={<UsersManagementPage />}
+              />
+              <Route
+                path={ROUTES.ADMIN_ANALYTICS}
+                element={<DashboardPage />}
+              />
+            </Route>
           </Route>
         </Route>
 

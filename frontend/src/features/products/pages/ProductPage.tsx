@@ -1,192 +1,155 @@
 import React, { useEffect, useState } from 'react';
-import { useGetCategoriesQuery } from '../api/productApi';
-import { ProductGrid, ProductFilters, ProductSort } from '../index';
-import { useProductFilters } from '../hooks/useProductFilters';
-import { useProducts } from '../hooks/useProducts';
-import { useCart } from '../../cart';
-import { useWishlist } from '../../wishlist';
-import { useAuth } from '../../auth/hooks/useAuth';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ProductGrid } from '../../../components/product/ProductGrid';
+import { ProductFilters } from '../../../components/product/ProductFilters';
+import { ProductSort } from '../../../components/product/ProductSort';
 import { Pagination } from '../../../components/common/Pagination';
-import { MainLayout } from '../../../layouts/MainLayout';
+import { useGetProductsQuery, useGetCategoriesQuery } from '../api/productApi';
+import { ROUTES } from '../../../utils/constants';
+import { SORT_OPTIONS, FILTERS, PAGINATION } from '../../../utils/constants';
+import { useProductFilters } from '../hooks/useProductFilters';
+import { useCart } from '../../cart';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { useWishlist } from '../../wishlist';
+import { Button } from '../../../components/common/Button';
 
 export const ProductsPage: React.FC = () => {
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
-  
-  const { data: categoriesData } = useGetCategoriesQuery();
-  const categories = Array.isArray(categoriesData)
-    ? categoriesData
-    : categoriesData && typeof categoriesData === 'object'
-      ? (categoriesData as any).data ?? []
-      : [];
-  const { products, isLoading, pagination } = useProducts();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const rawCategories = useGetCategoriesQuery().data;
+  const categories = Array.isArray(rawCategories) ? rawCategories : (rawCategories as any)?.data ?? [];
+
+  const initialCategory = searchParams.get('category') || '';
+  const initialSort = searchParams.get('sort') || SORT_OPTIONS[0].value;
+  const initialSearch = searchParams.get('search') || '';
+  const initialMinPrice = searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined;
+  const initialMaxPrice = searchParams.get('max_price') ? Number(searchParams.get('max_price')) : undefined;
+  const initialRating = searchParams.get('min_rating') ? Number(searchParams.get('min_rating')) : undefined;
+
   const {
     filters,
-    sortOptions,
-    applyFilters,
-    handleSearchChange,
-    handlePriceChange,
+    setFilters,
     handleSortChange,
     handleCategoryChange,
+    handlePriceChange,
     handleRatingChange,
     handleAvailabilityChange,
     handlePageChange,
     clearAllFilters,
-  } = useProductFilters();
+  } = useProductFilters({
+    category: initialCategory,
+    sort_by: initialSort,
+    search: initialSearch,
+    min_price: initialMinPrice,
+    max_price: initialMaxPrice,
+    min_rating: initialRating,
+    page: Number(searchParams.get('page')) || PAGINATION.DEFAULT_PAGE,
+    page_size: PAGINATION.DEFAULT_PAGE_SIZE,
+  });
+
+  const { data, isLoading } = useGetProductsQuery(filters as any);
+  const products = (data as any)?.data ?? [];
+  const pagination = (data as any)?.pagination ?? { total_pages: 1, current_page: 1, total_count: 0 };
   const { isAuthenticated } = useAuth();
-  const { getCart, addItemToCart } = useCart();
-  const { items: wishlistItems, getWishlist, addItem, removeItem, isInWishlist } = useWishlist();
+  const { addItemToCart } = useCart();
+  const { items: wishlistItems, addItem, removeItem, isInWishlist } = useWishlist();
 
   useEffect(() => {
-    getCart();
-    if (isAuthenticated) {
-      getWishlist();
-    }
-  }, [getCart, getWishlist, isAuthenticated]);
+    if (isAuthenticated) {}
+  }, [isAuthenticated]);
 
-  const handleAddToCart = (productId: string) => {
-    addItemToCart({ product_id: productId, quantity: 1 });
-  };
+  const handleAddToCart = (productId: string) => addItemToCart({ product_id: productId, quantity: 1 });
+  const handleToggleWishlist = (productId: string) => isInWishlist(productId) ? removeItem(productId) : addItem(productId);
 
-  const handleToggleWishlist = (productId: string) => {
-    if (isInWishlist(productId)) {
-      removeItem(productId);
-    } else {
-      addItem(productId);
-    }
-  };
-
-  // Apply filters on mount and when filters change
-  useEffect(() => {
-    applyFilters();
-  }, [filters.page, filters.sort_by, filters.category]);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   return (
-    <MainLayout>
-      <div className="container-custom py-8">
-        {/* Hero Section */}
-        <div className="rounded-3xl bg-gradient-to-r from-[#2b2350] to-[#3d2f60] text-white p-8 mb-8 shadow-sm">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#ff902b]">Shop</p>
-            <h1 className="mt-3 text-4xl font-bold">Explore Our Collections</h1>
-            <p className="mt-3 text-white/80">Browse trending products, filter by category, and discover the best deals tailored for you.</p>
-          </div>
-        </div>
-
-        {/* Filter & Sort Bar */}
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-[#ff902b] text-white px-5 py-2 text-sm font-bold">
-              {products.length} items
-            </div>
-            <p className="text-gray-600">Available in our store</p>
-          </div>
-          <button
-            onClick={() => setIsMobileFiltersOpen(true)}
-            className="lg:hidden inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-700 hover:border-gray-400 transition"
-          >
-            ☰ Filters
-          </button>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-          {/* Sidebar Filters */}
-          <aside className="hidden lg:block">
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm sticky top-24">
-              <h2 className="text-xl font-bold text-gray-900">Refine Search</h2>
-              <p className="mt-2 text-sm text-gray-600">Find exactly what you're looking for.</p>
-              <div className="mt-6">
-                <ProductFilters
-                  categories={categories}
-                  selectedCategory={filters.category}
-                  onCategoryChange={handleCategoryChange}
-                  onPriceChange={handlePriceChange}
-                  onRatingChange={handleRatingChange}
-                  onAvailabilityChange={handleAvailabilityChange}
-                  onClearFilters={clearAllFilters}
-                />
-              </div>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <div>
-            {/* Search & Sort */}
-            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex-1 min-w-0">
-                  <label htmlFor="product-search" className="sr-only">Search products</label>
-                  <div className="relative">
-                    <input
-                      id="product-search"
-                      type="text"
-                      placeholder="Search products, brands, or keywords"
-                      value={filters.search}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && applyFilters()}
-                      className="w-full rounded-2xl border border-gray-300 bg-gray-50 px-5 py-3 text-sm text-gray-900 placeholder-gray-500 outline-none transition focus:border-[#ff902b] focus:bg-white"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700">
-                    Sorted by: <span className="ml-2 font-bold text-gray-900">{sortOptions.find((option) => option.value === filters.sort_by)?.label}</span>
-                  </span>
-                  <ProductSort
-                    options={sortOptions}
-                    value={filters.sort_by}
-                    onChange={handleSortChange}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Products Grid */}
-            <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
-              <ProductGrid
-                products={products}
-                isLoading={isLoading}
-                onAddToCart={handleAddToCart}
-                onAddToWishlist={handleToggleWishlist}
-                wishlistIds={wishlistItems.map((item) => item.product.id)}
-              />
-            </div>
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="mt-8">
-                <Pagination
-                  currentPage={pagination.currentPage}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Filters Modal */}
-        {isMobileFiltersOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileFiltersOpen(false)} />
-            <div className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
-              <div className="p-4 border-b flex justify-between items-center">
-                <h3 className="font-bold text-lg">Filters</h3>
-                <button onClick={() => setIsMobileFiltersOpen(false)} className="text-gray-500 text-2xl">✕</button>
-              </div>
-              <ProductFilters
-                categories={categories}
-                selectedCategory={filters.category}
-                onCategoryChange={handleCategoryChange}
-                onPriceChange={handlePriceChange}
-                onRatingChange={handleRatingChange}
-                onAvailabilityChange={handleAvailabilityChange}
-                onClearFilters={clearAllFilters}
-                isMobile
-              />
-            </div>
-          </div>
-        )}
+    <div className="container-custom py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Shop</span>
+        <h1 className="font-display text-3xl md:text-4xl text-[var(--color-text-primary)] mt-2">All Products</h1>
       </div>
-    </MainLayout>
+
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Sidebar Filters - Desktop */}
+        <aside className="hidden lg:block w-64 flex-shrink-0">
+          <div className="sticky top-24 bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-xl)] p-6 shadow-[var(--shadow-sm)]">
+            <ProductFilters
+              categories={categories}
+              selectedCategory={filters.category}
+              onCategoryChange={handleCategoryChange}
+              onPriceChange={handlePriceChange}
+              onRatingChange={handleRatingChange}
+              onAvailabilityChange={handleAvailabilityChange}
+              onClearFilters={clearAllFilters}
+            />
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="flex-1">
+          {/* Toolbar */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => setIsMobileFiltersOpen(true)} className="lg:hidden">
+                Filters
+              </Button>
+              <span className="font-ui text-sm text-[var(--color-text-secondary)]">
+                {(pagination as any).total_count ?? products.length} products
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <ProductSort options={SORT_OPTIONS} value={filters.sort_by} onChange={handleSortChange} />
+            </div>
+          </div>
+
+          {/* Products Grid */}
+          <ProductGrid
+            products={products}
+            isLoading={isLoading}
+            onAddToCart={handleAddToCart}
+            onAddToWishlist={handleToggleWishlist}
+            wishlistIds={wishlistItems.map((i: any) => i.product.id)}
+          />
+
+          {/* Pagination */}
+          {pagination.total_pages > 1 && (
+            <div className="mt-8">
+              <Pagination
+                currentPage={pagination.current_page}
+                totalPages={pagination.total_pages}
+                onPageChange={(page) => handlePageChange(page)}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Filters Drawer */}
+      {isMobileFiltersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setIsMobileFiltersOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-80 bg-[var(--color-bg-surface)] shadow-[var(--shadow-xl)] overflow-y-auto">
+            <div className="p-4 border-b border-[var(--color-border-light)] flex justify-between items-center">
+              <h3 className="font-ui text-sm font-bold uppercase tracking-[0.08em] text-[var(--color-text-primary)]">Filters</h3>
+              <button onClick={() => setIsMobileFiltersOpen(false)} className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <ProductFilters
+              categories={categories}
+              selectedCategory={filters.category}
+              onCategoryChange={(id) => { handleCategoryChange(id); }}
+              onPriceChange={handlePriceChange}
+              onRatingChange={handleRatingChange}
+              onAvailabilityChange={handleAvailabilityChange}
+              onClearFilters={() => { clearAllFilters(); }}
+              isMobile
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 };

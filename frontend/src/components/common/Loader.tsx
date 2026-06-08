@@ -19,7 +19,7 @@ export const Loader: React.FC<LoaderProps> = ({
 
   const spinner = (
     <div
-      className={`animate-spin rounded-full border-t-[#2b2350] border-r-transparent border-b-[#ff902b] border-l-transparent ${sizeClasses[size]} ${className}`}
+      className={`animate-spin rounded-full border-t-[var(--color-gold-400)] border-r-transparent border-b-[var(--color-gold-200)] border-l-transparent ${sizeClasses[size]} ${className}`}
       role="status"
       aria-label="Loading"
     />
@@ -27,7 +27,7 @@ export const Loader: React.FC<LoaderProps> = ({
 
   if (fullPage) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 dark:bg-slate-950/70 backdrop-blur-xs">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg-base)]/80 backdrop-blur-sm">
         {spinner}
       </div>
     );

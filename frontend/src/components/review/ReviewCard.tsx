@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ThumbsUp, Flag, MessageCircle } from 'lucide-react';
+import React from 'react';
+import { ThumbsUp, Flag } from 'lucide-react';
 import type { Review } from '../../types';
-import { RatingStars } from './RatingStars';
-import { formatDate, getRelativeTime, truncateText } from '../../utils';
+import { RatingStars } from '../review/RatingStars';
+import { getRelativeTime } from '../../utils';
 
 interface ReviewCardProps {
   review: Review;
@@ -11,109 +11,54 @@ interface ReviewCardProps {
 }
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onHelpful, onReport }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = React.useState(false);
   const hasLongComment = review.comment.length > 300;
 
   return (
-    <div className="border-b border-gray-100 py-6 last:border-0">
-      {/* Review Header */}
-      <div className="flex items-start justify-between">
+    <div className="py-6 border-b border-[var(--color-border-light)] last:border-0">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
-            {review.user_avatar ? (
-              <img src={review.user_avatar} alt={review.user_name} className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <span className="text-primary-600 font-semibold">
-                {review.user_name.charAt(0).toUpperCase()}
-              </span>
-            )}
+          <div className="w-10 h-10 rounded-full bg-[var(--color-bg-muted)] flex items-center justify-center">
+            <span className="font-ui text-sm font-bold text-[var(--color-text-secondary)]">
+              {review.user_name.charAt(0).toUpperCase()}
+            </span>
           </div>
-
           <div>
-            <p className="font-semibold text-gray-800">{review.user_name}</p>
+            <p className="font-ui text-sm font-medium text-[var(--color-text-primary)]">{review.user_name}</p>
             <div className="flex items-center gap-2 mt-1">
               <RatingStars rating={review.rating} size="sm" />
               {review.is_verified_purchase && (
-                <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                  Verified Purchase
-                </span>
+                <span className="font-ui text-[10px] text-[var(--color-success-text)] bg-[var(--color-success-bg)] px-2 py-0.5 rounded-full border border-[var(--color-success-border)]">Verified</span>
               )}
             </div>
           </div>
         </div>
-
-        <div className="text-right">
-          <p className="text-xs text-gray-400" title={formatDate(review.created_at)}>
-            {getRelativeTime(review.created_at)}
-          </p>
-        </div>
+        <p className="font-ui text-[11px] text-[var(--color-text-tertiary)]">{getRelativeTime(review.created_at)}</p>
       </div>
 
-      {/* Review Title */}
-      <h4 className="font-semibold text-gray-800 mt-3">{review.title}</h4>
-
-      {/* Review Comment */}
-      <p className="text-gray-600 mt-2 leading-relaxed">
-        {isExpanded ? review.comment : truncateText(review.comment, 300)}
+      <h4 className="font-ui text-sm font-medium text-[var(--color-text-primary)] mt-3">{review.title}</h4>
+      <p className="font-ui text-sm text-[var(--color-text-secondary)] mt-2 leading-relaxed">
+        {isExpanded ? review.comment : review.comment.slice(0, 300)}
         {hasLongComment && (
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-primary-600 hover:text-primary-700 ml-2 text-sm"
-          >
+          <button onClick={() => setIsExpanded(!isExpanded)} className="ml-2 text-[var(--color-text-accent)] hover:underline">
             {isExpanded ? 'Show less' : 'Read more'}
           </button>
         )}
       </p>
 
-      {/* Review Images */}
-      {review.images && review.images.length > 0 && (
-        <div className="flex gap-2 mt-3">
-          {review.images.slice(0, 3).map((image, index) => (
-            <img
-              key={index}
-              src={image}
-              alt={`Review image ${index + 1}`}
-              className="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80 transition"
-            />
-          ))}
-          {review.images.length > 3 && (
-            <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-sm">
-              +{review.images.length - 3}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Admin Response */}
       {review.admin_response && (
-        <div className="mt-3 bg-gray-50 rounded-lg p-3">
-          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-            <MessageCircle className="w-4 h-4" />
-            <span>Store Owner Response</span>
-          </div>
-          <p className="text-sm text-gray-600">{review.admin_response}</p>
-          {review.admin_response_at && (
-            <p className="text-xs text-gray-400 mt-1">{formatDate(review.admin_response_at)}</p>
-          )}
+        <div className="mt-3 p-3 bg-[var(--color-bg-muted)] rounded-[var(--radius-md)]">
+          <p className="font-ui text-[11px] uppercase tracking-wider text-[var(--color-text-tertiary)]">Store Response</p>
+          <p className="font-ui text-sm text-[var(--color-text-secondary)] mt-1">{review.admin_response}</p>
         </div>
       )}
 
-      {/* Helpful Buttons */}
       <div className="flex items-center gap-4 mt-4">
-        <button
-          onClick={() => onHelpful?.(review.id, true)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-600 transition"
-        >
-          <ThumbsUp className="w-4 h-4" />
-          <span>Helpful ({review.helpful_count})</span>
+        <button onClick={() => onHelpful?.(review.id, true)} className="flex items-center gap-1.5 font-ui text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-accent)] transition-colors">
+          <ThumbsUp className="w-4 h-4" /> Helpful ({review.helpful_count})
         </button>
-        <button
-          onClick={() => onReport?.(review.id)}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-600 transition"
-        >
-          <Flag className="w-4 h-4" />
-          <span>Report</span>
+        <button onClick={() => onReport?.(review.id)} className="flex items-center gap-1.5 font-ui text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-danger-text)] transition-colors">
+          <Flag className="w-4 h-4" /> Report
         </button>
       </div>
     </div>

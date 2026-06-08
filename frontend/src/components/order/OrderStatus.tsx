@@ -1,34 +1,17 @@
 import React from 'react';
-import { formatDate } from '../../utils';
-import { ORDER_STATUS, PAYMENT_STATUS } from '../../utils/constants';
-import type { Order } from '../../types';
 
-interface OrderStatusProps {
-  order: Order;
-}
-
-export const OrderStatus: React.FC<OrderStatusProps> = ({ order }) => {
-  const status = ORDER_STATUS[order.status as keyof typeof ORDER_STATUS];
-  const payment = PAYMENT_STATUS[order.payment_status as keyof typeof PAYMENT_STATUS];
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <div className="space-y-2">
-        <p className="text-sm text-gray-500">Order Status</p>
-        <p className="text-lg font-semibold capitalize">{status?.label || order.status}</p>
-      </div>
-      <div className="space-y-2">
-        <p className="text-sm text-gray-500">Payment Status</p>
-        <p className="text-lg font-semibold capitalize">{payment?.label || order.payment_status}</p>
-      </div>
-      <div className="space-y-2">
-        <p className="text-sm text-gray-500">Placed At</p>
-        <p className="text-lg font-semibold">{formatDate(order.placed_at)}</p>
-      </div>
-      <div className="space-y-2">
-        <p className="text-sm text-gray-500">Total</p>
-        <p className="text-lg font-semibold">${order.total_amount.toFixed(2)}</p>
-      </div>
-    </div>
-  );
+const statusStyles: Record<string, string> = {
+  pending: 'bg-[var(--color-warning-bg)] text-[var(--color-warning-text)] border border-[var(--color-warning-border)]',
+  processing: 'bg-[var(--color-info-bg)] text-[var(--color-info-text)] border border-[var(--color-info-border)]',
+  confirmed: 'bg-[var(--color-info-bg)] text-[var(--color-info-text)] border border-[var(--color-info-border)]',
+  shipped: 'bg-[#EFF8FF] text-[#1E6FA8] border-[#B3D9F5]',
+  delivered: 'bg-[var(--color-success-bg)] text-[var(--color-success-text)] border border-[var(--color-success-border)]',
+  cancelled: 'bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border border-[var(--color-danger-border)]',
+  refunded: 'bg-[#F5F0FF] text-[#5B21B6] border-[#C4B5FD]',
 };
+
+export const OrderStatusBadge: React.FC<{ status: string }> = ({ status }) => (
+  <span className={`inline-flex items-center px-3 py-1 rounded-full font-ui text-[11px] font-medium tracking-wider ${statusStyles[status] || statusStyles.pending}`}>
+    {status.toUpperCase()}
+  </span>
+);

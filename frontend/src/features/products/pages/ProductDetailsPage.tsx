@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { MainLayout } from '../../../layouts/MainLayout';
 import { useProductDetails } from '../hooks/useProductDetails';
 import { useAuth } from '../../auth/hooks/useAuth';
 import { useWishlist } from '../../wishlist';
@@ -15,6 +14,7 @@ import { ReviewList } from '../../reviews/components/ReviewList';
 import { ReviewStats } from '../../reviews/components/ReviewStats';
 import { ROUTES } from '../../../utils/constants';
 import { formatPrice, calculateDiscountPercentage } from '../../../utils';
+import { Button } from '../../../components/common/Button';
 
 export const ProductDetailsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,12 +22,12 @@ export const ProductDetailsPage: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const { getWishlist, addItem, removeItem, isInWishlist } = useWishlist();
   const { addItemToCart } = useCart();
-  const [reviewPage] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>('');
+  const [quantity, setQuantity] = useState(1);
   const [createReview, { isLoading: isSubmittingReview }] = useCreateReviewMutation();
 
   const { data: reviewsData } = useGetProductReviewsQuery(
-    { productId: product?.id || '', page: reviewPage },
+    { productId: product?.id || '', page: 1 },
     { skip: !product?.id }
   );
   const { data: reviewStats } = useGetReviewStatsQuery(product?.id || '', {
@@ -35,263 +35,194 @@ export const ProductDetailsPage: React.FC = () => {
   });
 
   useEffect(() => {
-    if (slug) {
-      getProduct(slug);
-    }
-
-    return () => {
-      clearProduct();
-    };
+    if (slug) getProduct(slug);
+    return () => clearProduct();
   }, [slug, getProduct, clearProduct]);
 
   useEffect(() => {
-    if (product?.images?.length) {
-      setSelectedImage(product.images[0]);
-    }
+    if (product?.images?.length) setSelectedImage(product.images[0]);
   }, [product]);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      getWishlist();
-    }
+    if (isAuthenticated) getWishlist();
   }, [getWishlist, isAuthenticated]);
 
   const handleAddToCart = () => {
-    if (product) {
-      addItemToCart({ product_id: product.id, quantity: 1 });
-    }
+    if (product) addItemToCart({ product_id: product.id, quantity });
   };
 
   const handleToggleWishlist = () => {
     if (!product) return;
-    if (isInWishlist(product.id)) {
-      removeItem(product.id);
-    } else {
-      addItem(product.id);
-    }
+    isInWishlist(product.id) ? removeItem(product.id) : addItem(product.id);
   };
 
-  const handleReviewSubmit = async (data: {
-    rating: number;
-    title: string;
-    comment: string;
-  }) => {
+  const handleReviewSubmit = async (data: { rating: number; title: string; comment: string }) => {
     if (!product) return;
     await createReview({ product: product.id, rating: data.rating, title: data.title, comment: data.comment });
   };
-
-  const reviewItems = reviewsData?.reviews || [];
-  const isProductInWishlist = product ? isInWishlist(product.id) : false;
 
   const discountPercentage = useMemo(() => {
     if (!product) return 0;
     return calculateDiscountPercentage(product.price, product.final_price);
   }, [product]);
 
+  const images = product?.images?.length ? product.images : product?.image_url ? [product.image_url] : [];
+
   if (isLoading) {
     return (
-      <MainLayout>
-        <div className="container-custom py-12">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-gray-200 rounded w-1/3" />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="h-96 bg-gray-200 rounded" />
-              <div className="space-y-4">
-                <div className="h-8 bg-gray-200 rounded" />
-                <div className="h-8 bg-gray-200 rounded" />
-                <div className="h-8 bg-gray-200 rounded" />
-                <div className="h-32 bg-gray-200 rounded" />
-              </div>
+      <div className="container-custom py-12">
+        <div className="animate-pulse">
+          <div className="h-6 bg-[var(--color-bg-muted)] rounded w-1/4 mb-8" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="aspect-[4/5] skeleton rounded-[var(--radius-lg)]" />
+            <div className="space-y-4">
+              <div className="h-8 skeleton w-3/4 rounded" />
+              <div className="h-6 skeleton w-1/3 rounded" />
+              <div className="h-10 skeleton w-1/4 rounded" />
+              <div className="h-32 skeleton w-full rounded" />
             </div>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (error || !product) {
     return (
-      <MainLayout>
-        <div className="container-custom py-12 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-gray-500 mb-6">We couldn't find the product you're looking for.</p>
-          <Link to={ROUTES.PRODUCTS} className="btn-primary">
-            Back to Products
-          </Link>
-        </div>
-      </MainLayout>
+      <div className="container-custom py-12 text-center">
+        <h1 className="font-display text-3xl text-[var(--color-text-primary)] mb-4">Product Not Found</h1>
+        <p className="font-ui text-sm text-[var(--color-text-secondary)] mb-6">We couldn't find the product you're looking for.</p>
+        <Link to={ROUTES.PRODUCTS} className="btn-primary">Back to Products</Link>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="container-custom py-12">
-        <div className="mb-6">
-          <Link to={ROUTES.PRODUCTS} className="text-sm text-primary-600 hover:text-primary-700">
-            ← Back to products
-          </Link>
+    <div className="container-custom py-12">
+      {/* Breadcrumb */}
+      <nav className="mb-6">
+        <ol className="flex items-center gap-2 font-ui text-xs text-[var(--color-text-tertiary)]">
+          <li><Link to={ROUTES.HOME} className="hover:text-[var(--color-text-accent)]">Home</Link></li>
+          <li>/</li>
+          <li><Link to={ROUTES.PRODUCTS} className="hover:text-[var(--color-text-accent)]">Products</Link></li>
+          <li>/</li>
+          <li className="text-[var(--color-gold-600)]">{product.name}</li>
+        </ol>
+      </nav>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        {/* Images */}
+        <div className="space-y-4">
+          <div className="aspect-[4/5] rounded-[var(--radius-lg)] overflow-hidden bg-[var(--color-bg-muted)]">
+            <img src={selectedImage || product.image_url} alt={product.name} className="w-full h-full object-cover" />
+          </div>
+          {images.length > 1 && (
+            <div className="grid grid-cols-4 gap-3">
+              {images.map((image) => (
+                <button key={image} type="button" onClick={() => setSelectedImage(image)} className={`aspect-[4/5] rounded-[var(--radius-md)] overflow-hidden border-2 transition ${selectedImage === image ? 'border-[var(--color-gold-400)]' : 'border-transparent'}`}>
+                  <img src={image} alt={product.name} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr]">
-          <div className="space-y-6">
-            <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
-              <div className="grid gap-4 lg:grid-cols-[1fr_80px]">
-                <div className="space-y-4 p-6">
-                  <div className="overflow-hidden rounded-[32px] bg-gray-100">
-                    <img
-                      src={selectedImage || product.image_url}
-                      alt={product.name}
-                      className="h-full w-full min-h-[420px] object-cover"
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[product.image_url, ...product.images.filter((image) => image !== product.image_url)].slice(0, 3).map((image) => (
-                      <button
-                        key={image}
-                        type="button"
-                        onClick={() => setSelectedImage(image)}
-                        className={`overflow-hidden rounded-3xl border p-1 transition ${selectedImage === image || (!selectedImage && image === product.image_url)
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 bg-white hover:border-gray-300'
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={product.name}
-                          className="h-24 w-full object-cover rounded-3xl"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                </div>
+        {/* Details */}
+        <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
+          <div>
+            <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">{product.category.name}</span>
+            <h1 className="font-display text-3xl md:text-4xl text-[var(--color-text-primary)] mt-2 leading-tight">{product.name}</h1>
+          </div>
 
-                <div className="hidden lg:block space-y-4 p-6">
-                  <div className="rounded-3xl border border-gray-200 bg-primary-50 p-5 text-sm font-semibold text-primary-700">
-                    Fast shipping • Secure checkout • Easy returns
-                  </div>
-                  <div className="rounded-3xl border border-gray-200 bg-white p-5">
-                    <p className="text-sm font-semibold text-gray-900">Product Guarantees</p>
-                    <ul className="mt-4 space-y-3 text-sm text-gray-600">
-                      <li className="flex items-start gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary-600" />
-                        Quality checked and ready to ship.
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary-600" />
-                        Trusted by customers in {product.category.name}.
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <span className="mt-1 h-2.5 w-2.5 rounded-full bg-primary-600" />
-                        {product.is_available ? 'Available now' : 'Currently unavailable'}.
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <svg className="w-4 h-4 text-[var(--color-gold-400)]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+              <span className="font-ui text-sm font-medium text-[var(--color-text-primary)]">{product.rating.toFixed(1)}</span>
+            </div>
+            <span className="font-ui text-xs text-[var(--color-text-tertiary)]">({product.num_reviews} reviews)</span>
+          </div>
+
+          <div className="flex items-baseline gap-3">
+            <span className="font-ui text-2xl font-medium text-[var(--color-gold-600)]">{formatPrice(product.final_price)}</span>
+            {discountPercentage > 0 && (
+              <>
+                <span className="font-ui text-base text-[var(--color-text-tertiary)] line-through">{formatPrice(product.price)}</span>
+                <span className="font-ui text-xs font-bold text-[var(--color-gold-600)] bg-[var(--color-gold-50)] px-2 py-0.5 rounded-full border border-[var(--color-gold-100)]">-{discountPercentage}%</span>
+              </>
+            )}
+          </div>
+
+          <p className="font-ui text-sm text-[var(--color-text-secondary)] leading-relaxed">{product.description}</p>
+
+          {/* Variants */}
+          {product.variants && product.variants.length > 0 && (
+            <div>
+              <h3 className="font-ui text-xs uppercase tracking-[0.08em] text-[var(--color-text-secondary)] mb-3">Options</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.variants.map((variant) => (
+                  <button key={variant.id} className="px-4 py-2 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] font-ui text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-600)] transition-colors">
+                    {variant.name}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
 
-            <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-              <div className="bg-white rounded-3xl shadow-sm p-6">
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                    <Link
-                      to={ROUTES.CATEGORY(product.category.slug)}
-                      className="hover:text-primary-600"
-                    >
-                      {product.category.name}
-                    </Link>
-                    <span>•</span>
-                    <span>{product.stock_quantity > 0 ? 'In stock' : 'Out of stock'}</span>
-                  </div>
-
-                  <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <span>{product.rating.toFixed(1)} ★</span>
-                    <span>{product.num_reviews} reviews</span>
-                  </div>
-
-                  <div className="flex items-center gap-4 mt-4">
-                    <div>
-                      <p className="text-3xl font-bold text-primary-600">{formatPrice(product.final_price)}</p>
-                      {discountPercentage > 0 && (
-                        <p className="text-sm text-gray-500 line-through">{formatPrice(product.price)}</p>
-                      )}
-                    </div>
-                    {discountPercentage > 0 && (
-                      <span className="rounded-full bg-primary-100 text-primary-700 px-3 py-1 text-sm">
-                        Save {discountPercentage}%
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-gray-600 leading-relaxed">{product.short_description}</p>
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <button
-                      onClick={handleAddToCart}
-                      disabled={product.stock_quantity === 0}
-                      className="btn-primary w-full sm:w-auto"
-                    >
-                      Add to Cart
-                    </button>
-                    <button
-                      onClick={handleToggleWishlist}
-                      className={`w-full sm:w-auto rounded-2xl border px-5 py-3 text-sm font-medium transition ${
-                        isProductInWishlist
-                          ? 'border-red-500 bg-red-50 text-red-700 hover:border-red-600'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      {isProductInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl shadow-sm p-6 space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Product Details</h2>
-                  <p className="mt-3 text-gray-600 leading-relaxed">{product.description}</p>
-                </div>
-
-                <div className="grid gap-4 text-sm text-gray-600 sm:grid-cols-2">
-                  <div className="rounded-3xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-gray-500">SKU</p>
-                    <p className="mt-2 font-semibold text-gray-900">{product.sku}</p>
-                  </div>
-                  <div className="rounded-3xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Stock</p>
-                    <p className="mt-2 font-semibold text-gray-900">{product.stock_quantity > 0 ? 'In stock' : 'Out of stock'}</p>
-                  </div>
-                  <div className="rounded-3xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Category</p>
-                    <Link to={ROUTES.CATEGORY(product.category.slug)} className="mt-2 inline-block font-semibold text-primary-600 hover:text-primary-700">
-                      {product.category.name}
-                    </Link>
-                  </div>
-                  <div className="rounded-3xl bg-gray-50 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Sold</p>
-                    <p className="mt-2 font-semibold text-gray-900">{product.sold_count}</p>
-                  </div>
-                </div>
-              </div>
+          {/* Quantity */}
+          <div>
+            <h3 className="font-ui text-xs uppercase tracking-[0.08em] text-[var(--color-text-secondary)] mb-3">Quantity</h3>
+            <div className="inline-flex items-center border border-[var(--color-border-strong)] rounded-[var(--radius-md)]">
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] transition-colors">−</button>
+              <span className="w-12 text-center font-ui text-sm font-medium text-[var(--color-text-primary)]">{quantity}</span>
+              <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))} className="w-10 h-10 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] transition-colors">+</button>
             </div>
+          </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="bg-white rounded-3xl shadow-sm p-6">
-                {reviewStats && <ReviewStats stats={reviewStats} />}
-                <ReviewList reviews={reviewItems} />
-              </div>
+          {/* Actions */}
+          <div className="flex flex-col gap-3">
+            <Button onClick={handleAddToCart} disabled={product.stock_quantity === 0} className="w-full h-12 text-sm">
+              {product.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+            </Button>
+            {isAuthenticated && (
+              <Button variant="outline" onClick={handleToggleWishlist} className="w-full h-12 text-sm">
+                {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              </Button>
+            )}
+          </div>
 
-              <div className="bg-white rounded-3xl shadow-sm p-6">
-                <h2 className="text-lg font-semibold mb-4">Write a Review</h2>
-                <ReviewForm onSubmit={handleReviewSubmit} isLoading={isSubmittingReview} />
-              </div>
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-[var(--color-border-light)]">
+            <div>
+              <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">SKU</span>
+              <p className="font-ui text-sm text-[var(--color-text-primary)] mt-1">{product.sku}</p>
+            </div>
+            <div>
+              <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Availability</span>
+              <p className={`font-ui text-sm mt-1 ${product.stock_quantity > 0 ? 'text-[var(--color-success-text)]' : 'text-[var(--color-danger-text)]'}`}>
+                {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+              </p>
             </div>
           </div>
         </div>
       </div>
-    </MainLayout>
+
+      {/* Reviews Section */}
+      <div className="mt-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          {reviewStats && <ReviewStats stats={reviewStats} />}
+          <div className="mt-8">
+            <ReviewList reviews={reviewsData?.reviews || []} />
+          </div>
+        </div>
+        <div>
+          {isAuthenticated && (
+            <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-xl)] p-6">
+              <h3 className="font-display text-lg font-bold text-[var(--color-text-primary)] mb-4">Write a Review</h3>
+              <ReviewForm onSubmit={handleReviewSubmit} isLoading={isSubmittingReview} />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };

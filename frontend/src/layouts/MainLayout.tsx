@@ -3,12 +3,12 @@ import { Outlet } from 'react-router-dom';
 import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 
-export const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+export const MainLayout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[var(--color-bg-base)]">
       <Header />
       <main className="flex-1">
-        {children || <Outlet />}
+        <Outlet />
       </main>
       <Footer />
     </div>

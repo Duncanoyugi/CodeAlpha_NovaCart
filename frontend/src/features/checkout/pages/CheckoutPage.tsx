@@ -4,7 +4,6 @@ import { useForm, FormProvider, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { MainLayout } from '../../../layouts/MainLayout';
 import { ShippingForm } from '../components/ShippingForm';
 import { BillingForm } from '../components/BillingForm';
 import { StripePaymentForm } from '../components/StripePaymentForm';
@@ -111,92 +110,90 @@ export const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <MainLayout>
-      <div className="container-custom py-8">
-        <h1 className="text-2xl font-bold mb-8">Checkout</h1>
+    <div className="container-custom py-8">
+      <h1 className="text-2xl font-bold mb-8">Checkout</h1>
 
-        <CheckoutSteps currentStep={currentStep} steps={steps} />
+      <CheckoutSteps currentStep={currentStep} steps={steps} />
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Form Section */}
-          <div className="flex-1">
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              {/* Step 1 & 2: Order Form */}
-              {currentStep < 2 && (
-                <FormProvider {...methods}>
-                  <form id="checkout-form" onSubmit={handleSubmit(() => {})}>
-                    {currentStep === 0 && <ShippingForm />}
-                    {currentStep === 1 && <BillingForm />}
-                  </form>
-                </FormProvider>
-              )}
-
-              {/* Step 3: Payment Form */}
-              {currentStep === 2 && orderId && (
-                <Elements stripe={stripePromise}>
-                  <StripePaymentForm
-                    orderId={orderId}
-                    amount={totalAmount}
-                    onSuccess={handlePaymentSuccess}
-                    onError={handlePaymentError}
-                    onProcessing={setIsProcessingPayment}
-                  />
-                </Elements>
-              )}
-
-              {/* Step 4: Payment Processing */}
-              {currentStep === 3 && (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Processing Payment</h3>
-                  <p className="text-gray-500">Please wait while we confirm your payment...</p>
-                </div>
-              )}
-            </div>
-
-            {/* Navigation Buttons (only for steps 0-1) */}
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Form Section */}
+        <div className="flex-1">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            {/* Step 1 & 2: Order Form */}
             {currentStep < 2 && (
-              <div className="flex justify-between mt-6">
-                {currentStep > 0 && (
-                  <button
-                    type="button"
-                    onClick={handlePreviousStep}
-                    className="btn-secondary"
-                  >
-                    Back
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleNextStep}
-                  disabled={isCreatingOrder}
-                  className="btn-primary ml-auto flex items-center gap-2"
-                >
-                  {isCreatingOrder ? (
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                  ) : currentStep === steps.length - 1 ? (
-                    'Place Order'
-                  ) : (
-                    'Continue'
-                  )}
-                </button>
+              <FormProvider {...methods}>
+                <form id="checkout-form" onSubmit={handleSubmit(() => {})}>
+                  {currentStep === 0 && <ShippingForm />}
+                  {currentStep === 1 && <BillingForm />}
+                </form>
+              </FormProvider>
+            )}
+
+            {/* Step 3: Payment Form */}
+            {currentStep === 2 && orderId && (
+              <Elements stripe={stripePromise}>
+                <StripePaymentForm
+                  orderId={orderId}
+                  amount={totalAmount}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                  onProcessing={setIsProcessingPayment}
+                />
+              </Elements>
+            )}
+
+            {/* Step 4: Payment Processing */}
+            {currentStep === 3 && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Processing Payment</h3>
+                <p className="text-gray-500">Please wait while we confirm your payment...</p>
               </div>
             )}
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:w-96">
-            <CartSummary
-              subtotal={subtotal}
-              shippingCost={shippingCost}
-              taxAmount={taxAmount}
-              totalAmount={totalAmount}
-              itemCount={totalItems}
-              isCheckout
-            />
-          </div>
+          {/* Navigation Buttons (only for steps 0-1) */}
+          {currentStep < 2 && (
+            <div className="flex justify-between mt-6">
+              {currentStep > 0 && (
+                <button
+                  type="button"
+                  onClick={handlePreviousStep}
+                  className="btn-secondary"
+                >
+                  Back
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleNextStep}
+                disabled={isCreatingOrder}
+                className="btn-primary ml-auto flex items-center gap-2"
+              >
+                {isCreatingOrder ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                ) : currentStep === steps.length - 1 ? (
+                  'Place Order'
+                ) : (
+                  'Continue'
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Order Summary */}
+        <div className="lg:w-96">
+          <CartSummary
+            subtotal={subtotal}
+            shippingCost={shippingCost}
+            taxAmount={taxAmount}
+            totalAmount={totalAmount}
+            itemCount={totalItems}
+            isCheckout
+          />
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 };

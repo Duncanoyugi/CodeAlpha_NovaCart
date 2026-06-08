@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useForm, FormProvider, type Resolver } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Star } from 'lucide-react';
 import { useGetMyOrdersQuery } from '../../orders/api/orderApi';
@@ -8,6 +8,9 @@ import { useCreateReviewMutation } from '../api/reviewApi';
 import { reviewSchema } from '../schemas/reviewSchema';
 import type { ReviewFormData } from '../schemas/reviewSchema';
 import { ROUTES } from '../../../utils/constants';
+import { Button } from '../../../components/common/Button';
+import { Input } from '../../../components/common/Input';
+import { Rating } from '../../../components/common/Rating';
 import toast from 'react-hot-toast';
 
 export const WriteReviewPage: React.FC = () => {
@@ -15,20 +18,16 @@ export const WriteReviewPage: React.FC = () => {
   const navigate = useNavigate();
   const [createReview, { isLoading }] = useCreateReviewMutation();
   const { data: ordersData } = useGetMyOrdersQuery({});
-  
+
   const methods = useForm<ReviewFormData>({
-    resolver: zodResolver(reviewSchema) as Resolver<ReviewFormData>,
-    defaultValues: {
-      rating: 0,
-      title: '',
-      comment: '',
-    },
+    resolver: zodResolver(reviewSchema),
+    defaultValues: { rating: 0, title: '', comment: '' },
   });
 
   const { handleSubmit, register, watch, setValue, formState: { errors } } = methods;
   const rating = watch('rating');
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!productId || !ordersData?.orders?.length) return;
     const hasPurchased = ordersData.orders.some(
       (order: any) => order.items?.some((item: any) => item.product_id === productId)
@@ -42,7 +41,7 @@ export const WriteReviewPage: React.FC = () => {
     if (!productId) return;
     try {
       await createReview({ ...data, product: productId }).unwrap();
-      toast.success('Review submitted successfully! It will be visible after admin approval.');
+      toast.success('Review submitted successfully!');
       navigate(ROUTES.PRODUCT_DETAIL(productId.replace(/:/g, '')));
     } catch (error) {
       toast.error('Failed to submit review');
@@ -50,66 +49,26 @@ export const WriteReviewPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <h1 className="text-2xl font-bold mb-6">Write a Review</h1>
-      
+    <div className="max-w-2xl mx-auto py-12 px-4">
+      <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Reviews</span>
+      <h1 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">Write a Review</h1>
+
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Rating</label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setValue('rating', star)}
-                  className="focus:outline-none"
-                >
-                  <Star
-                    className={`w-8 h-8 ${
-                      star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-            {errors.rating && (
-              <p className="mt-1 text-sm text-red-600">{errors.rating.message}</p>
-            )}
+            <label className="block font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-secondary)] mb-3">Rating</label>
+            <Rating value={rating} onChange={(val) => setValue('rating', val)} size="lg" />
+            {errors.rating && <p className="mt-1 text-xs text-[var(--color-danger-text)]">{errors.rating.message}</p>}
           </div>
 
+          <Input label="Title" error={errors.title?.message} {...register('title')} placeholder="Great product!" />
           <div>
-            <label className="block text-sm font-medium mb-2">Title</label>
-            <input
-              type="text"
-              {...register('title')}
-              className="input-field"
-              placeholder="Great product!"
-            />
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
-            )}
+            <label className="block font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-secondary)] mb-2">Review</label>
+            <textarea {...register('comment')} className="w-full rounded-[var(--radius-md)] border border-[var(--color-border-strong)] bg-[var(--color-bg-raised)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-border-focus)] focus:outline-none min-h-[120px]" placeholder="Tell others what you think..." />
+            {errors.comment && <p className="mt-1 text-xs text-[var(--color-danger-text)]">{errors.comment.message}</p>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Review</label>
-            <textarea
-              {...register('comment')}
-              className="input-field min-h-[120px]"
-              placeholder="Tell others what you think about this product..."
-            />
-            {errors.comment && (
-              <p className="mt-1 text-sm text-red-600">{errors.comment.message}</p>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn-primary"
-          >
-            {isLoading ? 'Submitting...' : 'Submit Review'}
-          </button>
+          <Button type="submit" isLoading={isLoading} className="w-full">{isLoading ? 'Submitting...' : 'Submit Review'}</Button>
         </form>
       </FormProvider>
     </div>

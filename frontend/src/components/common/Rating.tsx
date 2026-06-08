@@ -51,7 +51,6 @@ export const Rating: React.FC<RatingProps> = ({
     >
       {[...Array(max)].map((_, index) => {
         const starRatingValue = index + 1;
-        // Determine fill state
         const isFilled = hoverValue !== null
           ? starRatingValue <= hoverValue
           : starRatingValue <= value;
@@ -65,8 +64,8 @@ export const Rating: React.FC<RatingProps> = ({
             onMouseEnter={() => handleMouseEnter(starRatingValue)}
             className={`transition-colors duration-150 focus:outline-none ${
               readonly
-                ? 'cursor-default text-yellow-400'
-                : 'cursor-pointer hover:scale-110 active:scale-95 text-yellow-400 focus:ring-1 focus:ring-yellow-400 focus:ring-offset-1 rounded-full'
+                ? 'cursor-default text-[var(--color-gold-400)]'
+                : 'cursor-pointer hover:scale-110 active:scale-95 text-[var(--color-gold-400)] focus:ring-1 focus:ring-[var(--color-gold-400)] focus:ring-offset-1 rounded-full'
             }`}
           >
             <Star

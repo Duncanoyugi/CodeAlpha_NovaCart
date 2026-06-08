@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Truck, CreditCard, Package } from 'lucide-react';
+import { Package, Truck, CreditCard, Check } from 'lucide-react';
 
 interface CheckoutStepsProps {
   currentStep: number;
@@ -10,54 +10,35 @@ export const CheckoutSteps: React.FC<CheckoutStepsProps> = ({ currentStep, steps
   const icons = [Package, Truck, CreditCard];
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between">
+    <div className="mb-10">
+      <div className="flex items-center">
         {steps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
           const Icon = icons[index];
 
           return (
-            <div key={step} className="flex-1 text-center">
-              <div className="relative">
-                {/* Connector Line */}
-                {index < steps.length - 1 && (
-                  <div
-                    className={`absolute top-5 left-1/2 w-full h-0.5 ${
-                      isCompleted ? 'bg-primary-500' : 'bg-gray-200'
-                    }`}
-                    style={{ transform: 'translateX(0%)' }}
-                  />
-                )}
-
-                {/* Step Circle */}
-                <div
-                  className={`
-                    relative z-10 w-10 h-10 mx-auto rounded-full flex items-center justify-center
-                    transition-all duration-300
-                    ${isCompleted ? 'bg-primary-500 text-white' : ''}
-                    ${isCurrent ? 'bg-primary-100 border-2 border-primary-500 text-primary-500' : ''}
-                    ${!isCompleted && !isCurrent ? 'bg-gray-100 text-gray-400' : ''}
-                  `}
-                >
-                  {isCompleted ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    Icon && <Icon className="w-5 h-5" />
-                  )}
+            <React.Fragment key={step}>
+              <div className="flex flex-col items-center">
+                <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                  isCompleted ? 'bg-[var(--color-gold-400)] border-[var(--color-gold-400)] text-[var(--color-gold-800)]' :
+                  isCurrent ? 'border-[var(--color-gold-400)] text-[var(--color-gold-400)] bg-[var(--color-gold-50)]' :
+                  'border-[var(--color-border-medium)] text-[var(--color-text-tertiary)] bg-[var(--color-bg-surface)]'
+                }`}>
+                  {isCompleted ? <Check className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
                 </div>
-
-                {/* Step Label */}
-                <p
-                  className={`
-                    mt-2 text-sm font-medium
-                    ${isCompleted || isCurrent ? 'text-primary-600' : 'text-gray-400'}
-                  `}
-                >
+                <span className={`mt-2 font-ui text-[11px] uppercase tracking-[0.08em] ${
+                  isCompleted || isCurrent ? 'text-[var(--color-gold-600)] font-bold' : 'text-[var(--color-text-tertiary)]'
+                }`}>
                   {step}
-                </p>
+                </span>
               </div>
-            </div>
+              {index < steps.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-2 mt-[-20px] transition-colors duration-300 ${
+                  index < currentStep ? 'bg-[var(--color-gold-400)]' : 'bg-[var(--color-border-light)]'
+                }`} />
+              )}
+            </React.Fragment>
           );
         })}
       </div>
