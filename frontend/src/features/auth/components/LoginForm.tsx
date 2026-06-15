@@ -22,9 +22,15 @@ export const LoginForm: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await login(data).unwrap();
-      const from = (location.state as any)?.from?.pathname || ROUTES.HOME;
-      navigate(from, { replace: true });
+      const result = await login(data).unwrap();
+      const from = (location.state as any)?.from?.pathname;
+      if (from) {
+        navigate(from, { replace: true });
+      } else if (result?.user?.role === 'ADMIN' || result?.user?.role === 'STAFF') {
+        navigate(ROUTES.ADMIN_DASHBOARD, { replace: true });
+      } else {
+        navigate(ROUTES.HOME, { replace: true });
+      }
     } catch (e) { /* handled by toast */ }
   };
 

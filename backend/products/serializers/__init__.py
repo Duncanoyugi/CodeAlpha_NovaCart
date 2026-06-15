@@ -1,5 +1,6 @@
 # backend/products/serializers/__init__.py
 from rest_framework import serializers
+from rest_framework.fields import FloatField
 from django.utils.text import slugify
 from ..models.base import Category, Product, ProductVariant
 
@@ -38,7 +39,11 @@ class ProductListSerializer(serializers.ModelSerializer):
     """Serializer for product listing (minimal fields)"""
     category_name = serializers.CharField(source='category.name', read_only=True)
     category_slug = serializers.CharField(source='category.slug', read_only=True)
-    final_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    final_price = serializers.FloatField(read_only=True)
+    discount_percentage = serializers.FloatField(read_only=True)
+    rating = serializers.FloatField(read_only=True)
+    price = serializers.FloatField(read_only=True)
+    compare_price = serializers.FloatField(read_only=True)
     
     class Meta:
         model = Product
@@ -51,9 +56,14 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for single product (full details)"""
     category_details = CategorySerializer(source='category', read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
-    final_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    final_price = serializers.FloatField(read_only=True)
     in_stock = serializers.BooleanField(read_only=True)
-    profit_margin = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    profit_margin = serializers.FloatField(read_only=True)
+    discount_percentage = serializers.FloatField(read_only=True)
+    rating = serializers.FloatField(read_only=True)
+    price = serializers.FloatField(read_only=True)
+    compare_price = serializers.FloatField(read_only=True)
+    cost_per_item = serializers.FloatField(read_only=True)
     
     class Meta:
         model = Product

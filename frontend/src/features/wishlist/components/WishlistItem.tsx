@@ -30,7 +30,7 @@ export const WishlistItem: React.FC<WishlistItemProps> = ({ item, onRemove, onAd
           </Link>
           <p className="text-sm text-gray-500 mt-2">{item.product.category.name}</p>
           {item.product.rating !== undefined && (
-            <p className="mt-3 text-sm text-gray-600">Rating: <span className="font-semibold text-gray-900">{item.product.rating.toFixed(1)} ★</span></p>
+            <p className="mt-3 text-sm text-gray-600">Rating: <span className="font-semibold text-gray-900">{Number(item.product.rating).toFixed(1)} ★</span></p>
           )}
           <p className="mt-3 text-lg font-semibold text-primary-600">{formatPrice(item.product.final_price)}</p>
         </div>

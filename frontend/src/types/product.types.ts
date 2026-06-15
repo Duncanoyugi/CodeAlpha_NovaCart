@@ -74,7 +74,17 @@ export interface ProductFilters {
 }
 
 export interface ProductListResponse {
-  data: Product[];
+  data: {
+    products: Product[];
+    pagination: {
+      total_count: number;
+      total_pages: number;
+      current_page: number;
+      page_size: number;
+      has_next: boolean;
+      has_previous: boolean;
+    };
+  };
   pagination: {
     total_count: number;
     total_pages: number;

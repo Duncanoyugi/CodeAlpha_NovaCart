@@ -1,0 +1,630 @@
+##################################################
+# NovaCart - Admin Product Population
+# Run this after creating categories
+# Replace {category_uuid} with actual category IDs from response above
+##################################################
+
+@baseUrl = http://127.0.0.1:8000/api/products
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgxNTI1NDY2LCJpYXQiOjE3ODE1MjQ1NjYsImp0aSI6Ijk1M2IzZmRkMWI4YTRhMmY5Y2E5YWExZTg4ZTBmMTc0IiwidXNlcl9pZCI6ImE4NWY0YzAyLTgwYTYtNDM4Zi04ZjNiLWM5ZjBhNjU4OTFiNSIsImVtYWlsIjoiYWRtaW5Abm92YWNhcnQuY29tIiwicm9sZSI6IkFETUlOIn0.FfDgaYObbM3w5M99KNmuy12Kumma4PjlYZZhuv1uIkM
+##################################################
+# ELECTRONICS PRODUCTS
+##################################################
+
+### iPhone 15 Pro
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "iPhone 15 Pro",
+    "slug": "iphone-15-pro",
+    "short_description": "The most powerful iPhone yet with titanium design",
+    "description": "Experience the future with iPhone 15 Pro featuring the A17 Pro chip, lightweight titanium design, and an advanced camera system that lets you shoot in ProRes and Spatial Video.",
+    "price": 999.00,
+    "compare_price": 1099.00,
+    "category": "8b267184-7aa6-400c-8ecb-d134a05f3815",
+    "image_url": "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=500",
+        "https://images.unsplash.com/photo-1695048133619-33b2b7e0c124?w=500"
+    ],
+    "sku": "APL-IP15P-128",
+    "tags": ["apple", "iphone", "smartphone", "premium"],
+    "stock_quantity": 50,
+    "discount_percentage": 5,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": true
+}
+
+### Samsung Galaxy S24 Ultra
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Samsung Galaxy S24 Ultra",
+    "slug": "samsung-galaxy-s24-ultra",
+    "short_description": "Galaxy AI is here with pro-grade camera",
+    "description": "Meet Galaxy S24 Ultra with built-in AI intelligence, pro-grade camera system with 200MP sensor, and S Pen included.",
+    "price": 1199.99,
+    "compare_price": 1299.99,
+    "category": "8b267184-7aa6-400c-8ecb-d134a05f3815",
+    "image_url": "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=500"
+    ],
+    "sku": "SMG-S24U-256",
+    "tags": ["samsung", "android", "smartphone", "ai"],
+    "stock_quantity": 35,
+    "discount_percentage": 8,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": true
+}
+
+### MacBook Pro M3
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "MacBook Pro 14-inch M3",
+    "slug": "macbook-pro-m3",
+    "short_description": "Supercharged by the M3 chip",
+    "description": "The MacBook Pro with M3 chip delivers exceptional performance for demanding workflows, whether you're editing video, writing code, or creating music.",
+    "price": 1599.00,
+    "compare_price": 1799.00,
+    "category": "8b267184-7aa6-400c-8ecb-d134a05f3815",
+    "image_url": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500"
+    ],
+    "sku": "APL-MBP14-M3",
+    "tags": ["apple", "laptop", "macbook", "m3"],
+    "stock_quantity": 25,
+    "discount_percentage": 10,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": false,
+    "is_new_arrival": true
+}
+
+### Sony WH-1000XM5 Headphones
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Sony WH-1000XM5 Noise Cancelling Headphones",
+    "slug": "sony-wh-1000xm5",
+    "short_description": "Industry-leading noise cancellation",
+    "description": "Experience unparalleled silence with Sony's best noise-cancelling headphones. 30-hour battery life and exceptional sound quality.",
+    "price": 399.99,
+    "compare_price": 449.99,
+    "category": "8b267184-7aa6-400c-8ecb-d134a05f3815",
+    "image_url": "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=500"
+    ],
+    "sku": "SNY-WH1000XM5",
+    "tags": ["headphones", "audio", "sony", "wireless"],
+    "stock_quantity": 100,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Apple Watch Series 9
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Apple Watch Series 9",
+    "slug": "apple-watch-series-9",
+    "short_description": "Smarter. Brighter. Mightier.",
+    "description": "The Apple Watch Series 9 features the new S9 chip, brighter display, and double-tap gesture. Track your health and stay connected.",
+    "price": 399.00,
+    "compare_price": 429.00,
+    "category": "8b267184-7aa6-400c-8ecb-d134a05f3815",
+    "image_url": "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500"
+    ],
+    "sku": "APL-AW9-41",
+    "tags": ["apple", "smartwatch", "fitness", "wearable"],
+    "stock_quantity": 75,
+    "discount_percentage": 5,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": true
+}
+
+### iPad Air 5th Gen
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "iPad Air 5th Generation",
+    "slug": "ipad-air-5th-gen",
+    "short_description": "Powerful. Colorful. Wonderful.",
+    "description": "iPad Air with M1 chip delivers incredible performance and all-day battery life in a portable design.",
+    "price": 599.00,
+    "compare_price": 649.00,
+    "category": "8b267184-7aa6-400c-8ecb-d134a05f3815",
+    "image_url": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500"
+    ],
+    "sku": "APL-IPA5-64",
+    "tags": ["apple", "ipad", "tablet"],
+    "stock_quantity": 40,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": false,
+    "is_new_arrival": false
+}
+
+##################################################
+# FASHION PRODUCTS
+##################################################
+
+### Nike Air Max 270
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Nike Air Max 270",
+    "slug": "nike-air-max-270",
+    "short_description": "Iconic style meets modern comfort",
+    "description": "The Air Max 270 features Nike's largest heel Air unit for maximum cushioning and a sleek, modern silhouette.",
+    "price": 150.00,
+    "compare_price": 170.00,
+    "category": "2d6dc08d-0b58-42a6-89a6-a2692ab7f550",
+    "image_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500"
+    ],
+    "sku": "NKE-AM270-BLK",
+    "tags": ["shoes", "nike", "sneakers", "sportswear"],
+    "stock_quantity": 120,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Levi's 501 Original Jeans
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Levi's 501 Original Fit Jeans",
+    "slug": "levis-501-original-jeans",
+    "short_description": "The iconic straight-fit jeans",
+    "description": "The Levi's 501 Original Fit Jeans have been a cultural icon for generations. Made from durable denim with a classic straight leg.",
+    "price": 89.99,
+    "compare_price": 98.00,
+    "category": "2d6dc08d-0b58-42a6-89a6-a2692ab7f550",
+    "image_url": "https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=500"
+    ],
+    "sku": "LEV-501-BLU",
+    "tags": ["jeans", "denim", "levis", "menswear"],
+    "stock_quantity": 200,
+    "discount_percentage": 8,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Adidas Ultraboost 22
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Adidas Ultraboost 22 Running Shoes",
+    "slug": "adidas-ultraboost-22",
+    "short_description": "Energy return with every step",
+    "description": "The Ultraboost 22 delivers responsive energy return and exceptional comfort for your daily runs.",
+    "price": 180.00,
+    "compare_price": 200.00,
+    "category": "2d6dc08d-0b58-42a6-89a6-a2692ab7f550",
+    "image_url": "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=500"
+    ],
+    "sku": "ADD-UB22-WHT",
+    "tags": ["shoes", "adidas", "running", "sportswear"],
+    "stock_quantity": 85,
+    "discount_percentage": 10,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": true,
+    "is_new_arrival": true
+}
+
+### Michael Kors Jet Set Tote
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Michael Kors Jet Set Travel Tote",
+    "slug": "michael-kors-jet-set-tote",
+    "short_description": "Stylish and spacious travel bag",
+    "description": "The Jet Set Travel Tote is perfect for daily commutes or weekend getaways. Features multiple pockets and durable Saffiano leather.",
+    "price": 248.00,
+    "compare_price": 328.00,
+    "category": "2d6dc08d-0b58-42a6-89a6-a2692ab7f550",
+    "image_url": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=500"
+    ],
+    "sku": "MKS-JST-BRN",
+    "tags": ["handbags", "accessories", "michaelkors"],
+    "stock_quantity": 45,
+    "discount_percentage": 25,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": false,
+    "is_new_arrival": false
+}
+
+### H&M Oversized Hoodie
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "H&M Oversized Cotton Hoodie",
+    "slug": "hm-oversized-hoodie",
+    "short_description": "Comfortable everyday essential",
+    "description": "Stay cozy in this oversized hoodie made from organic cotton. Perfect for lounging or running errands.",
+    "price": 49.99,
+    "compare_price": 69.99,
+    "category": "2d6dc08d-0b58-42a6-89a6-a2692ab7f550",
+    "image_url": "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500"
+    ],
+    "sku": "HM-OSH-GRY",
+    "tags": ["hoodie", "streetwear", "casual"],
+    "stock_quantity": 150,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": false,
+    "is_new_arrival": true
+}
+
+##################################################
+# HOME & LIVING PRODUCTS
+##################################################
+
+### Dyson V15 Detect Vacuum
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Dyson V15 Detect Cordless Vacuum",
+    "slug": "dyson-v15-detect",
+    "short_description": "Reveals invisible dust",
+    "description": "The Dyson V15 Detect uses a laser to reveal microscopic dust and automatically boosts suction power.",
+    "price": 699.99,
+    "compare_price": 749.99,
+    "category": "65fd136d-cf02-497d-a2c3-598503af52e0",
+    "image_url": "https://images.unsplash.com/photo-1558317374-687fb8cf5f2d?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1558317374-687fb8cf5f2d?w=500"
+    ],
+    "sku": "DYS-V15-GLD",
+    "tags": ["vacuum", "cleaning", "dyson", "appliances"],
+    "stock_quantity": 30,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Instant Pot Duo 7-in-1
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Instant Pot Duo 7-in-1 Pressure Cooker",
+    "slug": "instant-pot-duo-7-in-1",
+    "short_description": "7 appliances in 1",
+    "description": "The Instant Pot Duo combines 7 kitchen appliances: pressure cooker, slow cooker, rice cooker, steamer, saute pan, yogurt maker, and warmer.",
+    "price": 99.99,
+    "compare_price": 129.99,
+    "category": "65fd136d-cf02-497d-a2c3-598503af52e0",
+    "image_url": "https://images.unsplash.com/photo-1585515325310-1590d2f1bd85?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1585515325310-1590d2f1bd85?w=500"
+    ],
+    "sku": "INS-DUO-6QT",
+    "tags": ["cooker", "kitchen", "appliances"],
+    "stock_quantity": 80,
+    "discount_percentage": 15,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Casper Sleep Pillow
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Casper Sleep Original Pillow",
+    "slug": "casper-sleep-pillow",
+    "short_description": "Adjustable comfort for perfect sleep",
+    "description": "The Casper Pillow features a breathable cotton cover and adjustable fill for personalized comfort.",
+    "price": 65.00,
+    "compare_price": 85.00,
+    "category": "65fd136d-cf02-497d-a2c3-598503af52e0",
+    "image_url": "https://images.unsplash.com/photo-1616504870267-33b8b2a42ec0?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1616504870267-33b8b2a42ec0?w=500"
+    ],
+    "sku": "CSP-PIL-WHT",
+    "tags": ["bedding", "sleep", "pillow"],
+    "stock_quantity": 200,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": false,
+    "is_new_arrival": true
+}
+
+### Le Creuset Dutch Oven
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Le Creuset Signature Dutch Oven",
+    "slug": "le-creuset-dutch-oven",
+    "short_description": "Premium enameled cast iron",
+    "description": "The Le Creuset Dutch Oven is perfect for slow-cooking, braising, and baking. Superior heat retention and even distribution.",
+    "price": 350.00,
+    "compare_price": 400.00,
+    "category": "65fd136d-cf02-497d-a2c3-598503af52e0",
+    "image_url": "https://images.unsplash.com/photo-1618419233193-0e799cdf9c8b?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1618419233193-0e799cdf9c8b?w=500"
+    ],
+    "sku": "LCR-DO-5.5QT",
+    "tags": ["cookware", "kitchen", "castiron"],
+    "stock_quantity": 25,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": false,
+    "is_new_arrival": false
+}
+
+##################################################
+# BEAUTY PRODUCTS
+##################################################
+
+### The Ordinary Hyaluronic Acid 2% + B5
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "The Ordinary Hyaluronic Acid 2% + B5",
+    "slug": "the-ordinary-hyaluronic-acid",
+    "short_description": "Hydrating serum for glowing skin",
+    "description": "This water-based serum provides surface and deep hydration to improve skin texture and reduce fine lines.",
+    "price": 12.90,
+    "compare_price": 15.90,
+    "category": "7ea294d4-68e4-4b3b-9345-8bb072b2c74e",
+    "image_url": "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?w=500"
+    ],
+    "sku": "ORD-HA2-B5",
+    "tags": ["skincare", "serum", "hyaluronic"],
+    "stock_quantity": 500,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Dyson Airwrap Styler
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Dyson Airwrap Multi-Styler Complete",
+    "slug": "dyson-airwrap-styler",
+    "short_description": "Style without extreme heat damage",
+    "description": "The Dyson Airwrap uses the Coanda effect to curl, wave, smooth, and dry hair without extreme heat.",
+    "price": 599.99,
+    "compare_price": 649.99,
+    "category": "7ea294d4-68e4-4b3b-9345-8bb072b2c74e",
+    "image_url": "https://images.unsplash.com/photo-1631772823362-60a5ed92c185?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1631772823362-60a5ed92c185?w=500"
+    ],
+    "sku": "DYS-AW-CMP",
+    "tags": ["hair", "styling", "dyson"],
+    "stock_quantity": 20,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": true
+}
+
+##################################################
+# SPORTS & OUTDOORS PRODUCTS
+##################################################
+
+### Yeti Rambler 26oz Bottle
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Yeti Rambler 26oz Water Bottle",
+    "slug": "yeti-rambler-bottle",
+    "short_description": "Keeps drinks cold or hot for hours",
+    "description": "The Yeti Rambler is made from 18/8 stainless steel with double-wall vacuum insulation.",
+    "price": 35.00,
+    "compare_price": 45.00,
+    "category": "3c16e9b1-e218-4220-8606-0c812fa12412",
+    "image_url": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500"
+    ],
+    "sku": "YET-RAM-26",
+    "tags": ["waterbottle", "outdoor", "yeti"],
+    "stock_quantity": 150,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### The North Face Apex Bionic Jacket
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "The North Face Apex Bionic Jacket",
+    "slug": "north-face-apex-bionic",
+    "short_description": "Wind-resistant softshell jacket",
+    "description": "The Apex Bionic offers exceptional wind resistance and breathability for outdoor adventures.",
+    "price": 159.00,
+    "compare_price": 189.00,
+    "category": "3c16e9b1-e218-4220-8606-0c812fa12412",
+    "image_url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500"
+    ],
+    "sku": "TNF-APX-BLK",
+    "tags": ["jacket", "outdoor", "northface"],
+    "stock_quantity": 60,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": false,
+    "is_new_arrival": true
+}
+
+##################################################
+# BOOKS & STATIONERY PRODUCTS
+##################################################
+
+### Atomic Habits by James Clear
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Atomic Habits by James Clear",
+    "slug": "atomic-habits-book",
+    "short_description": "Tiny changes, remarkable results",
+    "description": "Atomic Habits is a transformative guide to building good habits and breaking bad ones.",
+    "price": 14.99,
+    "compare_price": 18.99,
+    "category": "22654354-03cd-412e-97ff-8e09df541b2c",
+    "image_url": "https://images.unsplash.com/photo-1589998059171-988d887df646?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1589998059171-988d887df646?w=500"
+    ],
+    "sku": "BOK-ATH-JC",
+    "tags": ["book", "selfhelp", "bestseller"],
+    "stock_quantity": 300,
+    "discount_percentage": 20,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}
+
+### Moleskine Classic Notebook
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Moleskine Classic Notebook",
+    "slug": "moleskine-classic-notebook",
+    "short_description": "Iconic notebook for your ideas",
+    "description": "The Moleskine Classic Notebook features a hard cover, rounded corners, and acid-free paper.",
+    "price": 19.99,
+    "compare_price": 24.99,
+    "category": "22654354-03cd-412e-97ff-8e09df541b2c",
+    "image_url": "https://images.unsplash.com/photo-1586074299757-49f52f58b1c0?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1586074299757-49f52f58b1c0?w=500"
+    ],
+    "sku": "MOL-NB-LRG",
+    "tags": ["notebook", "stationery", "office"],
+    "stock_quantity": 250,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": false,
+    "is_best_seller": false,
+    "is_new_arrival": false
+}
+
+##################################################
+# TOYS & GAMES PRODUCTS
+##################################################
+
+### LEGO Star Wars Millennium Falcon
+POST {{baseUrl}}/admin/products/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "LEGO Star Wars Millennium Falcon",
+    "slug": "lego-millennium-falcon",
+    "short_description": "Build the fastest hunk of junk in the galaxy",
+    "description": "This detailed LEGO set features the iconic Millennium Falcon with authentic details.",
+    "price": 159.99,
+    "compare_price": 179.99,
+    "category": "1515a2c9-29d1-42d1-b67d-0c4506b6b03b",
+    "image_url": "https://images.unsplash.com/photo-1587654780291-39c9404d9cb6?w=500",
+    "images": [
+        "https://images.unsplash.com/photo-1587654780291-39c9404d9cb6?w=500"
+    ],
+    "sku": "LEG-SW-MF",
+    "tags": ["lego", "toys", "starwars"],
+    "stock_quantity": 40,
+    "discount_percentage": 0,
+    "is_available": true,
+    "is_featured": true,
+    "is_best_seller": true,
+    "is_new_arrival": false
+}

@@ -60,7 +60,7 @@ export const RatingStars: React.FC<RatingStarsProps> = ({
         ))}
       </div>
       {showNumber && (
-        <span className="text-sm font-medium text-gray-600 ml-1">{rating.toFixed(1)}</span>
+        <span className="text-sm font-medium text-gray-600 ml-1">{Number(rating).toFixed(1)}</span>
       )}
     </div>
   );

@@ -19,7 +19,14 @@ export const HomePage: React.FC = () => {
 
   useEffect(() => { if (isAuthenticated) {} }, [isAuthenticated]);
 
-  const normalize = (data: any): any[] => Array.isArray(data) ? data : data?.data ?? [];
+  const normalize = (data: any): any[] => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.products)) return data.products;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.results)) return data.results;
+    return [];
+  };
 
   const featuredList = normalize(featured);
   const bestSellingList = normalize(bestSelling);
@@ -30,40 +37,45 @@ export const HomePage: React.FC = () => {
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative bg-[var(--color-bg-inverse)] text-[var(--color-text-inverse)] overflow-hidden">
-        <div className="container-normal py-16 md:py-24 lg:py-32">
-          <div className="max-w-3xl">
-            <span className="inline-block font-ui text-[11px] uppercase tracking-[0.2em] text-[var(--color-gold-400)] mb-6">New Collection 2026</span>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-[68px] leading-[1.05] mb-6">
-              Curated essentials for modern living
-            </h1>
-            <p className="font-ui text-base md:text-lg text-[rgba(240,235,224,0.6)] mb-8 max-w-lg">
-              Discover our latest arrivals. Editorial curation meets quality craftsmanship.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 bg-[var(--color-gold-400)] text-[var(--color-gold-800)] font-ui text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-md)] hover:bg-[var(--color-gold-200)] transition-colors">
-                Shop Now
-              </Link>
-              <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 border border-[rgba(240,235,224,0.2)] text-[var(--color-text-inverse)] font-ui text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-md)] hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-400)] transition-colors">
-                View Lookbook
-              </Link>
-            </div>
+      {/* Hero - Vertically Centered with Stat Bar */}
+{/* Hero - RESTORED ORIGINAL WORKING VERSION */}
+<section className="relative w-full min-h-[500px] md:min-h-[400px] lg:min-h-[450px] bg-[var(--color-bg-inverse)] text-[var(--color-text-inverse)] overflow-hidden">
+  <div className="absolute inset-0">
+    <img src="/images/image2.jpg" alt="" className="w-full h-full object-cover object-center" />
+    <div className="absolute inset-0 bg-black/40" />
+  </div>
+  <div className="relative container-normal py-16 md:py-20 lg:py-24">
+    <div className="max-w-3xl">
+      <span className="inline-block font-ui text-xs uppercase tracking-[0.2em] text-[var(--color-gold-400)] mb-6">New Collection 2026</span>
+      <h1 className="font-display text-5xl md:text-6xl lg:text-[70px] leading-[1.1] mb-6">
+        Curated essentials<br />for modern living
+      </h1>
+      <p className="font-ui text-lg md:text-xl text-[rgba(240,235,224,0.7)] mb-8 max-w-lg">
+        Discover our latest arrivals. <br /> Editorial curation<br />meets quality craftsmanship.
+      </p>
+      <div className="flex flex-wrap gap-4">
+        <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 bg-[var(--color-gold-400)] text-[var(--color-gold-800)] font-ui text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-md)] hover:bg-[var(--color-gold-500)] transition-colors">
+          Shop Now
+        </Link>
+        <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 border border-[rgba(240,235,224,0.3)] text-white font-ui text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-md)] hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-400)] transition-colors">
+          View Lookbook
+        </Link>
+      </div>
+    </div>
+  </div>
+  {/* Stat bar */}
+  <div className="border-t border-[rgba(240,235,224,0.1)]">
+    <div className="container-normal py-5">
+      <div className="grid grid-cols-3 gap-4">
+        {['10K+ Products', 'Free Shipping', '30-Day Returns'].map((stat) => (
+          <div key={stat} className="text-center">
+            <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[rgba(240,235,224,0.6)]">{stat}</span>
           </div>
-        </div>
-        {/* Stat bar */}
-        <div className="border-t border-[rgba(240,235,224,0.08)]">
-          <div className="container-normal py-6">
-            <div className="grid grid-cols-3 gap-4">
-              {['10K+ Products', 'Free Shipping', '30-Day Returns'].map((stat) => (
-                <div key={stat} className="text-center">
-                  <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[rgba(240,235,224,0.5)]">{stat}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* Categories */}
       <section className="section-gap">
@@ -77,7 +89,7 @@ export const HomePage: React.FC = () => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {categories.slice(0, 6).map((cat: any) => (
-                <Link key={cat.id} to={`${ROUTES.PRODUCTS}?category=${cat.slug}`} className="group text-center p-5 rounded-[var(--radius-xl)] border border-[var(--color-border-light)] hover:border-[var(--color-gold-400)] hover:shadow-[var(--shadow-md)] transition-all">
+                <Link key={cat.id} to={`${ROUTES.PRODUCTS}?category=${cat.id}`} className="group text-center p-5 rounded-[var(--radius-xl)] border border-[var(--color-border-light)] hover:border-[var(--color-gold-400)] hover:shadow-[var(--shadow-md)] transition-all">
                   <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-bg-muted)] flex items-center justify-center mb-3 group-hover:bg-[var(--color-gold-50)] transition-colors">
                     <span className="text-lg">📦</span>
                   </div>

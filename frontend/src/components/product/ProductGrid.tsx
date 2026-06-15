@@ -17,7 +17,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onAddToWishlist,
   wishlistIds = [],
 }) => {
-  const productList = React.useMemo(() => {
+  const productList = React.useMemo<Product[]>(() => {
     if (!products) return [];
     if (Array.isArray(products)) return products;
     if ((products as any).results && Array.isArray((products as any).results)) return (products as any).results;

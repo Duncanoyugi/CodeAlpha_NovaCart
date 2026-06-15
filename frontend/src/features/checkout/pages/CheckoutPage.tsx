@@ -10,6 +10,7 @@ import { StripePaymentForm } from '../components/StripePaymentForm';
 import { CheckoutSteps } from '../components/CheckoutSteps';
 import { CartSummary } from '../../../components/cart/CartSummary';
 import { useCart } from '../../cart';
+import { useAuth } from '../../auth/hooks/useAuth';
 import { useCreateOrderMutation } from '../../orders/api/orderApi';
 import { checkoutSchema } from '../schemas/checkoutSchema';
 import { ROUTES } from '../../../utils/constants';
@@ -26,6 +27,13 @@ export const CheckoutPage: React.FC = () => {
   const [, setIsProcessingPayment] = useState(false);
   const { cart, totalItems, subtotal, shippingCost, taxAmount, totalAmount, getCart } = useCart();
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate(ROUTES.LOGIN, { state: { from: ROUTES.CHECKOUT } });
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   const methods = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema) as Resolver<CheckoutFormData>,
@@ -106,6 +114,10 @@ export const CheckoutPage: React.FC = () => {
 
   if (totalItems === 0 && !cart?.total_items && !orderId) {
     navigate(ROUTES.CART);
+    return null;
+  }
+
+  if (!authLoading && !isAuthenticated) {
     return null;
   }
 

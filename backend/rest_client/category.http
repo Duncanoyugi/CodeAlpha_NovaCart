@@ -1,0 +1,156 @@
+##################################################
+# NovaCart - Admin Category Population
+# Run this first to create categories
+##################################################
+
+@baseUrl = http://127.0.0.1:8000/api/products
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzgxNTI0MTczLCJpYXQiOjE3ODE1MjMyNzMsImp0aSI6IjI1MjAzYzBkZmJkOTQ3ZGNiMTE1ZGY4YWZhZTU0ZmViIiwidXNlcl9pZCI6ImE4NWY0YzAyLTgwYTYtNDM4Zi04ZjNiLWM5ZjBhNjU4OTFiNSIsImVtYWlsIjoiYWRtaW5Abm92YWNhcnQuY29tIiwicm9sZSI6IkFETUlOIn0.TFC3huAR-7IUV5nJJReeG6-YeWxfbIKAfg2ELaX4Rzg
+
+##################################################
+# CREATE MAIN CATEGORIES
+##################################################
+
+### 1. Electronics Category
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Electronics",
+    "slug": "electronics",
+    "description": "Latest gadgets, smartphones, laptops, and electronic accessories",
+    "is_active": true,
+    "order": 1
+}
+
+### 2. Fashion & Clothing
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Fashion",
+    "slug": "fashion",
+    "description": "Trendy clothing, shoes, and accessories for men and women",
+    "is_active": true,
+    "order": 2
+}
+
+### 3. Home & Living
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Home & Living",
+    "slug": "home-living",
+    "description": "Furniture, decor, kitchenware, and home essentials",
+    "is_active": true,
+    "order": 3
+}
+
+### 4. Beauty & Personal Care
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Beauty",
+    "slug": "beauty",
+    "description": "Skincare, makeup, haircare, and personal care products",
+    "is_active": true,
+    "order": 4
+}
+
+### 5. Sports & Outdoors
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Sports & Outdoors",
+    "slug": "sports-outdoors",
+    "description": "Fitness equipment, camping gear, and outdoor apparel",
+    "is_active": true,
+    "order": 5
+}
+
+### 6. Books & Stationery
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Books & Stationery",
+    "slug": "books-stationery",
+    "description": "Bestsellers, textbooks, notebooks, and office supplies",
+    "is_active": true,
+    "order": 6
+}
+
+### 7. Toys & Games
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Toys & Games",
+    "slug": "toys-games",
+    "description": "Educational toys, board games, and collectibles",
+    "is_active": true,
+    "order": 7
+}
+
+### 8. Automotive
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Automotive",
+    "slug": "automotive",
+    "description": "Car accessories, tools, and maintenance products",
+    "is_active": true,
+    "order": 8
+}
+
+### 9. Health & Wellness
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Health & Wellness",
+    "slug": "health-wellness",
+    "description": "Vitamins, supplements, and wellness products",
+    "is_active": true,
+    "order": 9
+}
+
+### 10. Baby & Kids
+POST {{baseUrl}}/admin/categories/
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+    "name": "Baby & Kids",
+    "slug": "baby-kids",
+    "description": "Baby clothing, toys, and nursery essentials",
+    "is_active": true,
+    "order": 10
+}
+
+
+
+
+
+##################################################
+# NovaCart - Get All Existing Category IDs
+# Run this to see all categories you've already created
+##################################################
+
+@baseUrl = http://127.0.0.1:8000/api/products
+
+### Get All Categories - This will show all your existing categories with their IDs
+GET {{baseUrl}}/categories/
+

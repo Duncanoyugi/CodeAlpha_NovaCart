@@ -7,6 +7,7 @@ import {
   removeFromCart,
   clearCart,
 } from '../../../redux/slices/cartSlice';
+import { useCallback } from 'react';
 
 export const useCart = () => {
   const dispatch = useAppDispatch();
@@ -14,25 +15,25 @@ export const useCart = () => {
     (state) => state.cart
   );
 
-  const getCart = () => {
+  const getCart = useCallback(() => {
     dispatch(fetchCart());
-  };
+  }, [dispatch]);
 
-  const addItemToCart = (data: AddToCartData) => {
+  const addItemToCart = useCallback((data: AddToCartData) => {
     dispatch(addToCart(data));
-  };
+  }, [dispatch]);
 
-  const updateItemQuantity = (id: string, quantity: number) => {
+  const updateItemQuantity = useCallback((id: string, quantity: number) => {
     dispatch(updateCartItem({ id, quantity }));
-  };
+  }, [dispatch]);
 
-  const removeItemFromCart = (id: string) => {
+  const removeItemFromCart = useCallback((id: string) => {
     dispatch(removeFromCart(id));
-  };
+  }, [dispatch]);
 
-  const clearAllItems = () => {
+  const clearAllItems = useCallback(() => {
     dispatch(clearCart());
-  };
+  }, [dispatch]);
 
   const getItemQuantity = (productId: string): number => {
     if (!cart?.items) return 0;

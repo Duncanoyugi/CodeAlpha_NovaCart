@@ -16,7 +16,7 @@ export const CategoryPage: React.FC = () => {
 
   useEffect(() => { if (isAuthenticated) getWishlist(); }, [getWishlist, isAuthenticated]);
 
-  const products = data?.data || [];
+  const products = data?.data?.products || [];
 
   const handleAddToCart = (productId: string) => addItemToCart({ product_id: productId, quantity: 1 });
   const handleToggleWishlist = (productId: string) => isInWishlist(productId) ? removeItem(productId) : addItem(productId);

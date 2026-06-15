@@ -4,18 +4,30 @@ from ..models.base import Cart, CartItem
 from products.serializers import ProductListSerializer
 
 class CartItemSerializer(serializers.ModelSerializer):
-    product_details = ProductListSerializer(source='product', read_only=True)
-    subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    current_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    savings = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    product = ProductListSerializer(read_only=True)
+    subtotal = serializers.FloatField(read_only=True)
+    current_price = serializers.FloatField(read_only=True)
+    savings = serializers.FloatField(read_only=True)
+    price_at_add = serializers.FloatField(read_only=True)
+    variant = serializers.SerializerMethodField()
     
     class Meta:
         model = CartItem
         fields = [
-            'id', 'product', 'product_details', 'variant', 'quantity', 
+            'id', 'product', 'variant', 'quantity', 
             'price_at_add', 'subtotal', 'current_price', 'savings', 'created_at'
         ]
         read_only_fields = ['id', 'price_at_add', 'created_at']
+    
+    def get_variant(self, obj):
+        if obj.variant:
+            return {
+                'id': str(obj.variant.id),
+                'name': obj.variant.name,
+                'sku': obj.variant.sku,
+                'price': float(obj.variant.price) if obj.variant.price else None,
+            }
+        return None
 
 class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.UUIDField(required=True)

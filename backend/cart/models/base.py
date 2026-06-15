@@ -2,6 +2,7 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from decimal import Decimal
 import uuid
 
 class Cart(models.Model):
@@ -34,19 +35,19 @@ class Cart(models.Model):
     @property
     def subtotal(self):
         """Subtotal without shipping and tax"""
-        return sum(item.subtotal for item in self.items.all())
+        return sum((item.subtotal for item in self.items.all()), Decimal('0'))
     
     @property
     def shipping_cost(self):
         """Shipping cost (free over $50)"""
-        if self.subtotal >= 50:
-            return 0
-        return 5.99
+        if self.subtotal >= Decimal('50'):
+            return Decimal('0')
+        return Decimal('5.99')
     
     @property
     def tax_amount(self):
         """Tax amount (10% tax rate)"""
-        return self.subtotal * 0.10
+        return (self.subtotal * Decimal('0.10')).quantize(Decimal('0.01'))
     
     @property
     def total_amount(self):

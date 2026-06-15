@@ -48,8 +48,8 @@ export const ProductsPage: React.FC = () => {
   });
 
   const { data, isLoading } = useGetProductsQuery(filters as any);
-  const products = (data as any)?.data ?? [];
-  const pagination = (data as any)?.pagination ?? { total_pages: 1, current_page: 1, total_count: 0 };
+  const products = (data as any)?.data?.products ?? [];
+  const pagination = (data as any)?.data?.pagination ?? (data as any)?.pagination ?? { total_pages: 1, current_page: 1, total_count: 0 };
   const { isAuthenticated } = useAuth();
   const { addItemToCart } = useCart();
   const { items: wishlistItems, addItem, removeItem, isInWishlist } = useWishlist();
