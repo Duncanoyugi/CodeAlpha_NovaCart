@@ -71,6 +71,23 @@ export const authApi = apiSlice.injectEndpoints({
         body: data,
       }),
     }),
+    forgotPassword: builder.mutation<{ success: boolean; message: string }, { email: string }>({
+      query: (data) => ({
+        url: API_ENDPOINTS.AUTH.FORGOT_PASSWORD,
+        method: 'POST',
+        body: data,
+      }),
+    }),
+    resetPassword: builder.mutation<
+      { success: boolean; message: string },
+      { token: string; password: string; password2: string }
+    >({
+      query: (data) => ({
+        url: API_ENDPOINTS.AUTH.RESET_PASSWORD,
+        method: 'POST',
+        body: data,
+      }),
+    }),
     getCurrentUser: builder.query<User, void>({
       query: () => API_ENDPOINTS.AUTH.ME,
       providesTags: ['User'],
@@ -90,6 +107,8 @@ export const {
   useVerifyOTPMutation,
   useResendOTPMutation,
   useResendWelcomeMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
   useGetCurrentUserQuery,
   useLogoutMutation,
 } = authApi;

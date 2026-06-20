@@ -1,8 +1,9 @@
 # backend/authentication/views/__init__.py
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.throttling import SimpleRateThrottle
 from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
@@ -11,13 +12,34 @@ import secrets
 
 from ..serializers import (
     RegisterSerializer, OTPVerifySerializer, ResendOTPSerializer,
-    LoginSerializer, ResendWelcomeSerializer
+    LoginSerializer, ResendWelcomeSerializer, ForgotPasswordSerializer,
+    ResetPasswordSerializer
 )
 from ..services.auth_service import AuthService
 from users.models.base import User
 
+
+class LoginRateThrottle(SimpleRateThrottle):
+    scope = 'login'
+
+    def get_cache_key(self, request, view):
+        email = (request.data.get('email') or '').lower()
+        ident = email or self.get_ident(request)
+        return self.cache_format % {'scope': self.scope, 'ident': ident}
+
+
+class OtpRateThrottle(SimpleRateThrottle):
+    scope = 'otp'
+
+    def get_cache_key(self, request, view):
+        email = (request.data.get('email') or '').lower()
+        ident = email or self.get_ident(request)
+        return self.cache_format % {'scope': self.scope, 'ident': ident}
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([OtpRateThrottle])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     
@@ -45,6 +67,7 @@ def register(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([OtpRateThrottle])
 def verify_otp(request):
     serializer = OTPVerifySerializer(data=request.data)
     
@@ -85,6 +108,7 @@ def verify_otp(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([OtpRateThrottle])
 def resend_otp(request):
     serializer = ResendOTPSerializer(data=request.data)
     
@@ -125,6 +149,7 @@ def resend_otp(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login(request):
     serializer = LoginSerializer(data=request.data)
     
@@ -235,6 +260,67 @@ def resend_welcome(request):
         'success': False,
         'errors': serializer.errors
     }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([OtpRateThrottle])
+def forgot_password(request):
+    serializer = ForgotPasswordSerializer(data=request.data)
+
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({
+                'success': True,
+                'message': 'If that account exists, a reset link has been sent.'
+            }, status=status.HTTP_200_OK)
+
+        user.reset_token = secrets.token_urlsafe(32)
+        user.reset_token_expiry = timezone.now() + timedelta(minutes=30)
+        user.save(update_fields=['reset_token', 'reset_token_expiry'])
+
+        try:
+            AuthService.send_password_reset_email(user)
+        except Exception as e:
+            print(f"Failed to send password reset email: {e}")
+
+        return Response({
+            'success': True,
+            'message': 'If that account exists, a reset link has been sent.'
+        }, status=status.HTTP_200_OK)
+
+    return Response({
+        'success': False,
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([OtpRateThrottle])
+def reset_password(request):
+    serializer = ResetPasswordSerializer(data=request.data)
+
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        user.set_password(serializer.validated_data['password'])
+        user.reset_token = None
+        user.reset_token_expiry = None
+        user.save(update_fields=['password', 'reset_token', 'reset_token_expiry', 'updated_at'])
+
+        return Response({
+            'success': True,
+            'message': 'Password reset successfully.'
+        }, status=status.HTTP_200_OK)
+
+    return Response({
+        'success': False,
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):

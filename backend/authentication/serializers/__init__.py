@@ -6,6 +6,7 @@ from django.core.validators import EmailValidator
 from django.utils import timezone
 from datetime import timedelta
 from users.models.base import User
+from authentication.services.auth_service import OTPService
 import re
 import secrets
 
@@ -73,8 +74,8 @@ class OTPVerifySerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError({"email": "No user found with this email address."})
         
-        # Check OTP
-        if not user.otp_code or user.otp_code != otp_code:
+        is_valid_otp, otp_error = OTPService.is_valid(user, otp_code)
+        if not is_valid_otp:
             # Track failed attempt
             user.otp_attempts += 1
             user.save(update_fields=['otp_attempts'])
@@ -84,14 +85,7 @@ class OTPVerifySerializer(serializers.Serializer):
                 user.save(update_fields=['otp_code'])
                 raise serializers.ValidationError({"otp_code": "Maximum OTP attempts exceeded. Please request a new OTP."})
             
-            raise serializers.ValidationError({"otp_code": "Invalid OTP code."})
-        
-        # Check if OTP expired (10 minutes)
-        from django.utils import timezone
-        from datetime import timedelta
-        
-        if user.otp_created_at and user.otp_created_at < timezone.now() - timedelta(minutes=10):
-            raise serializers.ValidationError({"otp_code": "OTP has expired. Please request a new one."})
+            raise serializers.ValidationError({"otp_code": otp_error})
         
         attrs['user'] = user
         return attrs
@@ -153,3 +147,31 @@ class ResendWelcomeSerializer(serializers.Serializer):
             raise serializers.ValidationError("No user found with this email address.")
         
         return value
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.lower()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+
+        try:
+            user = User.objects.get(reset_token=attrs['token'])
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"token": "Invalid or expired reset token."})
+
+        if not user.reset_token_expiry or user.reset_token_expiry < timezone.now():
+            raise serializers.ValidationError({"token": "Invalid or expired reset token."})
+
+        attrs['user'] = user
+        return attrs

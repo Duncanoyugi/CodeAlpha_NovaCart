@@ -84,3 +84,24 @@ class PaymentAttempt(models.Model):
     
     def __str__(self):
         return f"Attempt {self.id} - {self.status}"
+
+
+class ProcessedWebhookEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    provider = models.CharField(max_length=50, default='stripe')
+    event_id = models.CharField(max_length=255)
+    event_type = models.CharField(max_length=100)
+    processed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'processed_webhook_events'
+        constraints = [
+            models.UniqueConstraint(fields=['provider', 'event_id'], name='unique_processed_webhook_event')
+        ]
+        indexes = [
+            models.Index(fields=['provider', 'event_id']),
+            models.Index(fields=['processed_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.provider}:{self.event_id}"

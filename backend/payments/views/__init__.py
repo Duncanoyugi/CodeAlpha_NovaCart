@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse
+from django.conf import settings
 import json
 import stripe
 
@@ -25,7 +26,8 @@ def create_payment_intent(request):
     if serializer.is_valid():
         result = PaymentService.process_payment(
             order_id=serializer.validated_data['order_id'],
-            payment_method=serializer.validated_data.get('payment_method', 'stripe')
+            payment_method=serializer.validated_data.get('payment_method', 'stripe'),
+            user=request.user
         )
         
         if result['success']:
@@ -58,7 +60,8 @@ def confirm_payment(request):
     
     if serializer.is_valid():
         result = PaymentService.confirm_payment(
-            serializer.validated_data['payment_intent_id']
+            serializer.validated_data['payment_intent_id'],
+            user=request.user
         )
         
         if result['success']:
@@ -162,20 +165,6 @@ def stripe_webhook(request):
     except stripe.error.SignatureVerificationError:
         return HttpResponse(status=400)
     
-    # Handle the event
-    if event['type'] == 'payment_intent.succeeded':
-        payment_intent = event['data']['object']
-        # Update payment status
-        PaymentService.confirm_payment(payment_intent['id'])
-        
-    elif event['type'] == 'payment_intent.payment_failed':
-        payment_intent = event['data']['object']
-        # Log failed payment
-        print(f"Payment failed: {payment_intent['id']}")
-        
-    elif event['type'] == 'charge.refunded':
-        charge = event['data']['object']
-        # Handle refund
-        print(f"Refund processed: {charge['id']}")
+    PaymentService.handle_webhook_event(event)
     
     return HttpResponse(status=200)

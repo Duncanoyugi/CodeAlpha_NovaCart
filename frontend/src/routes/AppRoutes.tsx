@@ -23,8 +23,10 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 
 // Auth Pages
 import {
+  ForgotPasswordPage,
   LoginPage,
   RegisterPage,
+  ResetPasswordPage,
   VerifyOTPPage,
 } from '../features/auth';
 
@@ -42,7 +44,12 @@ import {
 } from '../features/checkout';
 
 import { WishlistPage } from '../features/wishlist/pages/WishlistPage';
-import { ProfilePage } from '../features/auth/pages/ProfilePage';
+import {
+  AddressBookPage,
+  ChangePasswordPage,
+  EditProfilePage,
+  ProfilePage,
+} from '../features/profile';
 
 import { ProductDetailsPage } from '../features/products/pages/ProductDetailsPage';
 import { CategoryPage } from '../features/products/pages/CategoryPage';
@@ -98,6 +105,8 @@ export const AppRoutes: React.FC = () => {
           <Route path={ROUTES.LOGIN} element={<LoginPage />} />
           <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
           <Route path={ROUTES.VERIFY_OTP} element={<VerifyOTPPage />} />
+          <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+          <Route path={`${ROUTES.RESET_PASSWORD}/:token`} element={<ResetPasswordPage />} />
         </Route>
 
         {/* Protected Customer/Admin Routes (single layout mount) */}
@@ -123,6 +132,9 @@ export const AppRoutes: React.FC = () => {
             />
             <Route path={ROUTES.WISHLIST} element={<WishlistPage />} />
             <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+            <Route path={ROUTES.EDIT_PROFILE} element={<EditProfilePage />} />
+            <Route path={ROUTES.CHANGE_PASSWORD} element={<ChangePasswordPage />} />
+            <Route path={ROUTES.ADDRESS_BOOK} element={<AddressBookPage />} />
           </Route>
 
           {/* Admin-only */}
@@ -158,4 +170,3 @@ export const AppRoutes: React.FC = () => {
     </React.Suspense>
   );
 };
-

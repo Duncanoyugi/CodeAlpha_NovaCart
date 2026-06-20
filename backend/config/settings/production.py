@@ -4,7 +4,7 @@ from .base import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('ALLOWED_HOSTS', '').split(',') if host.strip()]
 
 # ============================================
 # NEON POSTGRESQL PRODUCTION CONFIGURATION
@@ -28,7 +28,11 @@ DATABASES = {
 }
 
 # Production CORS
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+    if origin.strip() and origin.strip() != '*'
+]
 CORS_ALLOW_CREDENTIALS = True
 
 # Production email (using Resend)
@@ -50,6 +54,10 @@ SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+X_FRAME_OPTIONS = 'DENY'
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Strict'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 # Static files compression for production
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'

@@ -7,7 +7,26 @@ from django.utils.html import strip_tags
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.models.base import User
 from authentication.models.base import LoginHistory
+from datetime import timedelta
 import secrets
+
+
+class OTPService:
+    """Shared OTP validation rules for all OTP-consuming endpoints."""
+
+    EXPIRY_MINUTES = 10
+
+    @staticmethod
+    def is_valid(user, otp_code):
+        if not user.otp_code or user.otp_code != otp_code:
+            return False, "Invalid OTP code."
+        if not user.otp_created_at:
+            return False, "OTP has expired. Please request a new one."
+        expires_at = user.otp_created_at + timedelta(minutes=OTPService.EXPIRY_MINUTES)
+        if timezone.now() > expires_at:
+            return False, "OTP has expired. Please request a new one."
+        return True, ""
+
 
 class AuthService:
     """Authentication business logic"""
@@ -63,6 +82,23 @@ class AuthService:
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,
+            fail_silently=False,
+        )
+
+    @staticmethod
+    def send_password_reset_email(user):
+        """Send password reset email."""
+        reset_url = f"{settings.FRONTEND_URL}/reset-password/{user.reset_token}"
+        message = (
+            f"Hi {user.full_name},\n\n"
+            f"Use this link to reset your NovaCart password: {reset_url}\n\n"
+            "If you did not request this, you can ignore this email."
+        )
+        send_mail(
+            subject='Reset Your NovaCart Password',
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
             fail_silently=False,
         )
     

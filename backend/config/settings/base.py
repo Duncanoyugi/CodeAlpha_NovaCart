@@ -112,6 +112,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'config.api_exceptions.custom_exception_handler',
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '5/min',
+        'otp': '3/min',
+        'payment': '10/min',
+    },
 }
 
 # JWT Settings

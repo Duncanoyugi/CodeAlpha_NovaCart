@@ -2,27 +2,40 @@
 from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
-from ..models.base import Payment, PaymentAttempt
+from django.core.exceptions import PermissionDenied
+from ..models.base import Payment, PaymentAttempt, ProcessedWebhookEvent
 from orders.models.base import Order
 from .stripe_service import StripeService
+
+
+class InvalidPaymentTransition(Exception):
+    pass
+
 
 class PaymentService:
     """Main payment processing service"""
     
     @staticmethod
-    def process_payment(order_id, payment_method='stripe'):
+    def process_payment(order_id, payment_method='stripe', user=None):
         """
         Process payment for an order
         """
         try:
             order = Order.objects.get(id=order_id)
+            if user is not None and order.user_id != user.id:
+                raise PermissionDenied("You do not have permission to pay for this order.")
             
             # Check if payment already exists
             if hasattr(order, 'payment'):
-                return {
-                    'success': False,
-                    'error': 'Payment already exists for this order'
-                }
+                payment = order.payment
+                if payment.payment_status in [Payment.PaymentStatus.SUCCEEDED, Payment.PaymentStatus.REFUNDED]:
+                    return {'success': False, 'error': 'Payment is already in a terminal state'}
+                if payment.stripe_payment_intent_id:
+                    return {
+                        'success': True,
+                        'requires_action': True,
+                        'payment_intent_id': payment.stripe_payment_intent_id,
+                    }
             
             # Create payment record
             payment = Payment.objects.create(
@@ -111,12 +124,25 @@ class PaymentService:
             }
     
     @staticmethod
-    def confirm_payment(payment_intent_id):
+    def confirm_payment(payment_intent_id, user=None):
         """
         Confirm a payment after successful Stripe confirmation
         """
         try:
-            # Retrieve payment intent from Stripe
+            with transaction.atomic():
+                payment = Payment.objects.select_for_update().select_related('order').get(
+                    stripe_payment_intent_id=payment_intent_id
+                )
+                if user is not None and payment.user_id != user.id:
+                    raise PermissionDenied("You do not have permission to confirm this payment.")
+                if payment.payment_status in [Payment.PaymentStatus.SUCCEEDED, Payment.PaymentStatus.REFUNDED]:
+                    return {
+                        'success': True,
+                        'message': 'Payment already confirmed',
+                        'payment_status': payment.payment_status
+                    }
+
+            # Retrieve payment intent from Stripe after locking/idempotency guard.
             result = StripeService.retrieve_payment_intent(payment_intent_id)
             
             if not result['success']:
@@ -127,37 +153,20 @@ class PaymentService:
             
             payment_intent = result['payment_intent']
             
-            # Find the payment record
-            try:
-                payment = Payment.objects.get(stripe_payment_intent_id=payment_intent_id)
-            except Payment.DoesNotExist:
-                return {
-                    'success': False,
-                    'error': 'Payment record not found'
-                }
-            
             # Update payment based on Stripe status
             if payment_intent.status == 'succeeded':
-                payment.payment_status = Payment.PaymentStatus.SUCCEEDED
-                payment.stripe_charge_id = payment_intent.latest_charge
-                payment.paid_at = timezone.now()
-                payment.save()
-                
-                # Update order status
-                order = payment.order
-                order.payment_status = Order.PaymentStatus.PAID
-                order.status = Order.Status.PROCESSING
-                order.save()
-                
-                # Log successful attempt
-                PaymentAttempt.objects.create(
-                    payment=payment,
-                    order=order,
-                    stripe_payment_intent_id=payment_intent_id,
-                    amount=payment.amount,
-                    status='succeeded',
-                    response_data=payment_intent
-                )
+                with transaction.atomic():
+                    payment = Payment.objects.select_for_update().select_related('order').get(
+                        stripe_payment_intent_id=payment_intent_id
+                    )
+                    if payment.payment_status in [Payment.PaymentStatus.SUCCEEDED, Payment.PaymentStatus.REFUNDED]:
+                        return {
+                            'success': True,
+                            'message': 'Payment already confirmed',
+                            'payment_status': payment.payment_status
+                        }
+                    order = Order.objects.select_for_update().get(id=payment.order_id)
+                    PaymentService._mark_payment_succeeded(payment, order, payment_intent)
                 
                 return {
                     'success': True,
@@ -165,8 +174,7 @@ class PaymentService:
                     'payment_status': payment.payment_status
                 }
             elif payment_intent.status == 'requires_payment_method':
-                payment.payment_status = Payment.PaymentStatus.FAILED
-                payment.save()
+                PaymentService._mark_payment_failed(payment, {'stripe_status': payment_intent.status})
                 
                 return {
                     'success': False,
@@ -183,6 +191,104 @@ class PaymentService:
                 'success': False,
                 'error': str(e)
             }
+
+    @staticmethod
+    def handle_webhook_event(event):
+        event_id = event.get('id')
+        event_type = event.get('type')
+        if not event_id or not event_type:
+            return {'success': False, 'error': 'Invalid webhook event'}
+
+        with transaction.atomic():
+            _, created = ProcessedWebhookEvent.objects.get_or_create(
+                provider='stripe',
+                event_id=event_id,
+                defaults={'event_type': event_type},
+            )
+            if not created:
+                return {'success': True, 'message': 'Webhook event already processed'}
+
+            data_object = event.get('data', {}).get('object', {})
+            if event_type == 'payment_intent.succeeded':
+                return PaymentService._handle_payment_intent_succeeded(data_object)
+            if event_type == 'payment_intent.payment_failed':
+                return PaymentService._handle_payment_intent_failed(data_object)
+            if event_type == 'charge.refunded':
+                return PaymentService._handle_charge_refunded(data_object)
+
+        return {'success': True, 'message': 'Webhook event ignored'}
+
+    @staticmethod
+    def _handle_payment_intent_succeeded(payment_intent):
+        payment_intent_id = payment_intent.get('id')
+        payment = Payment.objects.select_for_update().select_related('order').get(
+            stripe_payment_intent_id=payment_intent_id
+        )
+        if payment.payment_status in [Payment.PaymentStatus.SUCCEEDED, Payment.PaymentStatus.REFUNDED]:
+            return {'success': True, 'message': 'Payment already terminal'}
+        order = Order.objects.select_for_update().get(id=payment.order_id)
+        PaymentService._mark_payment_succeeded(payment, order, payment_intent)
+        return {'success': True, 'message': 'Payment marked succeeded'}
+
+    @staticmethod
+    def _handle_payment_intent_failed(payment_intent):
+        payment_intent_id = payment_intent.get('id')
+        payment = Payment.objects.select_for_update().select_related('order').get(
+            stripe_payment_intent_id=payment_intent_id
+        )
+        PaymentService._mark_payment_failed(payment, payment_intent)
+        return {'success': True, 'message': 'Payment marked failed'}
+
+    @staticmethod
+    def _handle_charge_refunded(charge):
+        payment_intent_id = charge.get('payment_intent')
+        payment = Payment.objects.select_for_update().select_related('order').get(
+            stripe_payment_intent_id=payment_intent_id
+        )
+        payment.payment_status = Payment.PaymentStatus.REFUNDED
+        payment.refunded_at = timezone.now()
+        payment.payment_response = charge
+        payment.save(update_fields=['payment_status', 'refunded_at', 'payment_response', 'updated_at'])
+
+        order = Order.objects.select_for_update().get(id=payment.order_id)
+        order.payment_status = Order.PaymentStatus.REFUNDED
+        order.status = Order.Status.REFUNDED
+        order.save(update_fields=['payment_status', 'status', 'updated_at'])
+        return {'success': True, 'message': 'Payment marked refunded'}
+
+    @staticmethod
+    def _mark_payment_succeeded(payment, order, payment_intent):
+        payment.payment_status = Payment.PaymentStatus.SUCCEEDED
+        payment.stripe_charge_id = getattr(payment_intent, 'latest_charge', None) or payment_intent.get('latest_charge')
+        payment.paid_at = timezone.now()
+        payment.payment_response = dict(payment_intent)
+        payment.save(update_fields=[
+            'payment_status', 'stripe_charge_id', 'paid_at', 'payment_response', 'updated_at'
+        ])
+
+        order.payment_status = Order.PaymentStatus.PAID
+        order.status = Order.Status.PROCESSING
+        order.processed_at = order.processed_at or timezone.now()
+        order.save(update_fields=['payment_status', 'status', 'processed_at', 'updated_at'])
+
+        PaymentAttempt.objects.create(
+            payment=payment,
+            order=order,
+            stripe_payment_intent_id=payment.stripe_payment_intent_id,
+            amount=payment.amount,
+            status='succeeded',
+            response_data=payment.payment_response,
+        )
+
+    @staticmethod
+    def _mark_payment_failed(payment, payment_intent):
+        payment.payment_status = Payment.PaymentStatus.FAILED
+        payment.payment_response = dict(payment_intent)
+        payment.save(update_fields=['payment_status', 'payment_response', 'updated_at'])
+
+        order = payment.order
+        order.payment_status = Order.PaymentStatus.FAILED
+        order.save(update_fields=['payment_status', 'updated_at'])
     
     @staticmethod
     def refund_payment(payment_id, amount=None, reason=None):

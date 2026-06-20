@@ -1,5 +1,5 @@
 // Common API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
   data: T;
@@ -24,6 +24,19 @@ export interface Address {
   state: string;
   postal_code: string;
   country: string;
+}
+
+export interface UserAddress {
+  id: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default: boolean;
+  address_type: 'shipping' | 'billing';
+  created_at: string;
 }
 
 // Error Type
