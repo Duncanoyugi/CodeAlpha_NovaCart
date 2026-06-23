@@ -1,5 +1,6 @@
 import React from 'react';
 import { ProductCard } from './ProductCard';
+import { EmptyState } from '../common/EmptyState';
 import type { Product } from '../../types';
 
 interface ProductGridProps {
@@ -8,6 +9,9 @@ interface ProductGridProps {
   onAddToCart?: (productId: string) => void;
   onAddToWishlist?: (productId: string) => void;
   wishlistIds?: string[];
+  emptyTitle?: string;
+  emptyDescription?: string;
+  onClearFilters?: () => void;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -16,6 +20,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onAddToCart,
   onAddToWishlist,
   wishlistIds = [],
+  emptyTitle = 'No products found',
+  emptyDescription = 'Try adjusting your filters or search terms to find what you\'re looking for.',
+  onClearFilters,
 }) => {
   const productList = React.useMemo<Product[]>(() => {
     if (!products) return [];
@@ -29,7 +36,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {[...Array(8)].map((_, index) => (
-          <div key={index} className="bg-[var(--color-bg-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border-light)] overflow-hidden">
+          <div key={index} className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] border border-[var(--color-border)] overflow-hidden">
             <div className="aspect-[4/5] bg-[var(--color-bg-muted)] skeleton" />
             <div className="p-4 space-y-3">
               <div className="h-3 bg-[var(--color-bg-muted)] rounded skeleton w-1/3" />
@@ -44,10 +51,13 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
 
   if (productList.length === 0) {
     return (
-      <div className="text-center py-16">
-        <p className="font-display text-2xl text-[var(--color-text-primary)] mb-2">No products found</p>
-        <p className="font-ui text-sm text-[var(--color-text-secondary)]">Try adjusting your filters or search terms</p>
-      </div>
+      <EmptyState
+        icon={<svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>}
+        title={emptyTitle}
+        description={emptyDescription}
+        actionLabel={onClearFilters ? 'Clear Filters' : undefined}
+        actionOnClick={onClearFilters}
+      />
     );
   }
 

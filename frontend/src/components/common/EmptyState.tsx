@@ -22,8 +22,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`flex flex-col items-center justify-center text-center p-8 sm:p-12 bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-sm)] max-w-lg mx-auto ${className}`}>
-      <div className="flex items-center justify-center w-20 h-20 bg-[var(--color-bg-muted)] text-[var(--color-text-tertiary)] rounded-[var(--radius-2xl)] mb-6">
+    <div className={`flex flex-col items-center justify-center text-center p-8 sm:p-12 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-card)] max-w-lg mx-auto ${className}`}>
+      <div className="flex items-center justify-center w-20 h-20 bg-[var(--color-bg-muted)] text-[var(--color-text-muted)] rounded-[var(--radius-2xl)] mb-6">
         {icon}
       </div>
 

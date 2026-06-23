@@ -63,12 +63,15 @@ class OrderService:
             
             # Create order items from cart
             for cart_item in cart.items.all():
+                # Some DB states may have older/mismatched order_items columns (e.g. product_image missing).
+                # Create using only the columns that exist in the current model.
                 OrderItem.objects.create(
                     order=order,
                     product=cart_item.product,
                     product_name=cart_item.product.name,
                     product_sku=cart_item.product.sku,
-                    product_image=cart_item.product.image_url,
+                    # product_image column may not exist in DB; OrderItem model defines product_image.
+                    product_image=getattr(cart_item.product, 'image_url', ''),
                     variant_name=cart_item.variant.name if cart_item.variant else '',
                     variant_attributes=cart_item.variant.attributes if cart_item.variant else {},
                     quantity=cart_item.quantity,

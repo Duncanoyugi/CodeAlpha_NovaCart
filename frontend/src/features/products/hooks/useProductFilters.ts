@@ -5,7 +5,7 @@ import { SORT_OPTIONS, PAGINATION } from '../../../utils/constants';
 export const useProductFilters = (initial?: Record<string, any>) => {
   const [searchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Record<string, any>>({
     search: initial?.search ?? searchParams.get('search') ?? '',
     category: initial?.category ?? searchParams.get('category') ?? '',
     min_price: initial?.min_price ?? (searchParams.get('min_price') ? Number(searchParams.get('min_price')) : undefined),
@@ -22,10 +22,14 @@ export const useProductFilters = (initial?: Record<string, any>) => {
 
   const handleSearchChange = useCallback((value: string) => setFilter('search', value), [setFilter]);
   const handleCategoryChange = useCallback((category: string) => setFilter('category', category), [setFilter]);
-  const handlePriceChange = useCallback((min?: number, max?: number) => setFilter('min_price', min), [setFilter]);
+  const handlePriceChange = useCallback((min?: number, max?: number) => {
+    setFilters((prev) => ({ ...prev, min_price: min, max_price: max, page: PAGINATION.DEFAULT_PAGE }));
+  }, []);
   const handleRatingChange = useCallback((rating?: number) => setFilter('min_rating', rating), [setFilter]);
   const handleSortChange = useCallback((sort: string) => setFilter('sort_by', sort), [setFilter]);
-  const handleAvailabilityChange = useCallback((inStock?: boolean) => {}, []);
+  const handleAvailabilityChange = useCallback((inStock?: boolean) => {
+    setFilters((prev) => ({ ...prev, in_stock: inStock }));
+  }, []);
   const handlePageChange = useCallback((page: number) => setFilter('page', page), [setFilter]);
 
   const clearAllFilters = useCallback(() => {
@@ -35,6 +39,7 @@ export const useProductFilters = (initial?: Record<string, any>) => {
       min_price: undefined,
       max_price: undefined,
       min_rating: undefined,
+      in_stock: undefined,
       sort_by: SORT_OPTIONS[0].value,
       page: PAGINATION.DEFAULT_PAGE,
       page_size: PAGINATION.DEFAULT_PAGE_SIZE,

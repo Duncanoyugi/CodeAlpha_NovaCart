@@ -15,6 +15,7 @@ import { ReviewStats } from '../../reviews/components/ReviewStats';
 import { ROUTES } from '../../../utils/constants';
 import { formatPrice, calculateDiscountPercentage } from '../../../utils';
 import { Button } from '../../../components/common/Button';
+import { ChevronRight, Shield, Truck, RotateCcw } from 'lucide-react';
 
 export const ProductDetailsPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -89,37 +90,37 @@ export const ProductDetailsPage: React.FC = () => {
 
   if (error || !product) {
     return (
-      <div className="container-custom py-12 text-center">
+      <div className="container-custom py-20 text-center">
         <h1 className="font-display text-3xl text-[var(--color-text-primary)] mb-4">Product Not Found</h1>
         <p className="font-ui text-sm text-[var(--color-text-secondary)] mb-6">We couldn't find the product you're looking for.</p>
-        <Link to={ROUTES.PRODUCTS} className="btn-primary">Back to Products</Link>
+        <Link to={ROUTES.PRODUCTS} className="btn-primary inline-flex items-center gap-2">Back to Products</Link>
       </div>
     );
   }
 
   return (
-    <div className="container-custom py-12">
+    <div className="container-custom py-10">
       {/* Breadcrumb */}
       <nav className="mb-6">
         <ol className="flex items-center gap-2 font-ui text-xs text-[var(--color-text-tertiary)]">
-          <li><Link to={ROUTES.HOME} className="hover:text-[var(--color-text-accent)]">Home</Link></li>
-          <li>/</li>
-          <li><Link to={ROUTES.PRODUCTS} className="hover:text-[var(--color-text-accent)]">Products</Link></li>
-          <li>/</li>
-          <li className="text-[var(--color-gold-600)]">{product.name}</li>
+          <li><Link to={ROUTES.HOME} className="hover:text-[var(--color-text-accent)] transition-colors">Home</Link></li>
+          <li><ChevronRight className="w-3 h-3" /></li>
+          <li><Link to={ROUTES.PRODUCTS} className="hover:text-[var(--color-text-accent)] transition-colors">Products</Link></li>
+          <li><ChevronRight className="w-3 h-3" /></li>
+          <li className="text-[var(--color-gold-600)] font-medium">{product.name}</li>
         </ol>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16">
         {/* Images */}
         <div className="space-y-4">
-          <div className="aspect-[4/5] rounded-[var(--radius-lg)] overflow-hidden bg-[var(--color-bg-muted)]">
+          <div className="aspect-[4/5] rounded-[var(--radius-xl)] overflow-hidden bg-[var(--color-bg-muted)] shadow-[var(--shadow-card)]">
             <img src={selectedImage || product.image_url} alt={product.name} className="w-full h-full object-cover" />
           </div>
           {images.length > 1 && (
             <div className="grid grid-cols-4 gap-3">
               {images.map((image) => (
-                <button key={image} type="button" onClick={() => setSelectedImage(image)} className={`aspect-[4/5] rounded-[var(--radius-md)] overflow-hidden border-2 transition ${selectedImage === image ? 'border-[var(--color-gold-400)]' : 'border-transparent'}`}>
+                <button key={image} type="button" onClick={() => setSelectedImage(image)} className={`aspect-[4/5] rounded-[var(--radius-md)] overflow-hidden border-2 transition-all duration-200 ${selectedImage === image ? 'border-[var(--color-gold-400)] shadow-md' : 'border-transparent hover:border-[var(--color-border-medium)]'}`}>
                   <img src={image} alt={product.name} className="w-full h-full object-cover" />
                 </button>
               ))}
@@ -130,24 +131,34 @@ export const ProductDetailsPage: React.FC = () => {
         {/* Details */}
         <div className="lg:sticky lg:top-24 lg:self-start space-y-6">
           <div>
-            <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">{product.category.name}</span>
-            <h1 className="font-display text-3xl md:text-4xl text-[var(--color-text-primary)] mt-2 leading-tight">{product.name}</h1>
+            <span className="inline-block font-ui text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-gold-600)] bg-[var(--color-gold-50)] px-3 py-1.5 rounded-full border border-[var(--color-gold-100)]">
+              {product.category.name}
+            </span>
+            <h1 className="font-display text-3xl md:text-4xl text-[var(--color-text-primary)] mt-4 leading-tight">{product.name}</h1>
           </div>
 
+          {/* Rating */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-[var(--color-gold-400)]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-              <span className="font-ui text-sm font-medium text-[var(--color-text-primary)]">{Number(product.rating).toFixed(1)}</span>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <svg key={star} className={`w-5 h-5 ${star <= Math.round(product.rating) ? 'text-[var(--color-gold-400)]' : 'text-[var(--color-border-strong)]'}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
             </div>
+            <span className="font-ui text-sm font-medium text-[var(--color-text-primary)]">{Number(product.rating).toFixed(1)}</span>
             <span className="font-ui text-xs text-[var(--color-text-tertiary)]">({product.num_reviews} reviews)</span>
           </div>
 
-          <div className="flex items-baseline gap-3">
-            <span className="font-ui text-2xl font-medium text-[var(--color-gold-600)]">{formatPrice(product.final_price)}</span>
+          {/* Price */}
+          <div className="flex items-baseline gap-4">
+            <span className="font-ui text-3xl font-bold text-[var(--color-gold-600)]">{formatPrice(product.final_price)}</span>
             {discountPercentage > 0 && (
               <>
-                <span className="font-ui text-base text-[var(--color-text-tertiary)] line-through">{formatPrice(product.price)}</span>
-                <span className="font-ui text-xs font-bold text-[var(--color-gold-600)] bg-[var(--color-gold-50)] px-2 py-0.5 rounded-full border border-[var(--color-gold-100)]">-{discountPercentage}%</span>
+                <span className="font-ui text-lg text-[var(--color-text-tertiary)] line-through">{formatPrice(product.price)}</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] text-xs font-ui font-bold uppercase tracking-wider border border-[var(--color-danger-border)]">
+                  -{discountPercentage}% OFF
+                </span>
               </>
             )}
           </div>
@@ -157,10 +168,10 @@ export const ProductDetailsPage: React.FC = () => {
           {/* Variants */}
           {product.variants && product.variants.length > 0 && (
             <div>
-              <h3 className="font-ui text-xs uppercase tracking-[0.08em] text-[var(--color-text-secondary)] mb-3">Options</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="font-ui text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-text-tertiary)] mb-3">Options</h3>
+              <div className="flex flex-wrap gap-2.5">
                 {product.variants.map((variant) => (
-                  <button key={variant.id} className="px-4 py-2 rounded-[var(--radius-md)] border border-[var(--color-border-strong)] font-ui text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-600)] transition-colors">
+                  <button key={variant.id} className="px-5 py-2.5 rounded-[var(--radius-md)] border-2 border-[var(--color-border-medium)] font-ui text-sm text-[var(--color-text-secondary)] hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-600)] hover:bg-[var(--color-gold-50)] transition-all active:scale-[0.97]">
                     {variant.name}
                   </button>
                 ))}
@@ -170,37 +181,68 @@ export const ProductDetailsPage: React.FC = () => {
 
           {/* Quantity */}
           <div>
-            <h3 className="font-ui text-xs uppercase tracking-[0.08em] text-[var(--color-text-secondary)] mb-3">Quantity</h3>
-            <div className="inline-flex items-center border border-[var(--color-border-strong)] rounded-[var(--radius-md)]">
-              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-10 h-10 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] transition-colors">−</button>
-              <span className="w-12 text-center font-ui text-sm font-medium text-[var(--color-text-primary)]">{quantity}</span>
-              <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))} className="w-10 h-10 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] transition-colors">+</button>
+            <h3 className="font-ui text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--color-text-tertiary)] mb-3">Quantity</h3>
+            <div className="inline-flex items-center border-2 border-[var(--color-border-medium)] rounded-[var(--radius-lg)] bg-[var(--color-bg-raised)]">
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text-primary)] rounded-l-[var(--radius-lg)] transition-all active:scale-95">−</button>
+              <span className="w-16 text-center font-ui text-base font-semibold text-[var(--color-text-primary)] tabular-nums">{quantity}</span>
+              <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))} className="w-12 h-12 flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text-primary)] rounded-r-[var(--radius-lg)] transition-all active:scale-95">+</button>
             </div>
+            <p className="text-xs font-ui text-[var(--color-text-tertiary)] mt-2">{product.stock_quantity} items available</p>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-3">
-            <Button onClick={handleAddToCart} disabled={product.stock_quantity === 0} className="w-full h-12 text-sm">
+          <div className="flex flex-col gap-3 pt-2">
+            <Button
+              onClick={handleAddToCart}
+              disabled={product.stock_quantity === 0}
+              className="w-full h-14 text-sm font-bold shadow-[var(--shadow-gold)] text-base"
+            >
               {product.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
             </Button>
             {isAuthenticated && (
-              <Button variant="outline" onClick={handleToggleWishlist} className="w-full h-12 text-sm">
-                {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              <Button
+                variant="outline"
+                onClick={handleToggleWishlist}
+                className="w-full h-12 text-sm font-medium"
+              >
+                {isInWishlist(product.id) ? '❤ Remove from Wishlist' : '♡ Add to Wishlist'}
               </Button>
             )}
           </div>
 
           {/* Meta */}
-          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-[var(--color-border-light)]">
-            <div>
-              <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">SKU</span>
-              <p className="font-ui text-sm text-[var(--color-text-primary)] mt-1">{product.sku}</p>
+          <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-[var(--color-border-light)]">
+            <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-[var(--color-bg-muted)]/50">
+              <Shield className="w-5 h-5 text-[var(--color-gold-500)]" />
+              <div>
+                <span className="font-ui text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] font-semibold">SKU</span>
+                <p className="font-ui text-sm text-[var(--color-text-primary)] font-medium">{product.sku}</p>
+              </div>
             </div>
-            <div>
-              <span className="font-ui text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Availability</span>
-              <p className={`font-ui text-sm mt-1 ${product.stock_quantity > 0 ? 'text-[var(--color-success-text)]' : 'text-[var(--color-danger-text)]'}`}>
-                {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
-              </p>
+            <div className="flex items-center gap-3 p-3 rounded-[var(--radius-lg)] bg-[var(--color-bg-muted)]/50">
+              <Truck className="w-5 h-5 text-[var(--color-gold-500)]" />
+              <div>
+                <span className="font-ui text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] font-semibold">Availability</span>
+                <p className={`font-ui text-sm font-medium mt-0.5 ${product.stock_quantity > 0 ? 'text-[var(--color-success-text)]' : 'text-[var(--color-danger-text)]'}`}>
+                  {product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="grid grid-cols-3 gap-3 pt-2">
+            <div className="text-center p-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-raised)]">
+              <Truck className="w-5 h-5 mx-auto mb-1.5 text-[var(--color-gold-400)]" />
+              <p className="text-[10px] font-ui text-[var(--color-text-tertiary)] uppercase tracking-wider font-semibold">Free Shipping</p>
+            </div>
+            <div className="text-center p-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-raised)]">
+              <RotateCcw className="w-5 h-5 mx-auto mb-1.5 text-[var(--color-gold-400)]" />
+              <p className="text-[10px] font-ui text-[var(--color-text-tertiary)] uppercase tracking-wider font-semibold">Easy Returns</p>
+            </div>
+            <div className="text-center p-3 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-raised)]">
+              <Shield className="w-5 h-5 mx-auto mb-1.5 text-[var(--color-gold-400)]" />
+              <p className="text-[10px] font-ui text-[var(--color-text-tertiary)] uppercase tracking-wider font-semibold">Secure</p>
             </div>
           </div>
         </div>
@@ -216,8 +258,8 @@ export const ProductDetailsPage: React.FC = () => {
         </div>
         <div>
           {isAuthenticated && (
-            <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-xl)] p-6">
-              <h3 className="font-display text-lg font-bold text-[var(--color-text-primary)] mb-4">Write a Review</h3>
+            <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] p-6 shadow-[var(--shadow-card)]">
+              <h3 className="font-display text-lg font-bold text-[var(--color-text-primary)] mb-5">Write a Review</h3>
               <ReviewForm onSubmit={handleReviewSubmit} isLoading={isSubmittingReview} />
             </div>
           )}

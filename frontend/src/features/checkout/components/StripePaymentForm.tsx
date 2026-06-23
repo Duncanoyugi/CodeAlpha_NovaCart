@@ -49,10 +49,36 @@ export const StripePaymentForm: React.FC<{
       if (error) {
         toast.error(error.message || 'Payment failed');
         onError(error.message || 'Payment failed');
-      } else if (paymentIntent?.status === 'succeeded') {
+      } else if (!paymentIntent) {
+        toast.error('Payment failed: missing payment intent');
+        onError('Payment failed: missing payment intent');
+      } else if (paymentIntent.status === 'requires_action') {
+        // Next step (3D Secure / other authentication)
+        const { error: actionError, paymentIntent: actionResult } = await stripe.confirmCardPayment(
+          client_secret
+        );
+
+        if (actionError) {
+          toast.error(actionError.message || 'Payment action failed');
+          onError(actionError.message || 'Payment action failed');
+          return;
+        }
+
+        if (actionResult?.status === 'succeeded') {
+          toast.success('Payment successful!');
+          await confirmPayment({ payment_intent_id: actionResult.id }).unwrap();
+          onSuccess();
+        } else {
+          toast.error(`Payment not completed (status: ${actionResult?.status || 'unknown'})`);
+          onError(`Payment not completed (status: ${actionResult?.status || 'unknown'})`);
+        }
+      } else if (paymentIntent.status === 'succeeded') {
         toast.success('Payment successful!');
         await confirmPayment({ payment_intent_id: paymentIntent.id }).unwrap();
         onSuccess();
+      } else {
+        toast.error(`Payment not completed (status: ${paymentIntent.status})`);
+        onError(`Payment not completed (status: ${paymentIntent.status})`);
       }
     } catch (err: any) {
       const message = typeof err?.message === 'string' ? err.message : 'Payment processing failed';
@@ -77,13 +103,30 @@ export const StripePaymentForm: React.FC<{
       </div>
 
       <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-muted)] rounded-[var(--radius-md)]">
-        <ShieldCheck className="w-5 h-5 text-[var(--color-gold-400)]" />
-        <p className="font-ui text-xs text-[var(--color-text-secondary)]">Your payment is secured with 256-bit SSL encryption via Stripe.</p>
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-gold-50)] border border-[var(--color-border-light)]">
+          <ShieldCheck className="w-5 h-5 text-[var(--color-gold-500)]" />
+        </div>
+        <p className="font-ui text-xs text-[var(--color-text-secondary)]">
+          Your payment is secured with 256-bit SSL encryption via Stripe.
+        </p>
       </div>
 
-      <Button type="submit" disabled={!stripe || !cardComplete || isLoading} className="w-full h-12 text-sm">
-        {isLoading ? 'Processing...' : `Pay $${amount.toFixed(2)}`}
-      </Button>
+      <div className="rounded-[var(--radius-md)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] p-4">
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="font-ui text-xs uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">Amount</p>
+          <p className="font-display text-lg font-bold text-[var(--color-text-primary)]">${Number(amount || 0).toFixed(2)}</p>
+        </div>
+
+        <Button type="submit" disabled={!stripe || !cardComplete || isLoading} className="w-full h-12 text-sm mt-3">
+          {isLoading ? 'Processing...' : `Pay Now`}
+        </Button>
+
+        <p className="mt-2 text-center font-ui text-[11px] text-[var(--color-text-tertiary)]">
+          By placing the order, you agree to our Terms & Conditions.
+        </p>
+      </div>
+
     </form>
+
   );
 };

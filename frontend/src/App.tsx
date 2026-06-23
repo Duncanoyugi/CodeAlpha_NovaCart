@@ -1,4 +1,4 @@
-// import React from 'react';
+import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -8,8 +8,8 @@ import { setupInterceptors } from './services';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import './index.css';
+import './styles/toast.css';
 
-// Setup axios interceptors
 setupInterceptors();
 
 function App() {
@@ -22,21 +22,18 @@ function App() {
               position="top-right"
               toastOptions={{
                 duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
+                className: '!bg-[var(--toast-bg)] !text-[var(--toast-text)] !border !border-[var(--toast-border)]',
                 success: {
                   duration: 3000,
                   iconTheme: {
-                    primary: '#22c55e',
+                    primary: 'var(--toast-success)',
                     secondary: '#fff',
                   },
                 },
                 error: {
                   duration: 4000,
                   iconTheme: {
-                    primary: '#ef4444',
+                    primary: 'var(--toast-error)',
                     secondary: '#fff',
                   },
                 },

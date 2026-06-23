@@ -6,6 +6,7 @@ import { ROUTES } from '../utils/constants';
 import { useCart } from '../features/cart';
 import { useAuth } from '../features/auth/hooks/useAuth';
 import { useWishlist } from '../features/wishlist';
+import { Badge } from '../components/common/Badge';
 
 export const HomePage: React.FC = () => {
   const { data: featured = [], isLoading: featuredLoading } = useGetFeaturedProductsQuery();
@@ -46,21 +47,21 @@ export const HomePage: React.FC = () => {
   </div>
   <div className="relative container-normal py-16 md:py-20 lg:py-24">
     <div className="max-w-3xl">
-      <span className="inline-block font-ui text-xs uppercase tracking-[0.2em] text-[var(--color-gold-400)] mb-6">New Collection 2026</span>
+      <span className="inline-block font-body text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] mb-6">New Collection 2026</span>
       <h1 className="font-display text-5xl md:text-6xl lg:text-[70px] leading-[1.1] mb-6">
         Curated essentials<br />for modern living
       </h1>
-      <p className="font-ui text-lg md:text-xl text-[rgba(240,235,224,0.7)] mb-8 max-w-lg">
+      <p className="font-body text-lg md:text-xl text-[rgba(240,235,224,0.7)] mb-8 max-w-lg">
         Discover our latest arrivals. <br /> Editorial curation<br />meets quality craftsmanship.
       </p>
-      <div className="flex flex-wrap gap-4">
-        <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 bg-[var(--color-gold-400)] text-[var(--color-gold-800)] font-ui text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-md)] hover:bg-[var(--color-gold-500)] transition-colors">
-          Shop Now
-        </Link>
-        <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 border border-[rgba(240,235,224,0.3)] text-white font-ui text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-md)] hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-400)] transition-colors">
-          View Lookbook
-        </Link>
-      </div>
+       <div className="flex flex-wrap gap-4">
+         <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 bg-[var(--color-accent)] text-[var(--color-accent-foreground)] font-body text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-lg)] hover:brightness-110 transition-all shadow-md hover:shadow-lg">
+           Shop Now
+         </Link>
+         <Link to={ROUTES.PRODUCTS} className="inline-flex items-center px-8 py-3.5 border-2 border-white/30 text-white font-body text-[13px] font-bold uppercase tracking-[0.08em] rounded-[var(--radius-lg)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-all">
+           View Lookbook
+         </Link>
+       </div>
     </div>
   </div>
   {/* Stat bar */}
@@ -69,7 +70,7 @@ export const HomePage: React.FC = () => {
       <div className="grid grid-cols-3 gap-4">
         {['10K+ Products', 'Free Shipping', '30-Day Returns'].map((stat) => (
           <div key={stat} className="text-center">
-            <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[rgba(240,235,224,0.6)]">{stat}</span>
+            <span className="font-body text-[11px] uppercase tracking-[0.14em] text-[rgba(240,235,224,0.6)]">{stat}</span>
           </div>
         ))}
       </div>
@@ -80,20 +81,20 @@ export const HomePage: React.FC = () => {
       {/* Categories */}
       <section className="section-gap">
         <div className="container-normal">
-          <div className="bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] p-8 shadow-[var(--shadow-sm)]">
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-2xl)] p-8 shadow-[var(--shadow-card)]">
             <div className="flex items-end justify-between mb-8">
               <div>
-                <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Browse</span>
+                <span className="font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-primary)] font-semibold">Browse</span>
                 <h2 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">Top Categories</h2>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {categories.slice(0, 6).map((cat: any) => (
-                <Link key={cat.id} to={`${ROUTES.PRODUCTS}?category=${cat.id}`} className="group text-center p-5 rounded-[var(--radius-xl)] border border-[var(--color-border-light)] hover:border-[var(--color-gold-400)] hover:shadow-[var(--shadow-md)] transition-all">
-                  <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-bg-muted)] flex items-center justify-center mb-3 group-hover:bg-[var(--color-gold-50)] transition-colors">
+                <Link key={cat.id} to={`${ROUTES.PRODUCTS}?category=${cat.id}`} className="group text-center p-5 rounded-[var(--radius-xl)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:shadow-[var(--shadow-card-hover)] transition-all">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-[var(--color-bg-muted)] flex items-center justify-center mb-3 group-hover:bg-[var(--color-primary)]/10 transition-colors">
                     <span className="text-lg">📦</span>
                   </div>
-                  <span className="font-ui text-xs text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">{cat.name}</span>
+                  <span className="font-body text-xs text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] transition-colors">{cat.name}</span>
                 </Link>
               ))}
             </div>
@@ -106,10 +107,10 @@ export const HomePage: React.FC = () => {
         <div className="container-normal">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Selection</span>
+              <span className="font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-primary)] font-semibold">Selection</span>
               <h2 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">Featured Products</h2>
             </div>
-            <Link to={ROUTES.PRODUCTS} className="font-ui text-sm text-[var(--color-text-accent)] hover:underline">View All</Link>
+            <Link to={ROUTES.PRODUCTS} className="font-body text-sm text-[var(--color-primary)] hover:underline font-medium">View All</Link>
           </div>
           <ProductGrid products={featuredList} isLoading={featuredLoading} onAddToCart={handleAddToCart} onAddToWishlist={handleToggleWishlist} wishlistIds={wishlistItems.map((i: any) => i.product.id)} />
         </div>
@@ -120,10 +121,10 @@ export const HomePage: React.FC = () => {
         <div className="container-normal">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Popular</span>
+              <span className="font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-primary)] font-semibold">Popular</span>
               <h2 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">Best Sellers</h2>
             </div>
-            <Link to={ROUTES.PRODUCTS} className="font-ui text-sm text-[var(--color-text-accent)] hover:underline">View All</Link>
+            <Link to={ROUTES.PRODUCTS} className="font-body text-sm text-[var(--color-primary)] hover:underline font-medium">View All</Link>
           </div>
           <ProductGrid products={bestSellingList.slice(0, 8)} isLoading={bestSellingLoading} onAddToCart={handleAddToCart} onAddToWishlist={handleToggleWishlist} wishlistIds={wishlistItems.map((i: any) => i.product.id)} />
         </div>
@@ -134,10 +135,10 @@ export const HomePage: React.FC = () => {
         <div className="container-normal">
           <div className="flex items-end justify-between mb-8">
             <div>
-              <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)]">Just Landed</span>
+              <span className="font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-primary)] font-semibold">Just Landed</span>
               <h2 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">New Arrivals</h2>
             </div>
-            <Link to={ROUTES.PRODUCTS} className="font-ui text-sm text-[var(--color-text-accent)] hover:underline">View All</Link>
+            <Link to={ROUTES.PRODUCTS} className="font-body text-sm text-[var(--color-primary)] hover:underline font-medium">View All</Link>
           </div>
           <ProductGrid products={newArrivalsList} isLoading={newArrivalsLoading} onAddToCart={handleAddToCart} onAddToWishlist={handleToggleWishlist} wishlistIds={wishlistItems.map((i: any) => i.product.id)} />
         </div>

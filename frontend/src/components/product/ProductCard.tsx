@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import type { Product } from '../../types';
 import { ROUTES } from '../../utils/constants';
 import { formatPrice, calculateDiscountPercentage } from '../../utils';
+import { ShoppingCart, Heart, Eye } from 'lucide-react';
+import { Badge } from '../common/Badge';
 
 interface ProductCardProps {
   product: Product;
@@ -21,54 +23,75 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const isOutOfStock = product.stock_quantity === 0;
 
   return (
-    <div className="group relative bg-[var(--color-bg-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border-light)] transition-all duration-300 hover:border-[var(--color-border-medium)] hover:shadow-[var(--shadow-md)] hover:-translate-y-[2px]">
+    <div className="group bg-[var(--color-surface)] rounded-[var(--radius-xl)] border border-[var(--color-border)] overflow-hidden transition-all duration-200 hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-1 hover:border-[var(--color-border-medium)]">
       {/* Image Container */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-t-[var(--radius-lg)]">
-        <Link to={ROUTES.PRODUCT_DETAIL(product.slug)}>
+      <div className="relative aspect-[4/5] overflow-hidden bg-[var(--color-bg-muted)]">
+        <Link to={ROUTES.PRODUCT_DETAIL(product.slug)} className="block">
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-[400ms] group-hover:scale-[1.04]"
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
           />
         </Link>
 
-        {/* Discount Badge */}
-        {discountPercentage > 0 && (
-          <div className="absolute top-3 left-3 z-10 bg-[var(--color-gold-400)] text-[var(--color-gold-800)] text-[11px] font-bold px-2 py-1 rounded-[var(--radius-sm)]">
-            -{discountPercentage}%
-          </div>
-        )}
+        {/* Gradient Overlay on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-        {/* New Badge */}
-        {product.is_new_arrival && discountPercentage === 0 && (
-          <div className="absolute top-3 left-3 z-10 bg-[var(--color-bg-inverse)] text-[var(--color-text-inverse)] text-[11px] font-bold px-2 py-1 rounded-[var(--radius-sm)]">
-            NEW
-          </div>
-        )}
+        {/* Badges */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+          {discountPercentage > 0 && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[var(--color-accent)] text-[var(--color-accent-foreground)] text-[10px] font-body font-bold uppercase tracking-wider shadow-md">
+              -{discountPercentage}%
+            </span>
+          )}
+          {product.is_new_arrival && discountPercentage === 0 && (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-[var(--color-primary)] text-white text-[10px] font-body font-bold uppercase tracking-wider shadow-md">
+              New
+            </span>
+          )}
+        </div>
 
-        {/* Wishlist Heart */}
-        {onAddToWishlist && (
-          <button
-            onClick={() => onAddToWishlist(product.id)}
-            className={`absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
-              isInWishlist
-                ? 'bg-[rgba(231,76,60,0.9)] text-white'
-                : 'bg-[rgba(255,255,255,0.9)] text-[var(--color-text-secondary)] hover:text-[#E74C3C]'
-            }`}
-            aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+        {/* Quick Actions */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+          {onAddToWishlist && (
+            <button
+              onClick={() => onAddToWishlist(product.id)}
+              className={`w-9 h-9 flex items-center justify-center rounded-full shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                isInWishlist
+                  ? 'bg-[var(--color-danger)] text-white'
+                  : 'bg-white/95 text-[var(--color-text-secondary)] hover:bg-white hover:text-[var(--color-danger)] backdrop-blur-sm'
+              }`}
+              aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <Heart className={`w-4 h-4 ${isInWishlist ? 'fill-current' : ''}`} />
+            </button>
+          )}
+          <Link
+            to={ROUTES.PRODUCT_DETAIL(product.slug)}
+            className="hidden group-hover:flex w-9 h-9 items-center justify-center rounded-full bg-white/95 text-[var(--color-text-secondary)] hover:bg-white hover:text-[var(--color-text-primary)] shadow-lg backdrop-blur-sm transition-all duration-200"
+            aria-label="Quick view"
           >
-            <svg className="w-4 h-4" fill={isInWishlist ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-          </button>
-        )}
+            <Eye className="w-4 h-4" />
+          </Link>
+        </div>
 
-        {/* Add to Cart - Hover (Desktop) */}
+        {/* Add to Cart - Desktop Hover */}
         {onAddToCart && !isOutOfStock && (
           <button
             onClick={() => onAddToCart(product.id)}
-            className="absolute bottom-0 left-0 right-0 z-10 w-full bg-[var(--color-bg-inverse)] text-[var(--color-text-inverse)] py-2.5 text-[11px] font-ui uppercase tracking-[0.1em] font-bold transition-all duration-300"
+            className="absolute bottom-0 left-0 right-0 z-10 w-full bg-[var(--color-accent)] text-[var(--color-accent-foreground)] py-3.5 text-[11px] font-body font-bold uppercase tracking-[0.12em] transition-all duration-300 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 flex items-center justify-center gap-2 hover:brightness-110 hidden sm:flex"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Add to Cart
+          </button>
+        )}
+
+        {/* Add to Cart - Mobile */}
+        {onAddToCart && !isOutOfStock && (
+          <button
+            onClick={() => onAddToCart(product.id)}
+            className="sm:hidden w-full bg-[var(--color-accent)] text-[var(--color-accent-foreground)] py-2.5 text-[11px] font-body font-bold uppercase tracking-[0.12em] rounded-[var(--radius-md)] hover:brightness-110 transition-all mt-3"
           >
             Add to Cart
           </button>
@@ -80,57 +103,59 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {/* Category */}
         <Link
           to={ROUTES.CATEGORY(product.category.slug)}
-          className="text-[11px] font-ui uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] hover:text-[var(--color-gold-600)] transition-colors inline-block mb-1"
+          onClick={(e) => e.stopPropagation()}
+          className="text-[10px] font-body font-semibold uppercase tracking-[0.16em] text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors inline-block mb-1.5"
         >
           {product.category.name}
         </Link>
 
         {/* Product Name */}
-        <Link to={ROUTES.PRODUCT_DETAIL(product.slug)}>
-          <h3 className="font-display text-[15px] font-normal text-[var(--color-text-primary)] leading-snug line-clamp-2 hover:text-[var(--color-text-accent)] transition-colors">
+        <Link to={ROUTES.PRODUCT_DETAIL(product.slug)} className="group/title block">
+          <h3 className="font-display text-[15px] font-normal text-[var(--color-text-primary)] leading-snug line-clamp-2 group-hover/title:text-[var(--color-primary)] transition-colors">
             {product.name}
           </h3>
         </Link>
 
         {/* Rating */}
-        <div className="flex items-center gap-2 mt-2">
-          <div className="flex items-center">
-            <svg className="w-3.5 h-3.5 text-[var(--color-gold-400)]" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="text-[11px] font-ui font-medium text-[var(--color-text-primary)] ml-1">{Number(product.rating).toFixed(1)}</span>
+        <div className="flex items-center gap-2 mt-2.5">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <svg
+                key={star}
+                className={`w-3.5 h-3.5 ${star <= Math.round(product.rating) ? 'text-[var(--color-accent)]' : 'text-[var(--color-border-strong)]'}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            ))}
           </div>
-          <span className="text-[11px] font-ui text-[var(--color-text-tertiary)]">({product.num_reviews} reviews)</span>
+          <span className="text-[11px] font-body font-medium text-[var(--color-text-primary)]">{Number(product.rating).toFixed(1)}</span>
+          <span className="text-[11px] font-body text-[var(--color-text-muted)]">({product.num_reviews})</span>
         </div>
 
         {/* Price */}
-        <div className="mt-3 flex items-center gap-2">
-          <span className="font-ui text-sm font-medium text-[var(--color-gold-600)]">
+        <div className="mt-3 flex items-end gap-2.5">
+          <span className="font-body text-lg font-semibold text-[var(--color-primary)] leading-none">
             {formatPrice(product.final_price)}
           </span>
           {discountPercentage > 0 && (
-            <span className="font-ui text-[11px] text-[var(--color-text-tertiary)] line-through">
+            <span className="font-body text-xs text-[var(--color-text-muted)] line-through">
               {formatPrice(product.price)}
             </span>
           )}
         </div>
 
         {/* Stock Status */}
-        {isOutOfStock ? (
-          <p className="mt-2 text-[11px] font-ui text-[var(--color-danger-text)]">Out of Stock</p>
-        ) : (
-          <p className="mt-2 text-[11px] font-ui text-[var(--color-success-text)]">In Stock</p>
-        )}
-
-        {/* Mobile Add to Cart */}
-        {onAddToCart && !isOutOfStock && (
-          <button
-            onClick={() => onAddToCart(product.id)}
-            className="mt-3 w-full bg-[var(--color-bg-inverse)] text-[var(--color-text-inverse)] py-2 text-[11px] font-ui uppercase tracking-[0.1em] font-bold rounded-[var(--radius-md)] hover:bg-[rgba(240,235,224,0.9)] hover:text-[var(--color-bg-inverse)] transition-colors md:hidden"
-          >
-            Add to Cart
-          </button>
-        )}
+        <div className="mt-3">
+          {isOutOfStock ? (
+            <Badge variant="danger" size="sm">Out of Stock</Badge>
+          ) : product.stock_quantity < 5 ? (
+            <Badge variant="warning" size="sm">Low Stock</Badge>
+          ) : (
+            <Badge variant="success" size="sm">In Stock</Badge>
+          )}
+        </div>
       </div>
     </div>
   );

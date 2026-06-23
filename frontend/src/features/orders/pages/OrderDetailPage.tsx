@@ -62,7 +62,7 @@ export const OrderDetailPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <OrderStatusBadge status={order.status} />
         {order.status === 'pending' && (
-          <Button variant="danger" onClick={() => setShowCancelModal(true)} className="text-xs">
+<Button variant="destructive" onClick={() => setShowCancelModal(true)} className="text-xs">
             Cancel Order
           </Button>
         )}
@@ -88,7 +88,7 @@ export const OrderDetailPage: React.FC = () => {
             <p className="font-ui text-sm text-[var(--color-text-secondary)] mb-6">This action cannot be undone. Are you sure you want to cancel order #{order.order_number}?</p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowCancelModal(false)} className="flex-1">Keep Order</Button>
-              <Button variant="danger" onClick={handleCancel} className="flex-1">Yes, Cancel</Button>
+<Button variant="destructive" onClick={handleCancel} className="flex-1">Yes, Cancel</Button>
             </div>
           </div>
         </div>

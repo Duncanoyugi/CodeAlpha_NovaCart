@@ -1,0 +1,25 @@
+/* Toast Styles */
+:root {
+  --toast-bg: #FFFFFF;
+  --toast-border: #E4E0D8;
+  --toast-text: #14213D;
+  --toast-success: #1F9D6E;
+  --toast-error: #C2452D;
+  --toast-warning: #B9791F;
+}
+
+.dark {
+  --toast-bg: #262630;
+  --toast-border: #34343E;
+  --toast-text: #F2F1ED;
+  --toast-success: #34C796;
+  --toast-error: #E2705A;
+  --toast-warning: #E8A33D;
+}
+
+/* Override react-hot-toast defaults */
+:root {
+  --toaster-bg: var(--toast-bg);
+  --toaster-color: var(--toast-text);
+  --toaster-border: var(--toast-border);
+}

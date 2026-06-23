@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from './Button';
 
 interface Props {
@@ -19,7 +19,6 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
@@ -38,14 +37,14 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-gray-50 dark:bg-slate-950 rounded-3xl m-4 border border-gray-150 dark:border-slate-800">
-          <div className="flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-full mb-6">
+        <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-[var(--color-bg)] rounded-[var(--radius-2xl)] m-4 border border-[var(--color-border)]">
+          <div className="flex items-center justify-center w-16 h-16 bg-[var(--color-danger)]/10 text-[var(--color-danger)] rounded-full mb-6">
             <AlertTriangle className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+          <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-3">
             Something went wrong
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-8 leading-relaxed">
+          <p className="text-sm text-[var(--color-text-secondary)] max-w-md mb-8 leading-relaxed">
             An unexpected error occurred in this section of the application. Please try reloading the page or contact support if the issue persists.
           </p>
           <div className="flex items-center gap-4">
@@ -53,6 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Try Again
             </Button>
             <Button variant="primary" onClick={this.handleReload}>
+              <RefreshCw className="w-4 h-4 mr-2" />
               Reload Page
             </Button>
           </div>

@@ -62,7 +62,8 @@ def checkout(request):
     
     return Response({
         'success': False,
-        'errors': serializer.errors
+        'errors': serializer.errors,
+        'received_data': request.data,
     }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
