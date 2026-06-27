@@ -14,6 +14,16 @@ from users.serializers import (
 )
 from users.services import UserService
 
+# Admin endpoints
+from users.views.admin_views import (
+    list_admin_users,
+    update_user_role,
+    toggle_user_status,
+    verify_user,
+)
+
+
+
 
 @api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])

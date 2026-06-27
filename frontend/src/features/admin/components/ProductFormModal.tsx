@@ -82,18 +82,21 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   useEffect(() => {
     if (product) {
+      const categoryValue = typeof product.category === 'object'
+        ? product.category.id
+        : product.category;
       reset({
         name: product.name,
         short_description: product.short_description,
         description: product.description,
         price: product.price,
         compare_price: product.compare_price || null,
-        category: product.category.id,
+        category: categoryValue || '',
         image_url: product.image_url,
         images: product.images || [],
         stock_quantity: product.stock_quantity,
         sku: product.sku,
-        tags: product.tags.join(', '),
+        tags: product.tags?.join(', ') || '',
         discount_percentage: product.discount_percentage,
         is_available: product.is_available,
         is_featured: product.is_featured,
@@ -138,15 +141,29 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
       const formData = new FormData();
-      const productData: ProductFormData = {
-        ...data,
-        tags: data.tags,
-      };
-      Object.entries(productData).forEach(([key, value]) => {
+
+      const append = (key: string, value: any) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, String(value));
+          formData.append(key, value);
         }
-      });
+      };
+
+      append('name', data.name);
+      append('short_description', data.short_description);
+      append('description', data.description);
+      append('price', String(data.price));
+      append('compare_price', data.compare_price !== null && data.compare_price !== undefined ? String(data.compare_price) : null);
+      append('category', data.category);
+      append('image_url', data.image_url);
+      append('stock_quantity', String(data.stock_quantity));
+      append('sku', data.sku);
+      append('tags', JSON.stringify(data.tags.split(',').map(t => t.trim()).filter(Boolean)));
+      append('images', JSON.stringify(data.images));
+      append('discount_percentage', String(data.discount_percentage));
+      append('is_available', String(data.is_available));
+      append('is_featured', String(data.is_featured));
+      append('is_best_seller', String(data.is_best_seller));
+      append('is_new_arrival', String(data.is_new_arrival));
 
       if (product) {
         await updateProduct({ id: product.id, data: formData }).unwrap();

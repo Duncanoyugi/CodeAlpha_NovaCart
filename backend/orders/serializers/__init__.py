@@ -17,12 +17,27 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderListSerializer(serializers.ModelSerializer):
     """Serializer for listing orders (minimal fields)"""
     total_items = serializers.IntegerField(read_only=True)
-    
+    items_summary = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Order
         fields = [
             'id', 'order_number', 'total_amount', 'status', 'payment_status',
-            'placed_at', 'total_items'
+            'placed_at', 'total_items', 'items_summary',
+            'shipping_full_name', 'shipping_email',
+        ]
+
+    def get_items_summary(self, obj):
+        items = obj.items.all()[:3]
+        return [
+            {
+                'id': str(item.id),
+                'product_name': item.product_name,
+                'product_image': item.product_image,
+                'quantity': item.quantity,
+                'total_price': float(item.total_price),
+            }
+            for item in items
         ]
 
 class OrderDetailSerializer(serializers.ModelSerializer):

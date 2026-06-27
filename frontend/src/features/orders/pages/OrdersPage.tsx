@@ -9,7 +9,7 @@ import { ORDER_STATUS } from '../../../utils/constants';
 export const OrdersPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const { data, isLoading } = useGetMyOrdersQuery({ page, pageSize: 10 } as any);
+  const { data, isLoading } = useGetMyOrdersQuery({ page, pageSize: 10, status: statusFilter || undefined });
 
   const orders = data?.orders || [];
   const totalPages = data?.pagination?.total_pages || 1;

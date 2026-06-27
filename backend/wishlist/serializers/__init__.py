@@ -3,7 +3,9 @@ from rest_framework import serializers
 from ..models.base import Wishlist, WishlistItem
 from products.serializers import ProductListSerializer
 
+
 class WishlistItemSerializer(serializers.ModelSerializer):
+
     product_details = ProductListSerializer(source='product', read_only=True)
     
     class Meta:
@@ -13,12 +15,15 @@ class WishlistItemSerializer(serializers.ModelSerializer):
 
 class WishlistSerializer(serializers.ModelSerializer):
     items = WishlistItemSerializer(many=True, read_only=True)
+    # Model has a `total_items` property; DRF can expose it directly.
     total_items = serializers.IntegerField(read_only=True)
-    
+
+
     class Meta:
         model = Wishlist
         fields = ['id', 'user', 'items', 'total_items', 'created_at', 'updated_at']
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
+
 
 class AddToWishlistSerializer(serializers.Serializer):
     product_id = serializers.UUIDField(required=True)

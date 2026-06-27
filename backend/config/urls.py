@@ -50,7 +50,9 @@ urlpatterns = [
     path('api/reviews/', include('reviews.urls')),
     path('api/cart/', include('cart.urls')),
     path('api/orders/', include('orders.urls')),
+    path('api/analytics/', include('analytics.urls')),
     path('api/payments/', include('payments.urls')),
+    path('api/wishlist/', include('wishlist.urls')),
 ]
 
 # Serve media files in development

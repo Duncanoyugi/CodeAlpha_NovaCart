@@ -67,21 +67,21 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <div className="flex items-start gap-2">
                 <Package className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="font-medium">{order.shipping_address?.full_name || 'N/A'}</p>
-                  <p className="text-sm text-gray-500">{order.shipping_address?.email || 'N/A'}</p>
-                  <p className="text-sm text-gray-500">{order.shipping_address?.phone || 'N/A'}</p>
+                   <p className="font-medium">{order.shipping_full_name || 'N/A'}</p>
+                   <p className="text-sm text-gray-500">{order.shipping_email || 'N/A'}</p>
+                   <p className="text-sm text-gray-500">{order.shipping_phone || 'N/A'}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                 <div>
                   <p className="font-medium">Shipping Address</p>
-                  <p className="text-sm text-gray-500">
-                    {order.shipping_address?.address_line1}<br />
-                    {order.shipping_address?.address_line2 && <>{order.shipping_address.address_line2}<br /></>}
-                    {order.shipping_address?.city}, {order.shipping_address?.state} {order.shipping_address?.postal_code}<br />
-                    {order.shipping_address?.country}
-                  </p>
+                   <p className="text-sm text-gray-500">
+                     {order.shipping_address_line1}<br />
+                     {order.shipping_address_line2 && <>{order.shipping_address_line2}<br /></>}
+                     {order.shipping_city}, {order.shipping_state} {order.shipping_postal_code}<br />
+                     {order.shipping_country}
+                   </p>
                 </div>
               </div>
             </div>

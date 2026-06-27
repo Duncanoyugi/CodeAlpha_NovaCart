@@ -10,6 +10,7 @@ interface ProductCardProps {
   product: Product;
   onAddToCart?: (productId: string) => void;
   onAddToWishlist?: (productId: string) => void;
+  onRemoveFromWishlist?: (productId: string) => void;
   isInWishlist?: boolean;
 }
 
@@ -17,6 +18,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
   onAddToWishlist,
+  onRemoveFromWishlist,
   isInWishlist = false,
 }) => {
   const discountPercentage = calculateDiscountPercentage(product.price, product.final_price);
@@ -54,9 +56,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Quick Actions */}
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
-          {onAddToWishlist && (
+          {(onAddToWishlist || onRemoveFromWishlist) && (
             <button
-              onClick={() => onAddToWishlist(product.id)}
+              onClick={() => {
+                if (isInWishlist) {
+                  onRemoveFromWishlist?.(product.id);
+                } else {
+                  onAddToWishlist?.(product.id);
+                }
+              }}
               className={`w-9 h-9 flex items-center justify-center rounded-full shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 isInWishlist
                   ? 'bg-[var(--color-danger)] text-white'

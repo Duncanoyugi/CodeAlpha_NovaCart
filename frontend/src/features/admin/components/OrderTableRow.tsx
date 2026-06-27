@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, Edit2 } from 'lucide-react';
+import { Eye, Edit2, MoreVertical } from 'lucide-react';
 import type { Order } from '../../../types';
 import { formatPrice, formatDate } from '../../../utils';
-import { ORDER_STATUS, PAYMENT_STATUS } from '../../../utils/constants';
+import { ORDER_STATUS, PAYMENT_STATUS, ROUTES } from '../../../utils/constants';
 import { OrderStatusModal } from './OrderStatusModal';
 import { OrderDetailModal } from './OrderDetailModal';
 
@@ -18,10 +18,10 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({ order, onRefresh }
   const getStatusBadge = (status: string, type: 'order' | 'payment') => {
     if (type === 'order') {
       const config = ORDER_STATUS[status as keyof typeof ORDER_STATUS];
-      return config?.color || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]';
+      return config?.color || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)] border border-[var(--color-border-light)]';
     }
     const config = PAYMENT_STATUS[status as keyof typeof PAYMENT_STATUS];
-    return config?.color || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)]';
+    return config?.color || 'bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)] border border-[var(--color-border-light)]';
   };
 
   const getStatusLabel = (status: string, type: 'order' | 'payment') => {
@@ -31,26 +31,51 @@ export const OrderTableRow: React.FC<OrderTableRowProps> = ({ order, onRefresh }
 
   return (
     <>
-      <tr className="hover:bg-[var(--color-bg-muted)] transition-colors">
-        <td className="py-3 px-4">
-          <button onClick={() => setShowDetailModal(true)} className="font-ui text-sm font-medium text-[var(--color-text-accent)] hover:underline">
+      <tr className="group hover:bg-[var(--color-bg-muted)] transition-colors duration-150">
+        <td className="py-4 px-4">
+          <span className="font-ui text-sm font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-primary)] transition-colors">
             {order.order_number}
-          </button>
+          </span>
         </td>
-        <td className="py-3 px-4 font-ui text-sm text-[var(--color-text-secondary)]">{order.shipping_address?.full_name || 'N/A'}</td>
-        <td className="py-3 px-4 font-ui text-sm text-[var(--color-text-tertiary)]">{formatDate(order.placed_at, 'MMM dd, yyyy')}</td>
-        <td className="py-3 px-4 text-right font-ui text-sm font-medium text-[var(--color-text-primary)]">{formatPrice(order.total_amount)}</td>
-        <td className="py-3 px-4">
-          <span className={`inline-flex px-2.5 py-1 rounded-full font-ui text-[11px] font-medium tracking-wider ${getStatusBadge(order.status, 'order')}`}>
+        <td className="py-4 px-4">
+          <span className="font-ui text-sm text-[var(--color-text-secondary)]">
+            {order.shipping_full_name || 'N/A'}
+          </span>
+        </td>
+        <td className="py-4 px-4">
+          <span className="font-ui text-sm text-[var(--color-text-muted)]">
+            {formatDate(order.placed_at, 'MMM dd, yyyy')}
+          </span>
+        </td>
+        <td className="py-4 px-4 text-right">
+          <span className="font-ui text-sm font-semibold text-[var(--color-text-primary)]">
+            {formatPrice(order.total_amount)}
+          </span>
+        </td>
+        <td className="py-4 px-4">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-ui text-[11px] font-semibold tracking-wide ${getStatusBadge(order.status, 'order')}`}>
             {getStatusLabel(order.status, 'order')}
           </span>
         </td>
-        <td className="py-3 px-4">
+        <td className="py-4 px-4">
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-full font-ui text-[11px] font-semibold tracking-wide ${getStatusBadge(order.payment_status, 'payment')}`}>
+            {getStatusLabel(order.payment_status, 'payment')}
+          </span>
+        </td>
+        <td className="py-4 px-4">
           <div className="flex items-center gap-1">
-            <button onClick={() => setShowDetailModal(true)} className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-accent)] rounded-[var(--radius-md)] hover:bg-[var(--color-bg-muted)] transition-colors" title="View Details">
+            <button
+              onClick={() => setShowDetailModal(true)}
+              className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] rounded-[var(--radius-md)] hover:bg-[var(--color-bg-muted)] transition-all duration-150"
+              title="View Details"
+            >
               <Eye className="w-4 h-4" />
             </button>
-            <button onClick={() => setShowStatusModal(true)} className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-accent)] rounded-[var(--radius-md)] hover:bg-[var(--color-bg-muted)] transition-colors" title="Update Status">
+            <button
+              onClick={() => setShowStatusModal(true)}
+              className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] rounded-[var(--radius-md)] hover:bg-[var(--color-bg-muted)] transition-all duration-150"
+              title="Update Status"
+            >
               <Edit2 className="w-4 h-4" />
             </button>
           </div>

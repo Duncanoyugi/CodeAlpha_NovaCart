@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ChevronDown } from 'lucide-react';
 import { ProductFormModal } from '../components/ProductFormModal';
 import { ProductTableRow } from '../components/ProductTableRow';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
@@ -30,7 +30,6 @@ export const ProductsManagementPage: React.FC = () => {
   const products = data?.products || [];
   const pagination = data?.pagination;
 
-  // Select/Deselect all
   const handleSelectAll = () => {
     if (selectedProducts.length === products.length) {
       setSelectedProducts([]);
@@ -82,7 +81,6 @@ export const ProductsManagementPage: React.FC = () => {
     }
   };
 
-  // Reset selected when products change (page change)
   useEffect(() => {
     setSelectedProducts([]);
   }, [page, search, statusFilter]);
@@ -92,17 +90,24 @@ export const ProductsManagementPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Products</h1>
-          <p className="text-gray-500 mt-1">Manage your product catalog</p>
+          <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-accent)]">
+            Management
+          </span>
+          <h1 className="font-display text-3xl font-bold text-[var(--color-text-primary)] tracking-tight mt-1">
+            Products
+          </h1>
+          <p className="font-ui text-sm text-[var(--color-text-secondary)] mt-1">
+            Manage your product catalog
+          </p>
         </div>
         <button
           onClick={() => {
             setEditingProduct(undefined);
             setShowFormModal(true);
           }}
-          className="btn-primary flex items-center gap-2"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-lg)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-ui text-sm font-semibold shadow-[var(--shadow-sm)] hover:brightness-110 hover:shadow-[var(--shadow-md)] transition-all duration-150 active:scale-[0.97]"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           Add Product
         </button>
       </div>
@@ -110,39 +115,42 @@ export const ProductsManagementPage: React.FC = () => {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-5 h-5" />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="Search products by name, SKU, or description..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input-field pl-10"
+            className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] pl-11 pr-4 py-2.5 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 transition-all"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-          className="input-field w-full sm:w-48"
-        >
-          <option value="all">All Products</option>
-          <option value="available">In Stock</option>
-          <option value="out_of_stock">Out of Stock</option>
-        </select>
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            className="w-full sm:w-52 rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 appearance-none transition-all cursor-pointer"
+          >
+            <option value="all">All Products</option>
+            <option value="available">In Stock</option>
+            <option value="out_of_stock">Out of Stock</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4 pointer-events-none" />
+        </div>
       </div>
 
       {/* Bulk Actions Bar */}
       {selectedProducts.length > 0 && (
-        <div className="bg-primary-50 rounded-lg p-4 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm font-medium text-primary-700">
-            {selectedProducts.length} product(s) selected
+        <div className="flex items-center justify-between gap-4 px-5 py-4 bg-[var(--color-bg-raised)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-sm)]">
+          <span className="font-ui text-sm font-medium text-[var(--color-text-secondary)]">
+            <span className="font-bold text-[var(--color-text-primary)]">{selectedProducts.length}</span> product{selectedProducts.length !== 1 ? 's' : ''} selected
           </span>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 setBulkStatusAction(true);
                 setShowBulkStatusModal(true);
               }}
-              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              className="px-4 py-2 rounded-[var(--radius-md)] bg-[var(--color-success-bg)] text-[var(--color-success-text)] border border-[var(--color-success-border)] font-ui text-sm font-semibold hover:brightness-95 transition-all"
             >
               Mark Available
             </button>
@@ -151,13 +159,13 @@ export const ProductsManagementPage: React.FC = () => {
                 setBulkStatusAction(false);
                 setShowBulkStatusModal(true);
               }}
-              className="px-3 py-1.5 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition"
+              className="px-4 py-2 rounded-[var(--radius-md)] bg-[#fef3c7] text-[#92400e] border border-[#fde68a] font-ui text-sm font-semibold hover:brightness-95 transition-all"
             >
               Mark Unavailable
             </button>
             <button
               onClick={() => setShowBulkDeleteModal(true)}
-              className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              className="px-4 py-2 rounded-[var(--radius-md)] bg-[var(--color-danger-bg)] text-[var(--color-danger-text)] border border-[var(--color-danger-border)] font-ui text-sm font-semibold hover:brightness-95 transition-all"
             >
               Delete Selected
             </button>
@@ -166,38 +174,47 @@ export const ProductsManagementPage: React.FC = () => {
       )}
 
       {/* Products Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-sm)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="py-3 px-4">
+            <thead>
+              <tr className="border-b border-[var(--color-border-light)]">
+                <th className="py-3.5 px-4">
                   <input
                     type="checkbox"
                     checked={selectedProducts.length === products.length && products.length > 0}
                     onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 rounded border-[var(--color-border-medium)] accent-[var(--color-primary)] cursor-pointer"
                   />
                 </th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Product</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Category</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Price</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Stock</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
-                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Product</th>
+                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Category</th>
+                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Price</th>
+                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Stock</th>
+                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Status</th>
+                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-500">
-                    <div className="animate-pulse">Loading products...</div>
+                  <td colSpan={7} className="py-16 text-center">
+                    <div className="space-y-3">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-12 bg-[var(--color-bg-muted)] rounded-[var(--radius-lg)] animate-pulse" />
+                      ))}
+                    </div>
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-gray-500">
-                    No products found
+                  <td colSpan={7} className="py-16 text-center">
+                    <div className="text-center">
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-bg-muted)] mb-3">
+                        <span className="text-[var(--color-text-muted)] font-bold text-sm">0</span>
+                      </div>
+                      <p className="font-ui text-sm text-[var(--color-text-muted)]">No products found</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -218,7 +235,7 @@ export const ProductsManagementPage: React.FC = () => {
 
         {/* Pagination */}
         {pagination && pagination.total_pages > 1 && (
-          <div className="px-6 py-4 border-t">
+          <div className="px-6 py-5 border-t border-[var(--color-border-light)] bg-[var(--color-bg-surface)]">
             <Pagination
               currentPage={pagination.current_page}
               totalPages={pagination.total_pages}

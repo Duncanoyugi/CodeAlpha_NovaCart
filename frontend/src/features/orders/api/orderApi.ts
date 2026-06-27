@@ -12,9 +12,14 @@ export const orderApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Cart', 'Order'],
     }),
-    getMyOrders: builder.query<{ orders: Order[]; pagination: any }, { page?: number; pageSize?: number }>({
-      query: ({ page = 1, pageSize = 10 }) =>
-        `${API_ENDPOINTS.ORDERS.MY_ORDERS}?page=${page}&page_size=${pageSize}`,
+    getMyOrders: builder.query<{ orders: any[]; pagination: any }, { page?: number; pageSize?: number; status?: string }>({
+      query: ({ page = 1, pageSize = 10, status }) => {
+        const params = new URLSearchParams();
+        params.set('page', String(page));
+        params.set('page_size', String(pageSize));
+        if (status) params.set('status', status);
+        return `${API_ENDPOINTS.ORDERS.MY_ORDERS}?${params.toString()}`;
+      },
       providesTags: ['Order'],
     }),
     getOrderDetail: builder.query<Order, string>({

@@ -29,7 +29,7 @@ export const WishlistItem: React.FC<WishlistItemProps> = ({ item, onRemove, onAd
               {truncateText(item.product.name, 60)}
             </h2>
           </Link>
-          <p className="text-xs font-ui text-[var(--color-text-tertiary)] mt-2 uppercase tracking-wider">{item.product.category.name}</p>
+          <p className="text-xs font-ui text-[var(--color-text-tertiary)] mt-2 uppercase tracking-wider">{item.product.category?.name ?? ''}</p>
           {item.product.rating !== undefined && (
             <div className="flex items-center gap-1.5 mt-2.5">
               <div className="flex items-center">

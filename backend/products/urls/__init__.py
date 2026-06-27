@@ -1,4 +1,3 @@
-# backend/products/urls/__init__.py
 from django.urls import path
 from ..views import (
     # Category views
@@ -7,8 +6,9 @@ from ..views import (
     # Product views
     list_products, featured_products, best_selling_products,
     new_arrivals, product_detail, create_product, update_product,
-    delete_product, update_inventory
+    delete_product, update_inventory,
 )
+from ..views.admin_products_view import list_admin_products
 
 urlpatterns = [
     # Category endpoints
@@ -27,8 +27,10 @@ urlpatterns = [
     path('<slug:slug>/', product_detail, name='product-detail'),
     
     # Admin product endpoints
-    path('admin/products/', create_product, name='create-product'),
+    path('admin/products/', list_admin_products, name='list-admin-products'),
+    path('admin/products/create/', create_product, name='create-product'),
     path('admin/products/<uuid:id>/', update_product, name='update-product'),
     path('admin/products/<uuid:id>/delete/', delete_product, name='delete-product'),
     path('admin/products/<uuid:id>/inventory/', update_inventory, name='update-inventory'),
+
 ]

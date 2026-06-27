@@ -42,9 +42,16 @@ export const StripePaymentForm: React.FC<{
 
     try {
       const { client_secret } = await createPaymentIntent({ order_id: orderId }).unwrap();
+      if (!client_secret || typeof client_secret !== 'string') {
+        toast.error('Stripe payment initialization failed (missing client secret). Check your internet/DNS connection to Stripe.');
+        onError('Stripe payment initialization failed (missing client secret)');
+        return;
+      }
+
       const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: { card },
       });
+
 
       if (error) {
         toast.error(error.message || 'Payment failed');

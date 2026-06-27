@@ -56,7 +56,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
         {/* Order Items Preview */}
         <div className="mt-4 flex items-center gap-4">
           <div className="flex -space-x-2">
-            {order.items.slice(0, 3).map((item) => (
+            {(order.items_summary || []).slice(0, 3).map((item: any) => (
               <img
                 key={item.id}
                 src={item.product_image}
@@ -66,7 +66,7 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
             ))}
           </div>
           <p className="text-sm text-gray-500">
-            {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+            {order.total_items || (order.items_summary?.length || 0)} item{(order.total_items || order.items_summary?.length || 0) !== 1 ? 's' : ''}
           </p>
         </div>
 

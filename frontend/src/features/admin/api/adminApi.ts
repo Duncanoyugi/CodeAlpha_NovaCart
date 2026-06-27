@@ -22,28 +22,39 @@ export const adminApi = apiSlice.injectEndpoints({
     // Dashboard Analytics
     getDashboardStats: builder.query<DashboardStats, void>({
       query: () => API_ENDPOINTS.ADMIN.DASHBOARD,
+      transformResponse: (response: any) => response.data,
       providesTags: ['Order', 'Product', 'User'],
     }),
     getSalesOverview: builder.query<SalesDataPoint[], { days?: number }>({
       query: ({ days = 30 }) => `${API_ENDPOINTS.ADMIN.SALES_OVERVIEW}?days=${days}`,
+      transformResponse: (response: any) => response.data,
       providesTags: ['Order'],
     }),
     getTopProducts: builder.query<TopProduct[], { limit?: number; days?: number }>({
       query: ({ limit = 10, days = 30 }) =>
         `${API_ENDPOINTS.ADMIN.TOP_PRODUCTS}?limit=${limit}&days=${days}`,
+      transformResponse: (response: any) => response.data,
       providesTags: ['Product', 'Order'],
     }),
     getCategorySales: builder.query<CategorySales[], { days?: number }>({
       query: ({ days = 30 }) => `/analytics/category-sales/?days=${days}`,
+      transformResponse: (response: any) => response.data,
       providesTags: ['Order', 'Product'],
     }),
     getCustomerInsights: builder.query<CustomerInsights, void>({
       query: () => '/analytics/customer-insights/',
+      transformResponse: (response: any) => response.data,
       providesTags: ['User', 'Order'],
     }),
     getInventoryStatus: builder.query<InventoryStatus, void>({
       query: () => '/analytics/inventory-status/',
+      transformResponse: (response: any) => response.data,
       providesTags: ['Product'],
+    }),
+    getRecentOrders: builder.query<Order[], { limit?: number }>({
+      query: ({ limit = 10 }) => `/analytics/recent-orders/?limit=${limit}`,
+      transformResponse: (response: any) => response.data,
+      providesTags: ['Order'],
     }),
 
     // Product Management
@@ -57,6 +68,7 @@ export const adminApi = apiSlice.injectEndpoints({
         });
         return `/products/admin/products/?${params.toString()}`;
       },
+      transformResponse: (response: any) => response.data,
       providesTags: ['Product'],
     }),
     createProduct: builder.mutation<Product, FormData>({
@@ -65,6 +77,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: formData,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
     updateProduct: builder.mutation<Product, { id: string; data: FormData }>({
@@ -73,6 +86,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
     deleteProduct: builder.mutation<void, string>({
@@ -80,6 +94,7 @@ export const adminApi = apiSlice.injectEndpoints({
         url: `/products/admin/products/${id}/delete/`,
         method: 'DELETE',
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
     updateInventory: builder.mutation<
@@ -91,12 +106,14 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: { stock_quantity },
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
 
     // Category Management
     getCategories: builder.query<Category[], void>({
       query: () => '/products/categories/',
+      transformResponse: (response: any) => response.data,
       providesTags: ['Category'],
     }),
     createCategory: builder.mutation<Category, Partial<Category>>({
@@ -105,6 +122,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Category'],
     }),
     updateCategory: builder.mutation<Category, { id: string; data: Partial<Category> }>({
@@ -113,6 +131,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Category'],
     }),
     deleteCategory: builder.mutation<void, string>({
@@ -120,6 +139,7 @@ export const adminApi = apiSlice.injectEndpoints({
         url: `/products/admin/categories/${id}/delete/`,
         method: 'DELETE',
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Category'],
     }),
 
@@ -134,6 +154,7 @@ export const adminApi = apiSlice.injectEndpoints({
         });
         return `${API_ENDPOINTS.ADMIN.ORDERS}?${params.toString()}`;
       },
+      transformResponse: (response: any) => response.data,
       providesTags: ['Order'],
     }),
     updateOrderStatus: builder.mutation<
@@ -145,6 +166,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Order'],
     }),
 
@@ -159,6 +181,7 @@ export const adminApi = apiSlice.injectEndpoints({
         });
         return `/users/admin/users/?${params.toString()}`;
       },
+      transformResponse: (response: any) => response.data,
       providesTags: ['User'],
     }),
     updateUserRole: builder.mutation<User, { userId: string; role: string }>({
@@ -167,6 +190,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: { role },
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['User'],
     }),
     toggleUserStatus: builder.mutation<User, { userId: string; is_active: boolean }>({
@@ -175,6 +199,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: { is_active },
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['User'],
     }),
     verifyUser: builder.mutation<User, { userId: string; is_verified: boolean }>({
@@ -183,6 +208,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: { is_verified },
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['User'],
     }),
 
@@ -192,6 +218,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
 
@@ -201,6 +228,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'PUT',
         body: data,
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
 
@@ -209,6 +237,7 @@ export const adminApi = apiSlice.injectEndpoints({
         url: `/products/admin/variants/${variantId}/delete/`,
         method: 'DELETE',
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
 
@@ -219,6 +248,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: { product_ids: productIds },
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
 
@@ -228,6 +258,7 @@ export const adminApi = apiSlice.injectEndpoints({
         method: 'POST',
         body: { product_ids: productIds, is_available },
       }),
+      transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
   }),
@@ -241,6 +272,7 @@ export const {
   useGetCategorySalesQuery,
   useGetCustomerInsightsQuery,
   useGetInventoryStatusQuery,
+  useGetRecentOrdersQuery,
 
   // Product Management
   useGetAdminProductsQuery,

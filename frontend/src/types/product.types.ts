@@ -34,6 +34,8 @@ export interface Product {
   final_price: number;
   cost_per_item?: number;
   category: Category;
+  category_name?: string;
+  category_slug?: string;
   image_url: string;
   images: string[];
   stock_quantity: number;

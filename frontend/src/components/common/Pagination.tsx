@@ -41,16 +41,16 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   if (totalPages <= 1) return null;
 
-  const buttonBase = 'min-w-[36px] h-9 rounded-[var(--radius-md)] transition flex items-center justify-center text-sm font-ui';
+  const buttonBase = 'min-w-[36px] h-9 rounded-[var(--radius-md)] transition-all duration-150 flex items-center justify-center text-sm font-ui';
 
   return (
     <div className="flex justify-center items-center gap-2">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`${buttonBase} border border-[var(--color-border-medium)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40 disabled:cursor-not-allowed`}
+        className={`${buttonBase} border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-medium)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)]`}
       >
-        <ChevronLeft className="w-5 h-5" />
+        <ChevronLeft className="w-4 h-4" />
       </button>
 
       {getPageNumbers().map((page, index) => (
@@ -59,10 +59,10 @@ export const Pagination: React.FC<PaginationProps> = ({
           onClick={() => typeof page === 'number' && onPageChange(page)}
           className={`${buttonBase} ${
             page === currentPage
-              ? 'bg-[var(--color-gold-400)] text-[var(--color-gold-800)] font-bold border-transparent'
+              ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)] font-bold shadow-[var(--shadow-sm)] hover:brightness-110 border-transparent'
               : page === '...'
-                ? 'cursor-default text-[var(--color-text-tertiary)]'
-                : 'border border-[var(--color-border-medium)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)]'
+                ? 'cursor-default text-[var(--color-text-muted)] hover:bg-transparent hover:text-[var(--color-text-muted)]'
+                : 'border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-medium)]'
           }`}
           disabled={page === '...'}
         >
@@ -73,9 +73,9 @@ export const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`${buttonBase} border border-[var(--color-border-medium)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40 disabled:cursor-not-allowed`}
+        className={`${buttonBase} border border-[var(--color-border-light)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-medium)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-secondary)]`}
       >
-        <ChevronRight className="w-5 h-5" />
+        <ChevronRight className="w-4 h-4" />
       </button>
     </div>
   );

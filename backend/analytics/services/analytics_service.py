@@ -85,11 +85,11 @@ class AnalyticsService:
         start_date = timezone.now() - timedelta(days=days)
         
         top_products = Product.objects.filter(
-            order_items__order__placed_at__gte=start_date,
-            order_items__order__payment_status='paid'
+            orderitem__order__placed_at__gte=start_date,
+            orderitem__order__payment_status='paid'
         ).annotate(
-            total_sold=Sum('order_items__quantity'),
-            total_revenue=Sum(F('order_items__quantity') * F('order_items__price_per_unit'))
+            total_sold=Sum('orderitem__quantity'),
+            total_revenue=Sum(F('orderitem__quantity') * F('orderitem__price_per_unit'))
         ).order_by('-total_sold')[:limit]
         
         result = []
@@ -112,11 +112,11 @@ class AnalyticsService:
         start_date = timezone.now() - timedelta(days=days)
         
         categories = Category.objects.filter(
-            products__order_items__order__placed_at__gte=start_date,
-            products__order_items__order__payment_status='paid'
+            products__orderitem__order__placed_at__gte=start_date,
+            products__orderitem__order__payment_status='paid'
         ).annotate(
-            total_sold=Sum('products__order_items__quantity'),
-            total_revenue=Sum(F('products__order_items__quantity') * F('products__order_items__price_per_unit'))
+            total_sold=Sum('products__orderitem__quantity'),
+            total_revenue=Sum(F('products__orderitem__quantity') * F('products__orderitem__price_per_unit'))
         ).order_by('-total_revenue')
         
         result = []

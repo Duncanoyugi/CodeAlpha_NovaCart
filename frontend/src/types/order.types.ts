@@ -10,9 +10,26 @@ export interface Order {
   coupon_discount?: number;
   status: 'pending' | 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
   payment_status: 'pending' | 'paid' | 'failed' | 'refunded';
-  shipping_address: ShippingAddress;
+  shipping_full_name?: string;
+  shipping_email?: string;
+  shipping_phone?: string;
+  shipping_address_line1?: string;
+  shipping_address_line2?: string;
+  shipping_city?: string;
+  shipping_state?: string;
+  shipping_postal_code?: string;
+  shipping_country?: string;
+  shipping_address?: ShippingAddress;
   billing_address: BillingAddress;
   items: OrderItem[];
+  items_summary?: Array<{
+    id: string;
+    product_name: string;
+    product_image: string;
+    quantity: number;
+    total_price: number;
+  }>;
+  total_items?: number;
   tracking_number?: string;
   carrier?: string;
   estimated_delivery?: string;

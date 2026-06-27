@@ -47,10 +47,11 @@ class ProductListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Product
-        fields = ['id', 'name', 'slug', 'short_description', 'price', 'compare_price', 
-                  'final_price', 'discount_percentage', 'image_url', 'category', 
-                  'category_name', 'category_slug', 'rating', 'num_reviews', 
-                  'is_available', 'is_featured', 'sold_count', 'created_at']
+        fields = ['id', 'name', 'slug', 'short_description', 'description', 'price', 'compare_price',
+                  'final_price', 'discount_percentage', 'image_url', 'images', 'category',
+                  'category_name', 'category_slug', 'stock_quantity', 'sku', 'tags',
+                  'rating', 'num_reviews', 'is_available', 'is_featured',
+                  'is_best_seller', 'is_new_arrival', 'sold_count', 'created_at']
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     """Serializer for single product (full details)"""

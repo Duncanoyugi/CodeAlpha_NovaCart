@@ -33,6 +33,15 @@ Content-Type: application/json
     "otp_code": "219446"
 }
 
+### Verify OTP
+POST {{baseUrl}}/verify-otp/
+Content-Type: application/json
+
+{
+    "email": "doe@gmail.com",
+    "otp_code": "176407"
+}
+
 ##################################################
 # RESEND OTP
 ##################################################
