@@ -55,7 +55,6 @@ class PaymentService:
                     'success': False,
                     'error': f'Payment method {payment_method} not supported'
                 }
-                
         except Order.DoesNotExist:
             return {
                 'success': False,
