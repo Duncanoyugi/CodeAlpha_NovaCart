@@ -1,11 +1,14 @@
-# backend/payments/services/payment_service.py
+
 from django.db import transaction
 from django.utils import timezone
-from decimal import Decimal
+from datetime import datetime
 from django.core.exceptions import PermissionDenied
 from ..models.base import Payment, PaymentAttempt, ProcessedWebhookEvent
 from orders.models.base import Order
 from .stripe_service import StripeService
+from .payment_finalization import PaymentFinalizationService
+from .providers.mpesa.auth import MPesaConfigurationError
+from .providers.mpesa.stk_push import MPesaSTKPushService
 
 
 class InvalidPaymentTransition(Exception):
@@ -14,6 +17,18 @@ class InvalidPaymentTransition(Exception):
 
 class PaymentService:
     """Main payment processing service"""
+
+    @staticmethod
+    def _parse_iso_datetime(value):
+        if not value:
+            return None
+        try:
+            parsed = datetime.fromisoformat(str(value))
+            if timezone.is_naive(parsed):
+                parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
+            return parsed
+        except (TypeError, ValueError):
+            return None
     
     @staticmethod
     def process_payment(order_id, payment_method='stripe', user=None):
@@ -25,9 +40,10 @@ class PaymentService:
             if user is not None and order.user_id != user.id:
                 raise PermissionDenied("You do not have permission to pay for this order.")
             
-            # Check if payment already exists
-            if hasattr(order, 'payment'):
-                payment = order.payment
+            # An order can retain failed historical attempts, but it may have
+            # only one active attempt at a time.
+            payment = order.payments.order_by('-created_at').first()
+            if payment:
                 if payment.payment_status in [Payment.PaymentStatus.SUCCEEDED, Payment.PaymentStatus.REFUNDED]:
                     return {'success': False, 'error': 'Payment is already in a terminal state'}
                 if payment.stripe_payment_intent_id:
@@ -36,6 +52,12 @@ class PaymentService:
                         'requires_action': True,
                         'payment_intent_id': payment.stripe_payment_intent_id,
                     }
+                if payment.payment_status in [
+                    Payment.PaymentStatus.PENDING,
+                    Payment.PaymentStatus.STK_SENT,
+                    Payment.PaymentStatus.AWAITING_CALLBACK,
+                ]:
+                    return {'success': False, 'error': 'An active payment attempt already exists for this order'}
             
             # Create payment record
             payment = Payment.objects.create(
@@ -43,7 +65,7 @@ class PaymentService:
                 user=order.user,
                 amount=order.total_amount,
                 currency='usd',
-                payment_method=payment_method,
+                provider=payment_method,
                 payment_status=Payment.PaymentStatus.PENDING
             )
             
@@ -60,6 +82,75 @@ class PaymentService:
                 'success': False,
                 'error': 'Order not found'
             }
+
+    @staticmethod
+    def initiate_mpesa_stk_push(order_id, phone, user=None):
+        try:
+            order = Order.objects.get(id=order_id)
+            if user is not None and order.user_id != user.id:
+                raise PermissionDenied("You do not have permission to pay for this order.")
+
+            if order.payment_status == Order.PaymentStatus.PAID:
+                return {'success': False, 'error': 'Order is already paid'}
+
+            active_payment = order.payments.filter(
+                payment_status__in=[
+                    Payment.PaymentStatus.PENDING,
+                    Payment.PaymentStatus.STK_SENT,
+                    Payment.PaymentStatus.AWAITING_CALLBACK,
+                ]
+            ).order_by('-created_at').first()
+            if active_payment:
+                return {
+                    'success': False,
+                    'error': 'An active M-Pesa payment attempt already exists for this order',
+                    'payment_id': str(active_payment.id),
+                    'checkout_request_id': active_payment.checkout_request_id,
+                    'status': active_payment.payment_status,
+                }
+
+            payment = Payment.objects.create(
+                order=order,
+                user=order.user,
+                amount=order.total_amount,
+                currency='KES',
+                provider=Payment.Provider.MPESA,
+                phone=phone,
+                payment_status=Payment.PaymentStatus.PENDING,
+            )
+
+            try:
+                response_data = MPesaSTKPushService.initiate(payment, phone)
+            except Exception as exc:
+                PaymentFinalizationService.mark_payment_failed(
+                    payment,
+                    Payment.PaymentStatus.FAILED,
+                    {'error': str(exc)},
+                    error_message=str(exc),
+                )
+                return {'success': False, 'error': str(exc), 'payment_id': str(payment.id)}
+
+            payment.phone = response_data.get('normalized_phone', phone)
+            expires_at = PaymentService._parse_iso_datetime(response_data.get('expires_at'))
+            if expires_at:
+                payment.expires_at = expires_at
+            payment.save(update_fields=['phone', 'expires_at', 'updated_at'])
+            PaymentFinalizationService.mark_mpesa_sent(payment, response_data)
+
+            return {
+                'success': True,
+                'payment_id': str(payment.id),
+                'checkout_request_id': payment.checkout_request_id,
+                'merchant_request_id': payment.merchant_request_id,
+                'status': payment.payment_status,
+                'customer_message': response_data.get('CustomerMessage', 'STK Push sent'),
+            }
+        except Order.DoesNotExist:
+            return {'success': False, 'error': 'Order not found'}
+        except PermissionDenied as exc:
+            return {'success': False, 'error': str(exc)}
+        except MPesaConfigurationError as exc:
+            return {'success': False, 'error': str(exc)}
     
     @staticmethod
     def process_stripe_payment(payment, order):

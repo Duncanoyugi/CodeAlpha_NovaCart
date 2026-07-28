@@ -11,9 +11,15 @@ import json
 import stripe
 
 from ..services.payment_service import PaymentService
+from ..services.providers.mpesa.callback import MPesaCallbackService
 from ..services.stripe_service import StripeService
-from ..serializers import CreatePaymentIntentSerializer, ConfirmPaymentSerializer, RefundPaymentSerializer
-from orders.models.base import Order
+from ..serializers import (
+    CreatePaymentIntentSerializer,
+    ConfirmPaymentSerializer,
+    RefundPaymentSerializer,
+    MPesaSTKPushSerializer,
+)
+from ..models.base import Payment
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -45,6 +51,46 @@ def create_payment_intent(request):
                 'message': result.get('error', 'Payment processing failed')
             }, status=status.HTTP_400_BAD_REQUEST)
     
+    return Response({
+        'success': False,
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mpesa_stk_push(request):
+    """Initiate an M-Pesa STK push for an order."""
+    serializer = MPesaSTKPushSerializer(data=request.data)
+
+    if serializer.is_valid():
+        result = PaymentService.initiate_mpesa_stk_push(
+            order_id=serializer.validated_data['order_id'],
+            phone=serializer.validated_data['phone'],
+            user=request.user,
+        )
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': result.get('customer_message', 'STK Push sent'),
+                'data': {
+                    'payment_id': result.get('payment_id'),
+                    'checkout_request_id': result.get('checkout_request_id'),
+                    'merchant_request_id': result.get('merchant_request_id'),
+                    'status': result.get('status'),
+                }
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            'success': False,
+            'message': result.get('error', 'Unable to start M-Pesa payment'),
+            'data': {
+                'payment_id': result.get('payment_id'),
+                'checkout_request_id': result.get('checkout_request_id'),
+                'status': result.get('status'),
+            }
+        }, status=status.HTTP_400_BAD_REQUEST)
+
     return Response({
         'success': False,
         'errors': serializer.errors
@@ -141,6 +187,40 @@ def get_payment_status(request, payment_intent_id):
             'message': result.get('error', 'Failed to retrieve payment status')
         }, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_mpesa_payment_status(request, payment_id):
+    """Get the status of a customer-owned M-Pesa payment attempt."""
+    try:
+        payment = Payment.objects.select_related('order').get(
+            id=payment_id,
+            user=request.user,
+            provider=Payment.Provider.MPESA,
+        )
+    except Payment.DoesNotExist:
+        return Response({
+            'success': False,
+            'message': 'Payment not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({
+        'success': True,
+        'data': {
+            'payment_id': str(payment.id),
+            'order_id': str(payment.order_id),
+            'status': payment.payment_status,
+            'phone': payment.phone,
+            'checkout_request_id': payment.checkout_request_id,
+            'merchant_request_id': payment.merchant_request_id,
+            'receipt_number': payment.mpesa_receipt_number,
+            'result_code': payment.result_code,
+            'result_description': payment.result_description,
+            'paid_at': payment.paid_at,
+            'expires_at': payment.expires_at,
+        }
+    }, status=status.HTTP_200_OK)
+
 # ============================================
 # STRIPE WEBHOOK (Important for production)
 # ============================================
@@ -168,3 +248,21 @@ def stripe_webhook(request):
     PaymentService.handle_webhook_event(event)
     
     return HttpResponse(status=200)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def mpesa_callback(request):
+    """Daraja callback endpoint for STK push results."""
+    payload = request.data if isinstance(request.data, dict) else {}
+    result = MPesaCallbackService.process(payload)
+
+    if result['success']:
+        return Response({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+    # Safaricom may retry on non-2xx responses; returning 200 avoids tight retry
+    # loops for unknown references while still surfacing the problem in logs/db.
+    return Response({
+        'ResultCode': 0,
+        'ResultDesc': result.get('error', 'Ignored'),
+    }, status=status.HTTP_200_OK)

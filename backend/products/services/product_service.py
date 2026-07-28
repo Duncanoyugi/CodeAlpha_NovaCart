@@ -27,11 +27,27 @@ class ProductService:
         # Filter by category
         category_id = request_data.get('category')
         if category_id:
-            queryset = queryset.filter(category_id=category_id)
+            category = Category.objects.filter(id=category_id, is_active=True).first()
+            queryset = queryset.filter(category_id__in=CategoryService.get_descendant_ids(category)) if category else queryset.none()
         
         category_slug = request_data.get('category_slug')
         if category_slug:
-            queryset = queryset.filter(category__slug=category_slug)
+            category = Category.objects.filter(slug=category_slug, is_active=True).first()
+            if not category:
+                queryset = queryset.none()
+            elif category.slug == 'brands':
+                # Brand is a cross-cutting collection, not a physical product
+                # category. Products retain their real category and are matched
+                # by their normalized brand tag.
+                brand_slugs = Category.objects.filter(parent=category, is_active=True).values_list('slug', flat=True)
+                brand_query = Q()
+                for brand_slug in brand_slugs:
+                    brand_query |= Q(tags__contains=[brand_slug])
+                queryset = queryset.filter(brand_query)
+            elif category.parent_id and category.parent.slug == 'brands':
+                queryset = queryset.filter(tags__contains=[category.slug])
+            else:
+                queryset = queryset.filter(category_id__in=CategoryService.get_descendant_ids(category))
         
         # Filter by price range
         min_price = request_data.get('min_price')
@@ -117,6 +133,27 @@ class CategoryService:
         """Get hierarchical category tree"""
         root_categories = Category.objects.filter(parent=None, is_active=True).order_by('order')
         return root_categories
+
+    @staticmethod
+    def get_descendant_ids(category):
+        """Return a category and every nested category below it.
+
+        Storefront navigation is built around collection landing pages (for
+        example, Chargers & Cables). A product can live in a precise leaf
+        category while its parent collection still returns it.
+        """
+        category_ids = [category.id]
+        pending_ids = [category.id]
+
+        while pending_ids:
+            child_ids = list(
+                Category.objects.filter(parent_id__in=pending_ids, is_active=True)
+                .values_list('id', flat=True)
+            )
+            category_ids.extend(child_ids)
+            pending_ids = child_ids
+
+        return category_ids
     
     @staticmethod
     def get_breadcrumbs(category):

@@ -6,8 +6,9 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = [
-            'id', 'order', 'amount', 'currency', 'payment_method',
-            'payment_status', 'stripe_payment_intent_id', 'paid_at',
+            'id', 'order', 'amount', 'currency', 'provider', 'phone',
+            'payment_status', 'checkout_request_id', 'mpesa_receipt_number',
+            'result_code', 'result_description', 'paid_at',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'paid_at']
@@ -15,6 +16,11 @@ class PaymentSerializer(serializers.ModelSerializer):
 class CreatePaymentIntentSerializer(serializers.Serializer):
     order_id = serializers.UUIDField(required=True)
     payment_method = serializers.CharField(default='stripe')
+
+
+class MPesaSTKPushSerializer(serializers.Serializer):
+    order_id = serializers.UUIDField(required=True)
+    phone = serializers.CharField(max_length=20, required=True)
 
 class ConfirmPaymentSerializer(serializers.Serializer):
     payment_intent_id = serializers.CharField(required=True)

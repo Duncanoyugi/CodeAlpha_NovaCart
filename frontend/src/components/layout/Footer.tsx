@@ -16,11 +16,11 @@ export const Footer: React.FC = () => {
                 </svg>
               </div>
               <span className="font-display text-xl font-bold text-[var(--color-text-inverse)]">
-                Nova<span className="text-[var(--color-primary)]">Cart</span>
+                Play<span className="text-[var(--color-primary)]">house</span>
               </span>
             </Link>
             <p className="text-sm text-[rgba(240,235,224,0.5)] leading-relaxed max-w-xs">
-              A curated marketplace for quality products. Editorial curation meets seamless commerce.
+              Playhouse brings together dependable electronics, accessories and everyday essentials in a clean storefront for easy navigation.
             </p>
             <div className="flex items-center gap-3 mt-5">
               <a href="#" className="p-2 text-[rgba(240,235,224,0.5)] hover:text-[var(--color-primary)] rounded-full hover:bg-white/5 transition-colors" aria-label="Instagram">
@@ -102,7 +102,7 @@ export const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="mt-14 pt-7 border-t border-[rgba(240,235,224,0.06)] flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-[rgba(240,235,224,0.35)] font-body">
-            &copy; {new Date().getFullYear()} NovaCart. All rights reserved.
+            &copy; {new Date().getFullYear()} Playhouse. All rights reserved.
           </p>
           <p className="text-xs text-[rgba(240,235,224,0.35)] font-body">
             Crafted with care. Built for quality.

@@ -18,8 +18,8 @@ from ..services.product_service import ProductService, CategoryService
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def list_categories(request):
-    """List all active categories"""
-    categories = Category.objects.filter(is_active=True)
+    """List active storefront categories and their nested navigation options."""
+    categories = Category.objects.filter(is_active=True, parent=None)
     serializer = CategorySerializer(categories, many=True)
     return Response({
         'success': True,

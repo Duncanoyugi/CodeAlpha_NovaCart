@@ -23,10 +23,9 @@ export const AboutPage: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
               Our Story
             </span>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-6">About NovaCart</h1>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-6">About Playhouse</h1>
             <p className="font-body text-lg md:text-xl text-[rgba(240,235,224,0.7)] leading-relaxed max-w-2xl">
-              NovaCart is built to make online shopping simple, beautiful and fast. We curate quality products
-              from trusted brands and combine them with thoughtful design and reliable delivery.
+              Playhouse is built to make electronics shopping simple, clear and dependable. We curate charging gear, audio, power banks and wearables from trusted brands so customers can find the right item quickly.
             </p>
             <div className="mt-10">
               <Link

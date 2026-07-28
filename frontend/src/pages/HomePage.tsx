@@ -11,7 +11,8 @@ export const HomePage: React.FC = () => {
   const { data: bestSelling = [], isLoading: bestSellingLoading } = useGetBestSellingProductsQuery();
   const { data: newArrivals = [], isLoading: newArrivalsLoading } = useGetNewArrivalsQuery();
   const categoriesData = useGetCategoriesQuery().data;
-  const categories = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data ?? [];
+  const categories = (Array.isArray(categoriesData) ? categoriesData : (categoriesData as any)?.data ?? [])
+    .filter((category: any) => !category.parent);
   const { addItemToCart } = useCart();
   const { items: wishlistItems, addItem, removeItem, isInWishlist } = useWishlist();
 
@@ -43,15 +44,15 @@ export const HomePage: React.FC = () => {
         <div className="relative container-normal py-16 md:py-20 lg:py-24">
           <div className="max-w-3xl">
             <span className="inline-block font-body text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] mb-6">
-              New Collection 2026
+              Playhouse Electronics
             </span>
             <h1 className="font-display text-5xl md:text-6xl lg:text-[70px] leading-[1.1] mb-6">
-              Curated essentials
+              Smart charging,
               <br />
-              for modern living
+              audio and power for everyday life
             </h1>
             <p className="font-body text-lg md:text-xl text-[rgba(240,235,224,0.7)] mb-8 max-w-lg">
-              Discover our latest arrivals. Editorial curation meets quality craftsmanship.
+              Discover Oraimo, Amaya, Samsung and more through a clear Playhouse catalog built for easy browsing and fast product discovery.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
@@ -95,7 +96,7 @@ export const HomePage: React.FC = () => {
                 <span className="font-body text-[11px] uppercase tracking-[0.14em] text-[var(--color-primary)] font-semibold">
                   Browse
                 </span>
-                <h2 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">Top Categories</h2>
+                <h2 className="font-display text-3xl text-[var(--color-text-primary)] mt-2">Playhouse Categories</h2>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">

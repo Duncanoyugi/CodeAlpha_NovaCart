@@ -12,6 +12,38 @@ import { Button } from '../common/Button';
 import { SearchBar } from './SearchBar';
 import { SearchOverlay } from './SearchOverlay';
 
+type CatalogNavigationEntry = {
+  label: string;
+  slug: string;
+  groups?: ReadonlyArray<{
+    label: string;
+    items: ReadonlyArray<readonly [string, string]>;
+  }>;
+};
+
+const catalogNavigation: ReadonlyArray<CatalogNavigationEntry> = [
+  {
+    label: 'Chargers & Cables', slug: 'chargers-cables', groups: [
+      { label: 'Chargers', items: [['Type C Chargers', 'type-c-chargers'], ['Micro Chargers', 'micro-chargers'], ['Car Chargers', 'car-chargers']] },
+      { label: 'Cables', items: [['Type C Cables', 'type-c-cables'], ['Micro Cables', 'micro-cables'], ['iPhone Cables', 'iphone-cables'], ['C to C Cables', 'c-to-c-cables'], ['4 in 1 Cables', 'four-in-one-cables']] },
+    ],
+  },
+  { label: 'Pods', slug: 'pods' },
+  { label: 'Power Banks', slug: 'power-banks' },
+  { label: 'Smart Watches', slug: 'smart-watches' },
+  { label: 'Shavers', slug: 'shavers' },
+  {
+    label: 'Earphones & Headphones', slug: 'earphones-headphones', groups: [
+      { label: 'Shop by type', items: [['Earphones', 'earphones'], ['Headphones', 'headphones']] },
+    ],
+  },
+  {
+    label: 'Brands', slug: 'brands', groups: [
+      { label: 'Shop by brand', items: [['Oraimo', 'oraimo'], ['Amaya', 'amaya'], ['Itel', 'itel'], ['Samsung', 'samsung'], ['Recrsi', 'recrsi'], ['Havit', 'havit']] },
+    ],
+  },
+] as const;
+
 export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -63,22 +95,31 @@ export const Header: React.FC = () => {
 
           {/* Logo */}
           <Link to={ROUTES.HOME} className="flex items-center gap-2 flex-shrink-0 no-underline">
-            <div className="flex items-center justify-center w-8 h-8 rounded-[var(--radius-md)] bg-[var(--color-primary)]">
-              <ShoppingBag className="w-4 h-4 text-white" />
-            </div>
+            <img src="/images/playhouse-logo.svg" alt="Playhouse logo" className="w-8 h-8 rounded-[var(--radius-md)] object-cover" />
             <span className="font-display text-xl font-bold text-[var(--color-text-inverse)] tracking-tight">
-              Nova<span className="text-[var(--color-primary)]">Cart</span>
+              Play<span className="text-[var(--color-primary)]">house</span>
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-0.5">
             <Link to={ROUTES.PRODUCTS} className="px-3 py-1.5 text-xs font-body font-semibold uppercase tracking-[0.08em] text-[rgba(240,235,224,0.7)] hover:text-[var(--color-primary)] hover:bg-white/5 rounded-[var(--radius-md)] transition-colors">
               Shop All
             </Link>
-            <Link to={ROUTES.PRODUCTS} className="px-3 py-1.5 text-xs font-body font-semibold uppercase tracking-[0.08em] text-[rgba(240,235,224,0.7)] hover:text-[var(--color-primary)] hover:bg-white/5 rounded-[var(--radius-md)] transition-colors">
-              Categories
-            </Link>
+            {catalogNavigation.map((entry) => entry.groups ? (
+              <details key={entry.slug} className="relative group">
+                <summary className="list-none cursor-pointer flex items-center gap-1 px-2 py-1.5 text-[11px] font-body font-semibold uppercase tracking-[0.06em] text-[rgba(240,235,224,0.7)] hover:text-[var(--color-primary)] hover:bg-white/5 rounded-[var(--radius-md)] transition-colors">
+                  {entry.label}<ChevronDown className="w-3.5 h-3.5 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="absolute left-0 top-full mt-2 min-w-52 p-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[var(--shadow-elevated)]">
+                  <Link to={ROUTES.CATEGORY(entry.slug)} className="block px-3 py-2 text-sm font-body font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-muted)] rounded-[var(--radius-md)]">Shop all {entry.label}</Link>
+                  {entry.groups.map((group) => <div key={group.label} className="mt-1 pt-2 border-t border-[var(--color-border)]">
+                    <p className="px-3 pb-1 text-[10px] uppercase tracking-[0.12em] font-body font-bold text-[var(--color-text-muted)]">{group.label}</p>
+                    {group.items.map(([label, slug]) => <Link key={slug} to={ROUTES.CATEGORY(slug)} className="block px-3 py-1.5 text-sm font-body text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] hover:bg-[var(--color-bg-muted)] rounded-[var(--radius-md)]">{label}</Link>)}
+                  </div>)}
+                </div>
+              </details>
+            ) : <Link key={entry.slug} to={ROUTES.CATEGORY(entry.slug)} className="px-2 py-1.5 text-[11px] font-body font-semibold uppercase tracking-[0.06em] text-[rgba(240,235,224,0.7)] hover:text-[var(--color-primary)] hover:bg-white/5 rounded-[var(--radius-md)] transition-colors">{entry.label}</Link>)}
             <Link to={ROUTES.ABOUT} className="px-3 py-1.5 text-xs font-body font-semibold uppercase tracking-[0.08em] text-[rgba(240,235,224,0.7)] hover:text-[var(--color-primary)] hover:bg-white/5 rounded-[var(--radius-md)] transition-colors">
               About
             </Link>

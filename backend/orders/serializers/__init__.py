@@ -84,7 +84,7 @@ class CheckoutSerializer(serializers.Serializer):
     billing_postal_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
     billing_country = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
-    payment_method = serializers.CharField(max_length=50, default='stripe')
+    payment_method = serializers.CharField(max_length=50, default='mpesa')
     customer_notes = serializers.CharField(required=False, allow_blank=True)
     coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
 

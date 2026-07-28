@@ -47,7 +47,7 @@ class OrderService:
                 shipping_country=checkout_data.get('shipping_country', 'US'),
                 billing_same_as_shipping=checkout_data.get('billing_same_as_shipping', True),
                 customer_notes=checkout_data.get('customer_notes', ''),
-                payment_method=checkout_data.get('payment_method', 'stripe')
+                payment_method=checkout_data.get('payment_method', 'mpesa')
             )
             
             # Set billing address if different
