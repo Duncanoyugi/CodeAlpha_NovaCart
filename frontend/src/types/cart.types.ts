@@ -8,6 +8,8 @@ export interface CartItem {
   price_at_add: number;
   subtotal: number;
   current_price: number;
+  price_changed?: boolean;
+  available_stock?: number;
   savings: number;
 }
 
@@ -19,6 +21,8 @@ export interface Cart {
   shipping_cost: number;
   tax_amount: number;
   total_amount: number;
+  session_key?: string | null;
+  free_shipping_threshold?: number;
 }
 
 export interface AddToCartData {

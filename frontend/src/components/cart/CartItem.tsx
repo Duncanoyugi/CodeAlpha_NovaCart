@@ -5,6 +5,7 @@ import type { CartItem as CartItemType } from '../../types';
 import { formatPrice } from '../../utils';
 import { ROUTES } from '../../utils/constants';
 import toast from 'react-hot-toast';
+import { ProductImage } from '../common/ProductImage';
 
 interface CartItemProps {
   item: CartItemType;
@@ -41,11 +42,7 @@ export const CartItem: React.FC<CartItemProps> = ({
       {/* Product Image */}
       <Link to={ROUTES.PRODUCT_DETAIL(item.product.slug)} className="sm:w-24 sm:h-24 flex-shrink-0 group/img">
         <div className="w-20 h-24 sm:w-24 sm:h-24 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-muted)]">
-          <img
-            src={item.product.image_url}
-            alt={item.product.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105"
-          />
+          <ProductImage product={item.product} alt={item.product.name} className="w-full h-full object-cover transition-transform duration-300 group-hover/img:scale-105" />
         </div>
       </Link>
 

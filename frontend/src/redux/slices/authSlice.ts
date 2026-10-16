@@ -2,96 +2,132 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { axiosInstance } from '../../services/axios';
 import { tokenService } from '../../services/tokenService';
+import { sessionService } from '../../services/session';
+import { getErrorMessage, getFieldErrors, getErrorCode } from '../../services/errorHandler';
 import { API_ENDPOINTS } from '../../utils/constants';
 import type { AuthState, User, LoginCredentials, RegisterData, VerifyOTPData, AuthResponse } from '../../types';
-import toast from 'react-hot-toast';
 
-const initialState: AuthState = {
+export interface AuthRejection {
+  message: string;
+  fields: Record<string, string>;
+  code?: string;
+}
+
+const reject = (error: unknown, fallback: string): AuthRejection => ({
+  message: getErrorMessage(error, fallback),
+  fields: getFieldErrors(error),
+  code: getErrorCode(error),
+});
+
+type AuthSliceState = AuthState & { isInitializing: boolean };
+
+// If tokens exist we must restore the session before deciding whether to show login.
+const initialState: AuthSliceState = {
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isInitializing: tokenService.isAuthenticated(),
   error: null,
 };
 
-// Async Thunks
-export const login = createAsyncThunk(
+export const login = createAsyncThunk<AuthResponse, LoginCredentials, { rejectValue: AuthRejection }>(
   'auth/login',
-  async (credentials: LoginCredentials, { rejectWithValue }) => {
+  async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.response?.data?.error || 'Login failed';
-      return rejectWithValue(message);
+      const { data } = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(reject(error, 'Login failed'));
     }
-  }
+  },
 );
 
-export const register = createAsyncThunk(
+export const googleLogin = createAsyncThunk<AuthResponse, string, { rejectValue: AuthRejection }>(
+  'auth/googleLogin',
+  async (idToken, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosInstance.post(API_ENDPOINTS.AUTH.GOOGLE_AUTH, { token: idToken });
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(reject(error, 'Google sign-in failed'));
+    }
+  },
+);
+
+export const register = createAsyncThunk<{ email: string; full_name: string; email_sent: boolean }, RegisterData, { rejectValue: AuthRejection }>(
   'auth/register',
-  async (userData: RegisterData, { rejectWithValue }) => {
+  async (userData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REGISTER, userData);
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
-      return rejectWithValue(message);
+      const { data } = await axiosInstance.post(API_ENDPOINTS.AUTH.REGISTER, userData);
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(reject(error, 'Registration failed'));
     }
-  }
+  },
 );
 
-export const verifyOTP = createAsyncThunk(
+export const verifyOTP = createAsyncThunk<AuthResponse, VerifyOTPData, { rejectValue: AuthRejection }>(
   'auth/verifyOTP',
-  async (otpData: VerifyOTPData, { rejectWithValue }) => {
+  async (otpData, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.VERIFY_OTP, otpData);
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.response?.data?.error || 'OTP verification failed';
-      return rejectWithValue(message);
+      const { data } = await axiosInstance.post(API_ENDPOINTS.AUTH.VERIFY_OTP, otpData);
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(reject(error, 'Verification failed'));
     }
-  }
+  },
 );
 
-export const resendOTP = createAsyncThunk(
+export const resendOTP = createAsyncThunk<string, string, { rejectValue: AuthRejection }>(
   'auth/resendOTP',
-  async (email: string, { rejectWithValue }) => {
+  async (email, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.RESEND_OTP, { email });
-      return response.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || error.response?.data?.error || 'Failed to resend OTP';
-      return rejectWithValue(message);
+      const { data } = await axiosInstance.post(API_ENDPOINTS.AUTH.RESEND_OTP, { email });
+      return data.message as string;
+    } catch (error) {
+      return rejectWithValue(reject(error, 'Could not resend the code'));
     }
-  }
+  },
 );
 
-export const getCurrentUser = createAsyncThunk(
+export const getCurrentUser = createAsyncThunk<User, void, { rejectValue: AuthRejection }>(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
-      return response.data.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to get user');
+      const { data } = await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
+      return data.data;
+    } catch (error) {
+      return rejectWithValue(reject(error, 'Session expired'));
     }
-  }
+  },
 );
 
-export const logout = createAsyncThunk(
-  'auth/logout',
-  async (_, { rejectWithValue }) => {
-    try {
-      const refreshToken = tokenService.getRefreshToken();
-      if (refreshToken) {
-        await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT, { refresh: refreshToken });
-      }
-      return null;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Logout failed');
-    }
+export const logout = createAsyncThunk('auth/logout', async () => {
+  const refresh = tokenService.getRefreshToken();
+  try {
+    if (refresh) await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT, { refresh });
+  } catch {
+    /* logging out locally is what matters */
   }
-);
+  return null;
+});
+
+const startSession = (state: AuthSliceState, payload: AuthResponse) => {
+  state.isLoading = false;
+  state.user = payload.user;
+  state.isAuthenticated = true;
+  state.isInitializing = false;
+  state.error = null;
+  tokenService.setTokens(payload.tokens.access, payload.tokens.refresh);
+};
+
+const endSession = (state: AuthSliceState) => {
+  state.user = null;
+  state.isAuthenticated = false;
+  state.isLoading = false;
+  state.isInitializing = false;
+  tokenService.removeTokens();
+};
 
 const authSlice = createSlice({
   name: 'auth',
@@ -103,105 +139,72 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.isAuthenticated = true;
+      state.isInitializing = false;
     },
     clearAuth: (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
-      state.isLoading = false;
+      endSession(state);
       state.error = null;
-      tokenService.removeTokens();
     },
   },
   extraReducers: (builder) => {
     builder
-      // Login
       .addCase(login.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(login.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
+      .addCase(login.fulfilled, (state, { payload }) => startSession(state, payload))
+      .addCase(login.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-        tokenService.setTokens(action.payload.tokens.access, action.payload.tokens.refresh);
-        toast.success('Login successful! Welcome back.');
+        state.error = payload?.message ?? 'Login failed';
       })
-      .addCase(login.rejected, (state, action) => {
+
+      .addCase(googleLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, { payload }) => startSession(state, payload))
+      .addCase(googleLogin.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = action.payload as string;
-        toast.error(state.error);
+        state.error = payload?.message ?? 'Google sign-in failed';
       })
-      
-      // Register
+
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
       .addCase(register.fulfilled, (state) => {
         state.isLoading = false;
-        toast.success('Registration successful! Please check your email for OTP.');
       })
-      .addCase(register.rejected, (state, action) => {
+      .addCase(register.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.error = action.payload as string;
-        toast.error(state.error);
+        state.error = payload?.message ?? 'Registration failed';
       })
-      
-      // Verify OTP
+
       .addCase(verifyOTP.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(verifyOTP.fulfilled, (state, action: PayloadAction<AuthResponse>) => {
+      .addCase(verifyOTP.fulfilled, (state, { payload }) => startSession(state, payload))
+      .addCase(verifyOTP.rejected, (state, { payload }) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-        tokenService.setTokens(action.payload.tokens.access, action.payload.tokens.refresh);
-        toast.success('Email verified successfully! Welcome to NovaCart!');
+        state.error = payload?.message ?? 'Verification failed';
       })
-      .addCase(verifyOTP.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-        toast.error(state.error);
-      })
-      
-      // Resend OTP
-      .addCase(resendOTP.fulfilled, () => {
-        toast.success('OTP resent successfully!');
-      })
-      .addCase(resendOTP.rejected, (_state, action) => {
-        toast.error(action.payload as string);
-      })
-      
-      // Get Current User
+
       .addCase(getCurrentUser.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(getCurrentUser.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(getCurrentUser.fulfilled, (state, { payload }) => {
         state.isLoading = false;
-        state.user = action.payload;
+        state.isInitializing = false;
+        state.user = { ...(state.user ?? {}), ...payload } as User;
         state.isAuthenticated = true;
       })
-      .addCase(getCurrentUser.rejected, (state) => {
-        state.isLoading = false;
-        state.user = null;
-        state.isAuthenticated = false;
-        tokenService.removeTokens();
-      })
-      
-      // Logout
+      .addCase(getCurrentUser.rejected, (state) => endSession(state))
+
       .addCase(logout.fulfilled, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        state.isLoading = false;
+        endSession(state);
         state.error = null;
-        tokenService.removeTokens();
-        toast.success('Logged out successfully');
-      })
-      .addCase(logout.rejected, (state) => {
-        state.user = null;
-        state.isAuthenticated = false;
-        tokenService.removeTokens();
+        sessionService.clear();
       });
   },
 });

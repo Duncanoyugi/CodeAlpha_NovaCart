@@ -127,7 +127,7 @@ class Order(models.Model):
     # FIX: postal codes vary globally (Kenya, EU, US formats)
     shipping_postal_code = models.CharField(max_length=50)
 
-    shipping_country = models.CharField(max_length=100, default='US')
+    shipping_country = models.CharField(max_length=100, default='Kenya')
 
     # -----------------------
     # Billing information
@@ -188,7 +188,7 @@ class Order(models.Model):
         if not self.order_number:
             timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
             random_str = ''.join(
-                random.choices(
+                random.SystemRandom().choices(
                     string.ascii_uppercase + string.digits,
                     k=6
                 )
@@ -205,10 +205,19 @@ class Order(models.Model):
 
     @property
     def can_cancel(self):
-        return self.status in [
-            self.Status.PENDING,
-            self.Status.PROCESSING
-        ]
+        """Customers may cancel until money has changed hands. Paid orders go
+        through support/refund so the payment and stock stay consistent."""
+        return (
+            self.status == self.Status.PENDING
+            and self.payment_status != self.PaymentStatus.PAID
+        )
+
+    @property
+    def is_payable(self):
+        return (
+            self.status == self.Status.PENDING
+            and self.payment_status != self.PaymentStatus.PAID
+        )
 
     @property
     def can_refund(self):
@@ -264,3 +273,35 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.product_name}"
+
+class Coupon(models.Model):
+    """Simple promotion code: a percentage or a fixed KES amount off the subtotal."""
+
+    class DiscountType(models.TextChoices):
+        PERCENT = 'percent', 'Percentage'
+        FIXED = 'fixed', 'Fixed amount (KES)'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    code = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=255, blank=True)
+    discount_type = models.CharField(max_length=10, choices=DiscountType.choices, default=DiscountType.PERCENT)
+    value = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    min_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    max_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    max_uses = models.PositiveIntegerField(null=True, blank=True, help_text='Leave empty for unlimited')
+    used_count = models.PositiveIntegerField(default=0)
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_until = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'coupons'
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        self.code = (self.code or '').strip().upper()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.code

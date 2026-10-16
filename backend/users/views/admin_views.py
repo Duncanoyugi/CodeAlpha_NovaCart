@@ -1,15 +1,16 @@
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from config.permissions import IsAdminRole, IsStaffOrAdminRole
 
 from users.models.base import User
 from users.serializers.admin_serializers import AdminUserSerializer
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminRole])
 def list_admin_users(request):
     """List users for admin dashboard with filtering + pagination."""
     page = int(request.query_params.get("page", 1))
@@ -78,7 +79,7 @@ def list_admin_users(request):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminRole])
 def update_user_role(request, user_id):
     user = User.objects.get(id=user_id)
     role = request.data.get("role")
@@ -90,7 +91,7 @@ def update_user_role(request, user_id):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminRole])
 def toggle_user_status(request, user_id):
     user = User.objects.get(id=user_id)
     is_active = request.data.get("is_active")
@@ -108,7 +109,7 @@ def toggle_user_status(request, user_id):
 
 
 @api_view(["PUT"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminRole])
 def verify_user(request, user_id):
     user = User.objects.get(id=user_id)
     is_verified = request.data.get("is_verified")

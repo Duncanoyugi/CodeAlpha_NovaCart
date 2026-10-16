@@ -29,7 +29,7 @@ class Payment(models.Model):
     
     # Payment details
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    currency = models.CharField(max_length=3, default='usd')
+    currency = models.CharField(max_length=3, default='KES')
     provider = models.CharField(max_length=20, choices=Provider.choices, db_index=True)
     payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING, db_index=True)
     

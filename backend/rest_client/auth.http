@@ -29,8 +29,8 @@ POST {{baseUrl}}/verify-otp/
 Content-Type: application/json
 
 {
-    "email": "ochiengduncan7878@gmail.com",
-    "otp_code": "219446"
+    "email": "customer254@gmail.com",
+    "otp_code": "913528"
 }
 
 ### Verify OTP

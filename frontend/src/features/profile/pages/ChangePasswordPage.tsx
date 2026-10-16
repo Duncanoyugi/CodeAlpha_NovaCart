@@ -1,101 +1,50 @@
 import React from 'react';
-import { useForm, FormProvider, type Resolver } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useProfile } from '../hooks/useProfile';
-import { changePasswordSchema } from '../schemas/profileSchema';
-import type { ChangePasswordFormData } from '../schemas/profileSchema';
-import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../../../utils/constants';
+import { z } from 'zod';
+import toast from 'react-hot-toast';
+import { useChangePasswordMutation } from '../api/userApi';
+import { AccountShell } from '../components/AccountShell';
+import { Button, Card } from '../../../components/ui';
+import { PasswordChecklist, PasswordInput } from '../../auth/components/AuthParts';
+import { getFieldErrors } from '../../../services/errorHandler';
+
+const schema = z.object({
+  old_password: z.string().min(1, 'Enter your current password'),
+  new_password: z.string().min(8, 'Use at least 8 characters').regex(/[A-Za-z]/, 'Include a letter').regex(/\d/, 'Include a number'),
+  confirm_password: z.string(),
+}).refine((v) => v.new_password === v.confirm_password, { path: ['confirm_password'], message: 'Passwords don’t match' });
+type Values = z.infer<typeof schema>;
 
 export const ChangePasswordPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { updateUserPassword, isChangingPassword } = useProfile();
-  
-  const methods = useForm<ChangePasswordFormData>({
-    resolver: zodResolver(changePasswordSchema) as Resolver<ChangePasswordFormData>,
-    defaultValues: {
-      old_password: '',
-      new_password: '',
-      confirm_password: '',
-    },
-  });
+  const [change, { isLoading }] = useChangePasswordMutation();
+  const { register, handleSubmit, reset, watch, setError, formState: { errors } } = useForm<Values>({ resolver: zodResolver(schema) });
 
-  const { handleSubmit, register, formState: { errors } } = methods;
-
-  const onSubmit = async (data: ChangePasswordFormData) => {
+  const onSubmit = async (v: Values) => {
     try {
-      await updateUserPassword(data);
-      navigate(ROUTES.PROFILE);
-    } catch {
-      // Error handled in useProfile
+      await change(v).unwrap();
+      toast.success('Password changed');
+      reset();
+    } catch (err) {
+      const fields = getFieldErrors({ isAxiosError: true, response: { data: (err as { data?: unknown }).data } });
+      if (fields.current_password) setError('old_password', { message: fields.current_password });
+      else if (fields.new_password) setError('new_password', { message: fields.new_password });
+      else toast.error((err as { message?: string }).message ?? 'Could not change your password');
     }
   };
 
   return (
-    <div className="container-custom py-8">
-      <h1 className="text-2xl font-bold mb-6">Change Password</h1>
-      
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <FormProvider {...methods}>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Current Password</label>
-              <input
-                type="password"
-                {...register('old_password')}
-                className="input-field"
-                disabled={isChangingPassword}
-              />
-              {errors.old_password && (
-                <p className="mt-1 text-sm text-red-600">{errors.old_password.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">New Password</label>
-              <input
-                type="password"
-                {...register('new_password')}
-                className="input-field"
-                disabled={isChangingPassword}
-              />
-              {errors.new_password && (
-                <p className="mt-1 text-sm text-red-600">{errors.new_password.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-              <input
-                type="password"
-                {...register('confirm_password')}
-                className="input-field"
-                disabled={isChangingPassword}
-              />
-              {errors.confirm_password && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirm_password.message}</p>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-4 pt-4">
-              <button
-                type="button"
-                onClick={() => navigate(ROUTES.PROFILE)}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isChangingPassword}
-                className="btn-primary"
-              >
-                {isChangingPassword ? 'Changing...' : 'Change Password'}
-              </button>
-            </div>
-          </form>
-        </FormProvider>
-      </div>
-    </div>
+    <AccountShell title="Change password" subtitle="Use a strong password you don’t use anywhere else.">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="max-w-lg">
+        <Card className="space-y-4 p-6">
+          <PasswordInput label="Current password" autoComplete="current-password" {...register('old_password')} error={errors.old_password?.message} />
+          <div><PasswordInput label="New password" autoComplete="new-password" {...register('new_password')} error={errors.new_password?.message} /><PasswordChecklist value={watch('new_password') ?? ''} /></div>
+          <PasswordInput label="Confirm new password" autoComplete="new-password" {...register('confirm_password')} error={errors.confirm_password?.message} />
+        </Card>
+        <Button type="submit" className="mt-5" loading={isLoading}>Update password</Button>
+      </form>
+    </AccountShell>
   );
 };
+
+export default ChangePasswordPage;

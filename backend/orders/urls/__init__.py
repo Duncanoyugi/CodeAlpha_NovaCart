@@ -1,7 +1,7 @@
 # backend/orders/urls/__init__.py
 from django.urls import path
 from ..views import (
-    checkout, my_orders, order_detail, cancel_order,
+    checkout, my_orders, order_detail, cancel_order, validate_coupon,
     admin_list_orders, admin_update_order_status, order_statistics
 )
 
@@ -9,6 +9,7 @@ urlpatterns = [
     # Customer endpoints
     path('checkout/', checkout, name='checkout'),
     path('my-orders/', my_orders, name='my-orders'),
+    path('coupons/validate/', validate_coupon, name='validate-coupon'),
     path('<uuid:order_id>/', order_detail, name='order-detail'),
     path('<uuid:order_id>/cancel/', cancel_order, name='cancel-order'),
     

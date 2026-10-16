@@ -1,29 +1,27 @@
 // API Endpoints
 export const API_ENDPOINTS = {
-  // Auth
   AUTH: {
     REGISTER: '/auth/register/',
     VERIFY_OTP: '/auth/verify-otp/',
     RESEND_OTP: '/auth/resend-otp/',
-    // Used by authApi.resendWelcome
     RESEND_WELCOME: '/auth/resend-welcome/',
-    LOGIN: '/auth/login/',
+     LOGIN: '/auth/login/',
+    GOOGLE_AUTH: '/auth/google/',
     LOGOUT: '/auth/logout/',
     ME: '/auth/me/',
     REFRESH: '/auth/refresh/',
     FORGOT_PASSWORD: '/auth/forgot-password/',
     RESET_PASSWORD: '/auth/reset-password/',
   },
-  // Products
   PRODUCTS: {
     LIST: '/products/',
     DETAIL: (slug: string) => `/products/${slug}/`,
     CATEGORIES: '/products/categories/',
+    CATEGORY_TREE: '/products/categories/tree/',
     FEATURED: '/products/featured/',
     BEST_SELLING: '/products/best-selling/',
     NEW_ARRIVALS: '/products/new-arrivals/',
   },
-  // Cart
   CART: {
     GET: '/cart/',
     ADD: '/cart/add/',
@@ -32,21 +30,19 @@ export const API_ENDPOINTS = {
     CLEAR: '/cart/clear/',
     MERGE: '/cart/merge/',
   },
-  // Orders
   ORDERS: {
     CHECKOUT: '/orders/checkout/',
     MY_ORDERS: '/orders/my-orders/',
     DETAIL: (id: string) => `/orders/${id}/`,
     CANCEL: (id: string) => `/orders/${id}/cancel/`,
+    VALIDATE_COUPON: '/orders/coupons/validate/',
   },
-  // Reviews
   REVIEWS: {
     CREATE: '/reviews/create/',
     PRODUCT: (id: string) => `/reviews/product/${id}/`,
     STATISTICS: (id: string) => `/reviews/product/${id}/statistics/`,
     HELPFUL: (id: string) => `/reviews/${id}/helpful/`,
   },
-  // Wishlist
   WISHLIST: {
     GET: '/wishlist/',
     ADD: '/wishlist/add/',
@@ -54,14 +50,15 @@ export const API_ENDPOINTS = {
     CHECK: (id: string) => `/wishlist/check/${id}/`,
     CLEAR: '/wishlist/clear/',
   },
-  // Payments
   PAYMENTS: {
+    CONFIG: '/payments/config/',
     CREATE_INTENT: '/payments/create-intent/',
     CONFIRM: '/payments/confirm/',
+    STK_PUSH: '/payments/stk-push/',
+    MPESA_STATUS: (id: string) => `/payments/mpesa/status/${id}/`,
     STATUS: (id: string) => `/payments/status/${id}/`,
     REFUND: '/payments/refund/',
   },
-  // Admin
   ADMIN: {
     DASHBOARD: '/analytics/dashboard/',
     SALES_OVERVIEW: '/analytics/sales-overview/',

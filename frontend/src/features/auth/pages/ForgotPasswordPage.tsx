@@ -1,52 +1,53 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import { useForgotPasswordMutation } from '../api/authApi';
-import { ROUTES } from '../../../utils/constants';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { ArrowLeft, Mail, MailCheck } from 'lucide-react';
+import { axiosInstance } from '../../../services/axios';
+import { getErrorMessage } from '../../../services/errorHandler';
+import { API_ENDPOINTS, ROUTES } from '../../../utils/constants';
+import { Button, Input } from '../../../components/ui';
+import { AuthHeading, FormAlert } from '../components/AuthParts';
+
+const schema = z.object({ email: z.string().trim().email('Enter a valid email') });
 
 export const ForgotPasswordPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
+  const [sent, setSent] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<z.infer<typeof schema>>({ resolver: zodResolver(schema) });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async ({ email }: z.infer<typeof schema>) => {
+    setError(null);
     try {
-      const response = await forgotPassword({ email }).unwrap();
-      toast.success(response.message || 'Reset link sent if the account exists.');
-    } catch {
-      toast.error('Unable to request password reset. Please try again.');
+      await axiosInstance.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+      setSent(email);
+    } catch (err) {
+      setError(getErrorMessage(err));
     }
   };
 
+  if (sent) {
+    return (
+      <div className="text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 text-brand-700"><MailCheck className="h-8 w-8" /></div>
+        <h1 className="text-3xl font-extrabold">Check your inbox</h1>
+        <p className="mt-2 text-sm text-ink-500">If an account exists for <b className="text-ink-800">{sent}</b>, we’ve sent a link to reset your password. It’s valid for 30 minutes.</p>
+        <Link to={ROUTES.LOGIN}><Button variant="outline" className="mt-8" block>Back to login</Button></Link>
+      </div>
+    );
+  }
   return (
-    <div className="w-full max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Forgot password</h1>
-      <p className="text-gray-600 mb-6">Enter your account email and we will send a reset link.</p>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            className="input-field"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            disabled={isLoading}
-          />
-        </div>
-
-        <button type="submit" className="btn-primary w-full" disabled={isLoading}>
-          {isLoading ? 'Sending...' : 'Send reset link'}
-        </button>
+    <>
+      <AuthHeading title="Forgot your password?" subtitle="Enter your email and we’ll send you a reset link." />
+      <FormAlert message={error} />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+        <Input label="Email" type="email" autoComplete="email" leftIcon={<Mail className="h-4.5 w-4.5" />} {...register('email')} error={errors.email?.message} />
+        <Button type="submit" size="lg" block loading={isSubmitting}>Send reset link</Button>
       </form>
-
-      <Link to={ROUTES.LOGIN} className="block text-center text-sm text-primary-600 mt-6">
-        Back to login
-      </Link>
-    </div>
+      <Link to={ROUTES.LOGIN} className="mt-8 flex items-center justify-center gap-2 text-sm font-semibold text-ink-500 hover:text-brand-700"><ArrowLeft className="h-4 w-4" /> Back to login</Link>
+    </>
   );
 };
+
+export default ForgotPasswordPage;

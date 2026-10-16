@@ -59,20 +59,21 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     variants = ProductVariantSerializer(many=True, read_only=True)
     final_price = serializers.FloatField(read_only=True)
     in_stock = serializers.BooleanField(read_only=True)
-    profit_margin = serializers.FloatField(read_only=True)
     discount_percentage = serializers.FloatField(read_only=True)
     rating = serializers.FloatField(read_only=True)
     price = serializers.FloatField(read_only=True)
     compare_price = serializers.FloatField(read_only=True)
-    cost_per_item = serializers.FloatField(read_only=True)
     
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
+
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'slug', 'short_description', 'description', 'price', 
-            'compare_price', 'final_price', 'cost_per_item', 'profit_margin',
-            'category', 'category_details', 'image_url', 'images', 'stock_quantity',
-            'in_stock', 'sku', 'barcode', 'tags', 'weight', 'discount_percentage',
+            'compare_price', 'final_price',
+            'category', 'category_name', 'category_slug', 'category_details', 'image_url', 'images', 'stock_quantity',
+            'in_stock', 'sku', 'tags', 'weight', 'discount_percentage',
             'is_available', 'is_featured', 'is_best_seller', 'is_new_arrival',
             'rating', 'num_reviews', 'views_count', 'sold_count', 'variants',
             'meta_title', 'meta_description', 'created_at', 'updated_at'

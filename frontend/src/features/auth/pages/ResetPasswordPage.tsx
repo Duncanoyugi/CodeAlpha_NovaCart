@@ -1,80 +1,51 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { useResetPasswordMutation } from '../api/authApi';
-import { ROUTES } from '../../../utils/constants';
+import { axiosInstance } from '../../../services/axios';
+import { getErrorMessage } from '../../../services/errorHandler';
+import { API_ENDPOINTS, ROUTES } from '../../../utils/constants';
+import { Button } from '../../../components/ui';
+import { AuthHeading, FormAlert, PasswordChecklist, PasswordInput } from '../components/AuthParts';
+
+const schema = z.object({
+  password: z.string().min(8, 'Use at least 8 characters').regex(/[A-Za-z]/, 'Include a letter').regex(/\d/, 'Include a number'),
+  password2: z.string(),
+}).refine((v) => v.password === v.password2, { path: ['password2'], message: 'Passwords don’t match' });
+type Values = z.infer<typeof schema>;
 
 export const ResetPasswordPage: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const { token = '' } = useParams();
   const navigate = useNavigate();
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
-  const [resetPassword, { isLoading }] = useResetPasswordMutation();
+  const [error, setError] = React.useState<string | null>(null);
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<Values>({ resolver: zodResolver(schema) });
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!token) {
-      toast.error('Reset link is invalid.');
-      return;
-    }
-    if (password !== password2) {
-      toast.error('Passwords do not match.');
-      return;
-    }
-
+  const onSubmit = async (values: Values) => {
+    setError(null);
     try {
-      await resetPassword({ token, password, password2 }).unwrap();
-      toast.success('Password reset successfully. Please log in.');
-      navigate(ROUTES.LOGIN);
-    } catch {
-      toast.error('Unable to reset password. The link may have expired.');
+      // Server contract: { token, password, password2 }
+      await axiosInstance.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, { token, ...values });
+      toast.success('Password updated. Please log in.');
+      navigate(ROUTES.LOGIN, { replace: true });
+    } catch (err) {
+      setError(getErrorMessage(err, 'This reset link is invalid or has expired.'));
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Reset password</h1>
-      <p className="text-gray-600 mb-6">Choose a new password for your NovaCart account.</p>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2">
-            New password
-          </label>
-          <input
-            id="password"
-            type="password"
-            className="input-field"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            disabled={isLoading}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password2" className="block text-sm font-medium mb-2">
-            Confirm password
-          </label>
-          <input
-            id="password2"
-            type="password"
-            className="input-field"
-            value={password2}
-            onChange={(event) => setPassword2(event.target.value)}
-            required
-            disabled={isLoading}
-          />
-        </div>
-
-        <button type="submit" className="btn-primary w-full" disabled={isLoading}>
-          {isLoading ? 'Resetting...' : 'Reset password'}
-        </button>
+    <>
+      <AuthHeading title="Set a new password" subtitle="Choose a strong password you haven’t used before." />
+      <FormAlert message={error} />
+      {error && <p className="-mt-2 mb-4 text-sm"><Link to={ROUTES.FORGOT_PASSWORD} className="font-bold text-brand-700 hover:underline">Request a new link</Link></p>}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <div><PasswordInput label="New password" autoComplete="new-password" {...register('password')} error={errors.password?.message} /><PasswordChecklist value={watch('password') ?? ''} /></div>
+        <PasswordInput label="Confirm new password" autoComplete="new-password" {...register('password2')} error={errors.password2?.message} />
+        <Button type="submit" size="lg" block loading={isSubmitting}>Update password</Button>
       </form>
-
-      <Link to={ROUTES.LOGIN} className="block text-center text-sm text-primary-600 mt-6">
-        Back to login
-      </Link>
-    </div>
+    </>
   );
 };
+
+export default ResetPasswordPage;

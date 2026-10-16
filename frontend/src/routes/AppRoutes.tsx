@@ -6,6 +6,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { AdminLayout } from '../layouts/AdminLayout';
 
+import { FullPageLoader } from '../components/ui';
 import { ProtectedRoute } from './ProtectedRoute';
 import { AdminRoute } from './AdminRoute';
 
@@ -21,66 +22,44 @@ import { AboutPage } from '../pages/AboutPage';
 import { ContactPage } from '../pages/ContactPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
-// Auth Pages
-import {
-  ForgotPasswordPage,
-  LoginPage,
-  RegisterPage,
-  ResetPasswordPage,
-  VerifyOTPPage,
-} from '../features/auth';
+const named = <T extends Record<string, React.ComponentType<any>>>(loader: () => Promise<T>, key: keyof T) =>
+  React.lazy(() => loader().then((m) => ({ default: m[key] as React.ComponentType<any> })));
 
-// Orders
-import {
-  OrdersPage,
-  OrderDetailPage,
-} from '../features/orders';
+// Auth
+const LoginPage = named(() => import('../features/auth/pages/LoginPage'), 'LoginPage');
+const RegisterPage = named(() => import('../features/auth/pages/RegisterPage'), 'RegisterPage');
+const VerifyOTPPage = named(() => import('../features/auth/pages/VerifyOTPPage'), 'VerifyOTPPage');
+const ForgotPasswordPage = named(() => import('../features/auth/pages/ForgotPasswordPage'), 'ForgotPasswordPage');
+const ResetPasswordPage = named(() => import('../features/auth/pages/ResetPasswordPage'), 'ResetPasswordPage');
 
-// Checkout
-import {
-  CheckoutPage,
-  OrderSuccessPage,
-  OrderCancelPage,
-} from '../features/checkout';
+// Customer area
+const OrdersPage = named(() => import('../features/orders/pages/OrdersPage'), 'OrdersPage');
+const OrderDetailPage = named(() => import('../features/orders/pages/OrderDetailPage'), 'OrderDetailPage');
+const CheckoutPage = named(() => import('../features/checkout/pages/CheckoutPage'), 'CheckoutPage');
+const OrderSuccessPage = named(() => import('../features/checkout/pages/OrderSuccessPage'), 'OrderSuccessPage');
+const OrderCancelPage = named(() => import('../features/checkout/pages/OrderCancelPage'), 'OrderCancelPage');
+const WishlistPage = named(() => import('../features/wishlist/pages/WishlistPage'), 'WishlistPage');
+const ProfilePage = named(() => import('../features/profile/pages/ProfilePage'), 'ProfilePage');
+const EditProfilePage = named(() => import('../features/profile/pages/EditProfilePage'), 'EditProfilePage');
+const ChangePasswordPage = named(() => import('../features/profile/pages/ChangePasswordPage'), 'ChangePasswordPage');
+const AddressBookPage = named(() => import('../features/profile/pages/AddressBookPage'), 'AddressBookPage');
 
-import { WishlistPage } from '../features/wishlist/pages/WishlistPage';
-import {
-  AddressBookPage,
-  ChangePasswordPage,
-  EditProfilePage,
-  ProfilePage,
-} from '../features/profile';
+// Catalogue
+const ProductDetailsPage = named(() => import('../features/products/pages/ProductDetailsPage'), 'ProductDetailsPage');
+const CategoryPage = named(() => import('../features/products/pages/CategoryPage'), 'CategoryPage');
+const ProductsPage = named(() => import('../features/products/pages/ProductPage'), 'ProductsPage');
+const CartPage = named(() => import('../pages/CartPage'), 'CartPage');
 
-import { ProductDetailsPage } from '../features/products/pages/ProductDetailsPage';
-import { CategoryPage } from '../features/products/pages/CategoryPage';
-
-// Admin pages
-import { DashboardPage } from '../features/admin/pages/DashboardPage';
-import { ProductsManagementPage } from '../features/admin/pages/ProductsManagementPage';
-import { OrdersManagementPage } from '../features/admin/pages/OrdersManagementPage';
-import { UsersManagementPage } from '../features/admin/pages/UsersManagementPage';
-
-// Lazy-loaded pages
-const ProductsPage = React.lazy(() =>
-  import('../features/products/pages/ProductPage').then((module) => ({
-    default: module.ProductsPage,
-  }))
-);
-
-const CartPage = React.lazy(() =>
-  import('../pages/CartPage').then((module) => ({
-    default: module.CartPage,
-  }))
-);
+// Admin
+const DashboardPage = named(() => import('../features/admin/pages/DashboardPage'), 'DashboardPage');
+const ProductsManagementPage = named(() => import('../features/admin/pages/ProductsManagementPage'), 'ProductsManagementPage');
+const OrdersManagementPage = named(() => import('../features/admin/pages/OrdersManagementPage'), 'OrdersManagementPage');
+const UsersManagementPage = named(() => import('../features/admin/pages/UsersManagementPage'), 'UsersManagementPage');
 
 export const AppRoutes: React.FC = () => {
   return (
     <React.Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          Loading...
-        </div>
-      }
+      fallback={<FullPageLoader />}
     >
       <Routes>
         {/* Public Routes (single layout mount) */}
@@ -163,6 +142,8 @@ export const AppRoutes: React.FC = () => {
             </Route>
           </Route>
         </Route>
+
+        <Route path={ROUTES.UNAUTHORIZED} element={<NotFoundPage />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

@@ -65,7 +65,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     postal_code = models.CharField(max_length=20, blank=True)
-    country = models.CharField(max_length=100, blank=True, default='US')
+    country = models.CharField(max_length=100, blank=True, default='Kenya')
     
     # Timestamps
     last_login = models.DateTimeField(default=timezone.now)
@@ -80,6 +80,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     otp_code = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     otp_attempts = models.IntegerField(default=0)
+
+    # Google OAuth (ID token `sub` — stored so the same Google identity always
+    # maps to the same NovaCart account; never exposed or writable from the API).
+    google_id = models.CharField(max_length=255, unique=True, blank=True, null=True)
     
     objects = UserManager()
     
@@ -97,6 +101,16 @@ class User(AbstractBaseUser, PermissionsMixin):
             models.Index(fields=['created_at']),
         ]
     
+    def save(self, *args, **kwargs):
+        if self.email:
+            self.email = self.email.strip().lower()
+        if self.role == self.Role.ADMIN and not self.is_staff:
+            self.is_staff = True  # lets role-ADMIN users into /admin/ as well
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                kwargs['update_fields'] = {*update_fields, 'is_staff'}
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.full_name} <{self.email}>"
     
@@ -125,7 +139,7 @@ class UserAddress(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=100, default='US')
+    country = models.CharField(max_length=100, default='Kenya')
     is_default = models.BooleanField(default=False)
     address_type = models.CharField(max_length=20, choices=[('shipping', 'Shipping'), ('billing', 'Billing')], default='shipping')
     created_at = models.DateTimeField(auto_now_add=True)

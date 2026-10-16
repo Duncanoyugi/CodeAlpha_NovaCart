@@ -1,40 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Compass } from 'lucide-react';
+import { Button } from '../components/ui';
 import { ROUTES } from '../utils/constants';
-import { Home, Search } from 'lucide-react';
-import { Button } from '../components/common/Button';
+import { Header } from '../components/layout/Header';
+import { Footer } from '../components/layout/Footer';
 
-export const NotFoundPage: React.FC = () => {
-  return (
-    <div className="flex items-center justify-center min-h-[60vh] px-4">
-      <div className="text-center max-w-md">
-        <div className="relative inline-block mb-8">
-          <span className="font-display text-[120px] md:text-[160px] font-bold text-[var(--color-text-primary)]/5 leading-none select-none">404</span>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Search className="w-16 h-16 text-[var(--color-text-muted)]/30" />
-          </div>
-        </div>
-        <h2 className="font-display text-2xl md:text-3xl font-bold text-[var(--color-text-primary)] mb-3">Page Not Found</h2>
-        <p className="font-body text-sm text-[var(--color-text-secondary)] mb-8 leading-relaxed max-w-sm mx-auto">
-          The page you're looking for doesn't exist or has been moved. Let's get you back on track.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link to={ROUTES.HOME}>
-            <Button variant="primary" className="shadow-md">
-              <Home className="w-4 h-4 mr-2" />
-              Go Back Home
-            </Button>
-          </Link>
-          <Link to={ROUTES.PRODUCTS}>
-            <Button variant="outline">
-              <Search className="w-4 h-4 mr-2" />
-              Browse Products
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-};
+export const NotFoundPage: React.FC = () => (
+  <div className="flex min-h-screen flex-col">
+    <Header />
+    <main className="flex flex-1 flex-col items-center justify-center px-4 py-20 text-center">
+      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-50 text-brand-700"><Compass className="h-10 w-10" /></div>
+      <p className="mt-6 font-display text-7xl font-extrabold text-brand-700">404</p>
+      <h1 className="mt-2 text-2xl font-bold">We can’t find that page</h1>
+      <p className="mt-2 max-w-md text-sm text-ink-500">The link may be broken or the page may have moved.</p>
+      <div className="mt-8 flex gap-3"><Link to={ROUTES.HOME}><Button size="lg">Go home</Button></Link><Link to={ROUTES.PRODUCTS}><Button size="lg" variant="outline">Shop products</Button></Link></div>
+    </main>
+    <Footer />
+  </div>
+);
 
 export default NotFoundPage;

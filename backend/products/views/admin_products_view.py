@@ -1,15 +1,16 @@
 from django.db.models import Q
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from config.permissions import IsAdminRole, IsStaffOrAdminRole
 
 from ..models.base import Product
-from ..serializers import ProductListSerializer
+from ..serializers import ProductDetailSerializer
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated, IsAdminUser])
+@permission_classes([IsAuthenticated, IsAdminRole])
 def list_admin_products(request):
     """List products for admin dashboard with filtering + pagination.
 
@@ -69,7 +70,7 @@ def list_admin_products(request):
     end = start + page_size
     products = qs[start:end]
 
-    serializer = ProductListSerializer(products, many=True)
+    serializer = ProductDetailSerializer(products, many=True)
 
     return Response(
         {

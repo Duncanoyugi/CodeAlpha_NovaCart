@@ -2,11 +2,11 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser
+from config.permissions import IsAdminRole, IsStaffOrAdminRole
 from ..services.analytics_service import AnalyticsService
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def dashboard_stats(request):
     """Get main dashboard statistics"""
     stats = AnalyticsService.get_dashboard_stats()
@@ -17,7 +17,7 @@ def dashboard_stats(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def sales_overview(request):
     """Get sales overview chart data"""
     days = int(request.query_params.get('days', 30))
@@ -29,7 +29,7 @@ def sales_overview(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def top_products(request):
     """Get top selling products"""
     limit = int(request.query_params.get('limit', 10))
@@ -42,7 +42,7 @@ def top_products(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def category_sales(request):
     """Get sales by category"""
     days = int(request.query_params.get('days', 30))
@@ -54,7 +54,7 @@ def category_sales(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def recent_orders(request):
     """Get recent orders"""
     limit = int(request.query_params.get('limit', 10))
@@ -66,7 +66,7 @@ def recent_orders(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def revenue_chart(request):
     """Get revenue chart data by period"""
     period = request.query_params.get('period', 'month')
@@ -78,7 +78,7 @@ def revenue_chart(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def customer_insights(request):
     """Get customer insights"""
     insights = AnalyticsService.get_customer_insights()
@@ -89,7 +89,7 @@ def customer_insights(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def inventory_status(request):
     """Get inventory status"""
     inventory = AnalyticsService.get_inventory_status()

@@ -3,11 +3,12 @@ from django.urls import path
 from ..views import (
     create_payment_intent, confirm_payment, refund_payment,
     get_payment_status, get_mpesa_payment_status, mpesa_callback,
-    mpesa_stk_push, stripe_webhook
+    mpesa_stk_push, stripe_webhook, payment_config
 )
 
 urlpatterns = [
     # Payment endpoints
+    path('config/', payment_config, name='payment-config'),
     path('create-intent/', create_payment_intent, name='create-payment-intent'),
     path('stk-push/', mpesa_stk_push, name='mpesa-stk-push'),
     path('confirm/', confirm_payment, name='confirm-payment'),

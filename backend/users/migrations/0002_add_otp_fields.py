@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 
+from config.migration_helpers import AddFieldIfMissing
+
 
 class Migration(migrations.Migration):
 
@@ -10,17 +12,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        AddFieldIfMissing(
             model_name='user',
             name='otp_code',
             field=models.CharField(blank=True, max_length=6, null=True),
         ),
-        migrations.AddField(
+        AddFieldIfMissing(
             model_name='user',
             name='otp_created_at',
             field=models.DateTimeField(blank=True, null=True),
         ),
-        migrations.AddField(
+        AddFieldIfMissing(
             model_name='user',
             name='otp_attempts',
             field=models.IntegerField(default=0),

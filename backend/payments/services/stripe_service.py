@@ -1,111 +1,99 @@
 # backend/payments/services/stripe_service.py
-import stripe
-from django.conf import settings
-from django.utils import timezone
+import logging
 from decimal import Decimal
 
+import stripe
+from django.conf import settings
 
-def _set_stripe_key():
-    """Set Stripe API key lazily to avoid startup issues."""
+logger = logging.getLogger(__name__)
+
+# stripe-python moved its exception classes out of ``stripe.error`` in v8.
+StripeError = getattr(stripe, 'StripeError', None) or stripe.error.StripeError
+SignatureVerificationError = (
+    getattr(stripe, 'SignatureVerificationError', None) or stripe.error.SignatureVerificationError
+)
+
+# KES is a two-decimal currency on Stripe (amount in cents).
+ZERO_DECIMAL = {'bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'}
+
+
+def to_minor_units(amount, currency):
+    amount = Decimal(str(amount))
+    return int(amount) if currency.lower() in ZERO_DECIMAL else int((amount * 100).to_integral_value())
+
+
+def from_minor_units(amount, currency):
+    return Decimal(amount) if currency.lower() in ZERO_DECIMAL else Decimal(amount) / 100
+
+
+def _configure():
     key = getattr(settings, 'STRIPE_SECRET_KEY', '') or ''
-    if key:
-        stripe.api_key = key
+    if not key:
+        raise StripeError('Card payments are not configured on this server.')
+    stripe.api_key = key
 
 
 class StripeService:
-    """Stripe payment processing service"""
-    
+    """Thin wrapper over Stripe returning plain dicts."""
+
     @staticmethod
-    def create_payment_intent(amount, currency='usd', metadata=None, customer_id=None):
-        """Create a Stripe Payment Intent"""
-        _set_stripe_key()
+    def create_payment_intent(amount, currency='kes', metadata=None, customer_id=None, idempotency_key=None):
         try:
-            amount_in_cents = int(amount * 100)
-            payment_intent_data = {
-                'amount': amount_in_cents,
-                'currency': currency,
+            _configure()
+            params = {
+                'amount': to_minor_units(amount, currency),
+                'currency': currency.lower(),
                 'metadata': metadata or {},
+                'automatic_payment_methods': {'enabled': True, 'allow_redirects': 'never'},
             }
             if customer_id:
-                payment_intent_data['customer'] = customer_id
-            payment_intent = stripe.PaymentIntent.create(**payment_intent_data)
+                params['customer'] = customer_id
+            options = {'idempotency_key': idempotency_key} if idempotency_key else {}
+            intent = stripe.PaymentIntent.create(**params, **options)
             return {
-                'success': True,
-                'payment_intent_id': payment_intent.id,
-                'client_secret': payment_intent.client_secret,
-                'amount': amount,
-                'currency': currency,
-                'status': payment_intent.status
+                'success': True, 'payment_intent_id': intent.id, 'client_secret': intent.client_secret,
+                'amount': amount, 'currency': currency, 'status': intent.status,
             }
-        except stripe.error.StripeError as e:
-            return {'success': False, 'error': str(e), 'error_type': 'stripe_error'}
-        except Exception as e:
-            return {'success': False, 'error': str(e), 'error_type': 'unknown_error'}
-    
+        except StripeError as exc:
+            logger.warning('Stripe create_payment_intent failed: %s', exc)
+            return {'success': False, 'error': getattr(exc, 'user_message', None) or str(exc)}
+
     @staticmethod
     def retrieve_payment_intent(payment_intent_id):
-        """Retrieve a Payment Intent from Stripe"""
-        _set_stripe_key()
         try:
-            payment_intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            _configure()
+            intent = stripe.PaymentIntent.retrieve(payment_intent_id)
             return {
-                'success': True,
-                'payment_intent': payment_intent,
-                'status': payment_intent.status,
-                'amount': payment_intent.amount / 100,
-                'currency': payment_intent.currency,
-                'metadata': payment_intent.metadata
+                'success': True, 'payment_intent': intent, 'status': intent.status,
+                'client_secret': intent.client_secret, 'amount': from_minor_units(intent.amount, intent.currency),
+                'currency': intent.currency, 'metadata': dict(intent.metadata or {}),
             }
-        except stripe.error.StripeError as e:
-            return {'success': False, 'error': str(e)}
-    
-    @staticmethod
-    def confirm_payment_intent(payment_intent_id, payment_method_id=None):
-        """Confirm a Payment Intent"""
-        _set_stripe_key()
-        try:
-            confirm_params = {}
-            if payment_method_id:
-                confirm_params['payment_method'] = payment_method_id
-            payment_intent = stripe.PaymentIntent.confirm(payment_intent_id, **confirm_params)
-            return {'success': True, 'payment_intent': payment_intent, 'status': payment_intent.status}
-        except stripe.error.StripeError as e:
-            return {'success': False, 'error': str(e)}
-    
+        except StripeError as exc:
+            return {'success': False, 'error': str(exc)}
+
     @staticmethod
     def cancel_payment_intent(payment_intent_id):
-        """Cancel a Payment Intent"""
-        _set_stripe_key()
         try:
-            payment_intent = stripe.PaymentIntent.cancel(payment_intent_id)
-            return {'success': True, 'payment_intent': payment_intent, 'status': payment_intent.status}
-        except stripe.error.StripeError as e:
-            return {'success': False, 'error': str(e)}
-    
+            _configure()
+            intent = stripe.PaymentIntent.cancel(payment_intent_id)
+            return {'success': True, 'status': intent.status}
+        except StripeError as exc:
+            return {'success': False, 'error': str(exc)}
+
     @staticmethod
-    def refund_payment(payment_intent_id, amount=None, reason=None):
-        """Refund a payment"""
-        _set_stripe_key()
+    def refund_payment(payment_intent_id, amount=None, currency='kes', reason=None):
         try:
-            refund_params = {'payment_intent': payment_intent_id}
+            _configure()
+            params = {'payment_intent': payment_intent_id, 'reason': 'requested_by_customer'}
             if amount:
-                refund_params['amount'] = int(amount * 100)
+                params['amount'] = to_minor_units(amount, currency)
             if reason:
-                refund_params['reason'] = reason
-            refund = stripe.Refund.create(**refund_params)
-            return {'success': True, 'refund_id': refund.id, 'amount': refund.amount / 100, 'status': refund.status}
-        except stripe.error.StripeError as e:
-            return {'success': False, 'error': str(e)}
-    
+                params['metadata'] = {'note': reason[:500]}
+            refund = stripe.Refund.create(**params)
+            return {'success': True, 'refund_id': refund.id, 'status': refund.status}
+        except StripeError as exc:
+            return {'success': False, 'error': str(exc)}
+
     @staticmethod
-    def create_customer(email, name=None, metadata=None):
-        """Create a Stripe Customer"""
-        _set_stripe_key()
-        try:
-            customer_data = {'email': email, 'metadata': metadata or {}}
-            if name:
-                customer_data['name'] = name
-            customer = stripe.Customer.create(**customer_data)
-            return {'success': True, 'customer_id': customer.id, 'customer': customer}
-        except stripe.error.StripeError as e:
-            return {'success': False, 'error': str(e)}
+    def construct_event(payload, signature):
+        return stripe.Webhook.construct_event(payload, signature, settings.STRIPE_WEBHOOK_SECRET)

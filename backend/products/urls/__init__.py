@@ -7,6 +7,8 @@ from ..views import (
     list_products, featured_products, best_selling_products,
     new_arrivals, product_detail, create_product, update_product,
     delete_product, update_inventory,
+    # Image upload views
+    upload_product_image, upload_product_images, delete_product_image, upload_category_image,
 )
 from ..views.admin_products_view import list_admin_products
 
@@ -18,6 +20,7 @@ urlpatterns = [
     path('admin/categories/', create_category, name='create-category'),
     path('admin/categories/<uuid:id>/', update_category, name='update-category'),
     path('admin/categories/<uuid:id>/delete/', delete_category, name='delete-category'),
+    path('admin/categories/<uuid:id>/image/', upload_category_image, name='upload-category-image'),
     
     # Product endpoints (public)
     path('', list_products, name='list-products'),
@@ -32,5 +35,10 @@ urlpatterns = [
     path('admin/products/<uuid:id>/', update_product, name='update-product'),
     path('admin/products/<uuid:id>/delete/', delete_product, name='delete-product'),
     path('admin/products/<uuid:id>/inventory/', update_inventory, name='update-inventory'),
+    
+    # Image upload endpoints
+    path('admin/products/<uuid:product_id>/image/', upload_product_image, name='upload-product-image'),
+    path('admin/products/<uuid:product_id>/images/', upload_product_images, name='upload-product-images'),
+    path('admin/products/<uuid:product_id>/image/delete/', delete_product_image, name='delete-product-image'),
 
 ]

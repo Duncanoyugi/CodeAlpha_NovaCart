@@ -5,6 +5,7 @@ import { formatPrice } from '../../../utils';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useDeleteProductMutation, useUpdateInventoryMutation } from '../api/adminApi';
 import { Button } from '../../../components/common/Button';
+import { ProductImage } from '../../../components/common/ProductImage';
 
 interface ProductTableRowProps {
   product: Product;
@@ -64,11 +65,7 @@ export const ProductTableRow: React.FC<ProductTableRowProps> = ({
         <td className="py-4 px-4">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 rounded-[var(--radius-lg)] overflow-hidden border border-[var(--color-border-light)] group-hover:border-[var(--color-border-medium)] transition-colors">
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <ProductImage product={product} alt={product.name} className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0">
               <p className="font-ui text-sm font-medium text-[var(--color-text-primary)] truncate max-w-[200px] group-hover:text-[var(--color-primary)] transition-colors">

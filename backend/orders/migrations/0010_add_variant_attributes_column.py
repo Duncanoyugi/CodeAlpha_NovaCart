@@ -1,6 +1,8 @@
 # backend/orders/migrations/0010_add_variant_attributes_column.py
 from django.db import migrations, models
 
+from ._safe import postgres_only_sql
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -8,7 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
+        postgres_only_sql(
             sql="""
                 DO $$ 
                 BEGIN 

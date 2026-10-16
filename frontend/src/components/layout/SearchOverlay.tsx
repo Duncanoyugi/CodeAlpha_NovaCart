@@ -5,6 +5,7 @@ import { ROUTES } from '../../utils/constants';
 import { useSearch } from '../../hooks/useSearch';
 import { ProductCardSkeleton } from '../common/Skeleton';
 import { formatPrice } from '../../utils';
+import { ProductImage } from '../common/ProductImage';
 
 interface SearchOverlayProps {
   isOpen: boolean;
@@ -143,11 +144,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                     selectedIndex === idx ? 'bg-[var(--color-bg-muted)] text-[var(--color-primary)]' : 'text-[var(--color-text-primary)] hover:bg-[var(--color-bg-muted)]'
                   }`}
                 >
-                  <img
-                    src={product.image_url}
-                    alt=""
-                    className="w-11 h-11 rounded-[var(--radius-md)] object-cover border border-[var(--color-border)] shrink-0"
-                  />
+                  <ProductImage product={product} alt="" className="w-11 h-11 rounded-[var(--radius-md)] object-cover border border-[var(--color-border)] shrink-0" />
                   <span className="flex-1 truncate">{product.name}</span>
                   <span className="text-sm font-semibold text-[var(--color-primary)] shrink-0">{formatPrice(product.final_price)}</span>
                 </button>

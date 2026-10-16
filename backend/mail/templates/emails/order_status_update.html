@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Order update</title></head>
+<body style="margin:0;background:#f4f6f5;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr><td style="background:#0b5d46;padding:24px 32px;color:#ffffff;font-size:22px;font-weight:700;">NovaCart</td></tr>
+        <tr><td style="padding:32px;">
+          <p style="margin:0 0 8px;font-size:15px;">Hi {{ user.full_name }},</p>
+          <h1 style="margin:0 0 16px;font-size:22px;">Your order is now {{ order.get_status_display }}</h1>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.6;">Order <strong>{{ order.order_number }}</strong> has been updated.</p>
+          {% if order.tracking_number %}
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.6;">Tracking number: <strong>{{ order.tracking_number }}</strong>{% if order.carrier %} ({{ order.carrier }}){% endif %}</p>
+          {% endif %}
+          <a href="{{ frontend_url }}/orders/{{ order.id }}" style="display:inline-block;background:#0b5d46;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;">View your order</a>
+        </td></tr>
+        <tr><td style="padding:20px 32px;background:#f9fafb;color:#6b7280;font-size:12px;">&copy; {{ year }} NovaCart. All rights reserved.</td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

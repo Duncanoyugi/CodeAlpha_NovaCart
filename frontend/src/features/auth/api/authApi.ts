@@ -36,6 +36,27 @@ export const authApi = apiSlice.injectEndpoints({
         body: userData,
       }),
     }),
+    googleLogin: builder.mutation<AuthResponse, { token: string }>({
+      query: (payload) => ({
+        url: API_ENDPOINTS.AUTH.GOOGLE_AUTH,
+        method: 'POST',
+        body: payload,
+      }),
+      transformResponse: (response: any) => response.data,
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.tokens) {
+            tokenService.setTokens(data.tokens.access, data.tokens.refresh);
+          }
+          if (data?.user) {
+            dispatch(setUser(data.user));
+          }
+        } catch (err) {
+          // swallow — errors handled by callers
+        }
+      },
+    }),
     verifyOTP: builder.mutation<AuthResponse, VerifyOTPData>({
       query: (otpData) => ({
         url: API_ENDPOINTS.AUTH.VERIFY_OTP,
@@ -104,6 +125,7 @@ export const authApi = apiSlice.injectEndpoints({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useGoogleLoginMutation,
   useVerifyOTPMutation,
   useResendOTPMutation,
   useResendWelcomeMutation,

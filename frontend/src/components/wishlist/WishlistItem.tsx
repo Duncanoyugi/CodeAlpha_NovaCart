@@ -4,6 +4,7 @@ import { Trash2, ShoppingCart } from 'lucide-react';
 import { formatPrice } from '../../utils';
 import { ROUTES } from '../../utils/constants';
 import { Button } from '../common/Button';
+import { ProductImage } from '../common/ProductImage';
 
 interface WishlistItemProps {
   item: {
@@ -37,11 +38,7 @@ export const WishlistItem: React.FC<WishlistItemProps> = ({
   return (
     <div className="flex flex-col sm:flex-row gap-4 py-4 border-b border-[var(--color-border-light)]">
       <Link to={ROUTES.PRODUCT_DETAIL(product.slug)} className="sm:w-24 flex-shrink-0">
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="w-full h-28 object-cover rounded-[var(--radius-md)] border border-[var(--color-border-light)]"
-        />
+        <ProductImage product={product} alt={product.name} className="w-full h-28 object-cover rounded-[var(--radius-md)] border border-[var(--color-border-light)]" />
       </Link>
 
       <div className="flex-1 min-w-0">

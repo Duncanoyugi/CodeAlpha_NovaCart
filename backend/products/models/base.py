@@ -2,6 +2,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
+from decimal import ROUND_HALF_UP, Decimal
 
 class Category(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -76,13 +77,15 @@ class Product(models.Model):
         ]
     
     def __str__(self):
-        return f"{self.name} (${self.price})"
+        return f"{self.name} (KES {self.price})"
     
     @property
     def final_price(self):
+        """Selling price after discount, rounded to whole shillings (KES)."""
         if self.discount_percentage > 0:
-            return self.price * (1 - self.discount_percentage / 100)
-        return self.price
+            discounted = self.price * (1 - self.discount_percentage / Decimal('100'))
+            return discounted.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+        return self.price.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
     
     @property
     def in_stock(self):

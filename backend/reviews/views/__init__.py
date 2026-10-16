@@ -2,7 +2,8 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from config.permissions import IsAdminRole, IsStaffOrAdminRole
 from django.shortcuts import get_object_or_404
 
 from ..models.base import Review
@@ -130,7 +131,7 @@ def mark_helpful(request, review_id):
 # ==================== ADMIN REVIEW ENDPOINTS ====================
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def admin_pending_reviews(request):
     """Get all pending reviews (admin only)"""
     reviews = AdminReviewService.get_pending_reviews()
@@ -142,7 +143,7 @@ def admin_pending_reviews(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def admin_all_reviews(request):
     """Get all reviews with filters (admin only)"""
     queryset = Review.objects.all().order_by('-created_at')
@@ -180,7 +181,7 @@ def admin_all_reviews(request):
     }, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminRole])
 def admin_review_action(request, review_id):
     """Approve, reject, or respond to a review (admin only)"""
     serializer = AdminReviewActionSerializer(data=request.data)

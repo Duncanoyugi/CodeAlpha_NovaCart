@@ -11,32 +11,23 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 
-# Simple health check view
 def health_check(request):
+    """Liveness/readiness probe for the hosting platform. Never leaks DB host or credentials."""
     from django.db import connection
-    from django.conf import settings as django_settings
-    
+    from django.utils import timezone
+
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT 1")
-            db_status = "connected"
-            cursor.execute("SELECT version();")
-            db_version = cursor.fetchone()[0][:50]
-    except Exception as e:
-        db_status = f"error: {str(e)}"
-        db_version = "unknown"
-    
-    return JsonResponse({
-        "status": "healthy",
-        "environment": "development" if django_settings.DEBUG else "production",
-        "database": {
-            "status": db_status,
-            "name": django_settings.DATABASES['default']['NAME'],
-            "host": django_settings.DATABASES['default']['HOST'],
-            "version": db_version
-        },
-        "timestamp": "2024-03-24 10:00:00"
-    })
+            cursor.execute('SELECT 1')
+        db_ok = True
+    except Exception:  # noqa: BLE001
+        db_ok = False
+    return JsonResponse(
+        {'status': 'healthy' if db_ok else 'degraded', 'database': 'connected' if db_ok else 'unreachable',
+         'timestamp': timezone.now().isoformat()},
+        status=200 if db_ok else 503,
+    )
+
 
 urlpatterns = [
     # Admin and health check
@@ -58,4 +49,3 @@ urlpatterns = [
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -6,9 +6,6 @@ import type { Product } from '../../types';
 interface ProductGridProps {
   products: Product[];
   isLoading?: boolean;
-  onAddToCart?: (productId: string) => void;
-  onAddToWishlist?: (productId: string) => void;
-  wishlistIds?: string[];
   emptyTitle?: string;
   emptyDescription?: string;
   onClearFilters?: () => void;
@@ -17,9 +14,6 @@ interface ProductGridProps {
 export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   isLoading = false,
-  onAddToCart,
-  onAddToWishlist,
-  wishlistIds = [],
   emptyTitle = 'No products found',
   emptyDescription = 'Try adjusting your filters or search terms to find what you\'re looking for.',
   onClearFilters,
@@ -67,9 +61,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
         <ProductCard
           key={product.id}
           product={product}
-          onAddToCart={onAddToCart}
-          onAddToWishlist={onAddToWishlist}
-          isInWishlist={wishlistIds.includes(product.id)}
         />
       ))}
     </div>

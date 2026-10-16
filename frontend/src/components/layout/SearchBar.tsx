@@ -5,6 +5,7 @@ import { ROUTES } from '../../utils/constants';
 import { useSearch } from '../../hooks/useSearch';
 import { ProductCardSkeleton } from '../common/Skeleton';
 import { formatPrice } from '../../utils';
+import { ProductImage } from '../common/ProductImage';
 
 export const SearchBar: React.FC = () => {
   const navigate = useNavigate();
@@ -152,11 +153,7 @@ onClick={() => { setQuery(''); setSelectedIndex(-1); inputRef.current?.focus(); 
                     role="option"
                     aria-selected={selectedIndex === idx}
                   >
-                    <img
-                      src={product.image_url}
-                      alt=""
-                      className="w-9 h-9 rounded-[var(--radius-md)] object-cover border border-[var(--color-border)] shrink-0"
-                    />
+                    <ProductImage product={product} alt="" className="w-9 h-9 rounded-[var(--radius-md)] object-cover border border-[var(--color-border)] shrink-0" />
                     <span className="flex-1 truncate">{product.name}</span>
                     <span className="text-xs font-semibold text-[var(--color-primary)] shrink-0">{formatPrice(product.final_price)}</span>
                   </button>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm, type Resolver, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Upload, Image, Loader2 } from 'lucide-react';
 import type { Product, Category } from '../../../types';
 import type { ProductFormData } from '../../../types/admin.types';
 import { useCreateProductMutation, useUpdateProductMutation, useGetCategoriesQuery } from '../api/adminApi';
@@ -15,7 +15,7 @@ const productSchema = z.object({
   price: z.number().min(0.01, 'Price must be greater than 0'),
   compare_price: z.number().optional().nullable(),
   category: z.string().min(1, 'Category is required'),
-  image_url: z.string().url('Must be a valid URL'),
+  image_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   images: z.array(z.string()).default([]),
   stock_quantity: z.number().min(0, 'Stock cannot be negative'),
   sku: z.string().min(1, 'SKU is required'),
@@ -43,6 +43,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSuccess,
 }) => {
   const [imageInput, setImageInput] = useState('');
+  const [mainImageFile, setMainImageFile] = useState<File | null>(null);
+  const [additionalImageFiles, setAdditionalImageFiles] = useState<File[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const { data: categories = [] } = useGetCategoriesQuery();
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
@@ -79,6 +82,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   } = methods;
 
   const images = watch('images');
+  const imageUrl = watch('image_url');
 
   useEffect(() => {
     if (product) {
@@ -103,6 +107,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         is_best_seller: product.is_best_seller,
         is_new_arrival: product.is_new_arrival,
       });
+      setMainImageFile(null);
+      setAdditionalImageFiles([]);
     } else {
       reset({
         name: '',
@@ -122,6 +128,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         is_best_seller: false,
         is_new_arrival: false,
       });
+      setMainImageFile(null);
+      setAdditionalImageFiles([]);
     }
   }, [product, reset]);
 
@@ -138,12 +146,145 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     setValue('images', newImages);
   };
 
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Image must be less than 10MB');
+        return;
+      }
+      setMainImageFile(file);
+      // Create preview
+      const previewUrl = URL.createObjectURL(file);
+      setValue('image_url', previewUrl);
+    }
+  };
+
+  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles: File[] = [];
+    
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name}: Not an image file`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name}: Must be less than 10MB`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+    
+    if (validFiles.length > 0) {
+      setAdditionalImageFiles(prev => [...prev, ...validFiles]);
+      // Create previews
+      const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+      setValue('images', [...images, ...newPreviews]);
+    }
+  };
+
+  const removeAdditionalImage = (index: number) => {
+    const newImages = [...images];
+    const removedUrl = newImages.splice(index, 1)[0];
+    setValue('images', newImages);
+    // Also remove from file list if it's a blob URL (uploaded file)
+    if (removedUrl.startsWith('blob:')) {
+      setAdditionalImageFiles(prev => {
+        const newFiles = [...prev];
+        newFiles.splice(index, 1);
+        return newFiles;
+      });
+    }
+  };
+
+  const uploadImages = async (): Promise<{ mainImageUrl?: string; additionalImageUrls: string[] }> => {
+    if (!mainImageFile && additionalImageFiles.length === 0) {
+      return { additionalImageUrls: [] };
+    }
+
+    setUploadingImages(true);
+    const formData = new FormData();
+    let mainImageUrl: string | undefined;
+    const additionalImageUrls: string[] = [];
+
+    try {
+      // Upload main image if provided
+      if (mainImageFile) {
+        formData.append('image', mainImageFile);
+        formData.append('is_main', 'true');
+        
+        const productId = product?.id || 'new';
+        const response = await fetch(`/api/products/admin/products/${productId}/image/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to upload main image');
+        }
+
+        const result = await response.json();
+        mainImageUrl = result.data.url;
+      }
+
+      // Upload additional images if provided
+      if (additionalImageFiles.length > 0) {
+        const additionalFormData = new FormData();
+        additionalImageFiles.forEach(file => {
+          additionalFormData.append('images', file);
+        });
+
+        const productId = product?.id || 'new';
+        const response = await fetch(`/api/products/admin/products/${productId}/images/`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+          body: additionalFormData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to upload additional images');
+        }
+
+        const result = await response.json();
+        result.data.forEach((img: { url: string }) => {
+          additionalImageUrls.push(img.url);
+        });
+      }
+
+      return { mainImageUrl, additionalImageUrls };
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     try {
+      // Upload images first if there are new files
+      let finalImageUrl = data.image_url;
+      let finalImages = data.images;
+
+      if (mainImageFile || additionalImageFiles.length > 0) {
+        const { mainImageUrl, additionalImageUrls } = await uploadImages();
+        if (mainImageUrl) finalImageUrl = mainImageUrl;
+        if (additionalImageUrls.length > 0) finalImages = [...data.images.filter(url => !url.startsWith('blob:')), ...additionalImageUrls];
+      }
+
       const formData = new FormData();
 
       const append = (key: string, value: any) => {
-        if (value !== undefined && value !== null) {
+        if (value !== undefined && value !== null && value !== '') {
           formData.append(key, value);
         }
       };
@@ -154,11 +295,11 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       append('price', String(data.price));
       append('compare_price', data.compare_price !== null && data.compare_price !== undefined ? String(data.compare_price) : null);
       append('category', data.category);
-      append('image_url', data.image_url);
+      append('image_url', finalImageUrl);
       append('stock_quantity', String(data.stock_quantity));
       append('sku', data.sku);
       append('tags', JSON.stringify(data.tags.split(',').map(t => t.trim()).filter(Boolean)));
-      append('images', JSON.stringify(data.images));
+      append('images', JSON.stringify(finalImages));
       append('discount_percentage', String(data.discount_percentage));
       append('is_available', String(data.is_available));
       append('is_featured', String(data.is_featured));
@@ -174,8 +315,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       }
       onSuccess();
       onClose();
-    } catch (error) {
-      toast.error('Failed to save product');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to save product');
     }
   };
 
@@ -319,43 +460,112 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             {/* Images */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Main Image URL *
+                Main Image
               </label>
-              <input {...register('image_url')} className="input-field" />
-              {errors.image_url && (
-                <p className="mt-1 text-sm text-red-600">{errors.image_url.message}</p>
-              )}
+              <div className="space-y-3">
+                {/* File upload */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-brand-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={handleMainImageChange}
+                    className="hidden"
+                    id="main-image-upload"
+                    disabled={uploadingImages}
+                  />
+                  <label htmlFor="main-image-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <span className="text-sm text-gray-600">Click to upload or drag and drop</span>
+                    <span className="text-xs text-gray-400">JPEG, PNG, WebP, GIF up to 10MB</span>
+                  </label>
+                </div>
+                
+                {/* URL input (alternative) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Or enter image URL</label>
+                  <input {...register('image_url')} className="input-field" placeholder="https://example.com/image.jpg" />
+                  {errors.image_url && (
+                    <p className="mt-1 text-sm text-red-600">{errors.image_url.message}</p>
+                  )}
+                </div>
+
+                {/* Preview */}
+                {(mainImageFile || imageUrl) && (
+                  <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
+                    <img 
+                      src={imageUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    {mainImageFile && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white text-xs bg-black/50 px-2 py-1 rounded">New image selected</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
+            {/* Additional Images */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Additional Images
               </label>
-              <div className="flex gap-2 mb-2">
-                <input
-                  type="text"
-                  value={imageInput}
-                  onChange={(e) => setImageInput(e.target.value)}
-                  className="input-field flex-1"
-                  placeholder="Enter image URL"
-                />
-                <button type="button" onClick={addImage} className="btn-secondary">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {images.map((url, index) => (
-                  <div key={index} className="relative group">
-                    <img src={url} alt="" className="w-16 h-16 object-cover rounded" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                {/* File upload */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-brand-500 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    multiple
+                    onChange={handleAdditionalImagesChange}
+                    className="hidden"
+                    id="additional-images-upload"
+                    disabled={uploadingImages}
+                  />
+                  <label htmlFor="additional-images-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <span className="text-sm text-gray-600">Click to upload or drag and drop</span>
+                    <span className="text-xs text-gray-400">Multiple files allowed, up to 10MB each</span>
+                  </label>
+                </div>
+
+                {/* URL input (alternative) */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={imageInput}
+                    onChange={(e) => setImageInput(e.target.value)}
+                    className="input-field flex-1"
+                    placeholder="Enter image URL"
+                  />
+                  <button type="button" onClick={addImage} className="btn-secondary" disabled={uploadingImages}>
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Previews */}
+                <div className="flex flex-wrap gap-2">
+                  {images.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <img src={url} alt="" className="w-16 h-16 object-cover rounded" />
+                      <button
+                        type="button"
+                        onClick={() => removeAdditionalImage(index)}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                        disabled={uploadingImages}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                      {url.startsWith('blob:') && (
+                        <div className="absolute bottom-0 left-0 right-0 bg-brand-600 text-white text-xs text-center py-0.5">
+                          New
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -389,18 +599,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t">
-              <button type="button" onClick={onClose} className="btn-secondary">
+              <button type="button" onClick={onClose} className="btn-secondary" disabled={isCreating || isUpdating || uploadingImages}>
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isCreating || isUpdating}
+                disabled={isCreating || isUpdating || uploadingImages}
                 className="btn-primary flex items-center gap-2"
               >
-                {(isCreating || isUpdating) && (
+                {(isCreating || isUpdating || uploadingImages) && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                 )}
-                {product ? 'Update Product' : 'Create Product'}
+                {uploadingImages ? 'Uploading images...' : product ? 'Update Product' : 'Create Product'}
               </button>
             </div>
           </form>

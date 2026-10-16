@@ -1,5 +1,7 @@
 from django.db import migrations, models
 
+from ._safe import AddFieldIfMissing
+
 
 class Migration(migrations.Migration):
 
@@ -8,7 +10,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        AddFieldIfMissing(
             model_name="order",
             name="billing_full_name",
             field=models.CharField(

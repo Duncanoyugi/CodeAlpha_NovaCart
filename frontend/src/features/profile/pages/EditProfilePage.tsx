@@ -1,120 +1,63 @@
 import React from 'react';
-import { useForm, FormProvider, type Resolver } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useProfile } from '../hooks/useProfile';
-import { profileSchema } from '../schemas/profileSchema';
-import type { ProfileFormData } from '../schemas/profileSchema';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import toast from 'react-hot-toast';
+import { useGetProfileQuery } from '../hooks/profileHooks';
+import { useUpdateProfileMutation } from '../api/userApi';
+import { useAppDispatch } from '../../../redux/hooks';
+import { setUser } from '../../../redux/slices/authSlice';
+import { AccountShell } from '../components/AccountShell';
+import { Button, Card, Input, Select } from '../../../components/ui';
+import { KENYA_COUNTIES, KENYAN_PHONE, cleanPhone } from '../../../utils/kenya';
 import { ROUTES } from '../../../utils/constants';
-import { Button } from '../../../components/common/Button';
-import { User, Phone, ArrowLeft } from 'lucide-react';
+
+const schema = z.object({
+  full_name: z.string().trim().min(2, 'Enter your full name'),
+  phone_number: z.string().optional().refine((v) => !v || KENYAN_PHONE.test(cleanPhone(v)), 'Enter a valid Kenyan phone number'),
+  address_line1: z.string().optional(), address_line2: z.string().optional(), city: z.string().optional(), state: z.string().optional(), postal_code: z.string().optional(),
+});
+type Values = z.infer<typeof schema>;
 
 export const EditProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUserProfile, isUpdating } = useProfile();
+  const dispatch = useAppDispatch();
+  const { data: user } = useGetProfileQuery();
+  const [update, { isLoading }] = useUpdateProfileMutation();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<Values>({ resolver: zodResolver(schema) });
 
-  const methods = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema) as Resolver<ProfileFormData>,
-    defaultValues: {
-      full_name: user?.full_name || '',
-      phone_number: user?.phone_number || '',
-    },
-  });
+  React.useEffect(() => {
+    if (user) reset({ full_name: user.full_name, phone_number: user.phone_number ?? '', address_line1: user.address_line1 ?? '', address_line2: user.address_line2 ?? '', city: user.city ?? '', state: user.state ?? '', postal_code: user.postal_code ?? '' });
+  }, [user, reset]);
 
-  const { handleSubmit, register, formState: { errors } } = methods;
-
-  const onSubmit = async (data: ProfileFormData) => {
+  const onSubmit = async (v: Values) => {
     try {
-      await updateUserProfile(data);
+      const updated = await update({ ...v, phone_number: v.phone_number ? cleanPhone(v.phone_number) : '', country: 'Kenya' }).unwrap();
+      dispatch(setUser({ ...(user as object), ...(updated as object) } as never));
+      toast.success('Profile updated');
       navigate(ROUTES.PROFILE);
-    } catch {
-      // Error handled in useProfile
+    } catch (err) {
+      toast.error((err as { message?: string }).message ?? 'Could not update your profile');
     }
   };
 
   return (
-    <div className="container-custom py-12">
-      <div className="mb-8">
-        <button
-          onClick={() => navigate(ROUTES.PROFILE)}
-          className="flex items-center gap-2 text-sm font-ui text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors mb-4 group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Back to Profile
-        </button>
-        <span className="font-ui text-[11px] uppercase tracking-[0.14em] text-[var(--color-gold-600)] font-semibold">Account</span>
-        <h1 className="font-display text-3xl md:text-4xl text-[var(--color-text-primary)] mt-2">Edit Profile</h1>
-      </div>
-
-      <div className="max-w-2xl bg-[var(--color-bg-surface)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-card)] overflow-hidden">
-        <div className="px-6 py-5 border-b border-[var(--color-border-light)]">
-          <p className="font-ui text-sm text-[var(--color-text-secondary)]">Update your personal information below.</p>
-        </div>
-
-        <div className="p-6 md:p-8">
-          <FormProvider {...methods}>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div>
-                <label htmlFor="full_name" className="block font-ui text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--color-text-secondary)] mb-2.5">Full Name</label>
-                <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <input
-                    id="full_name"
-                    type="text"
-                    {...register('full_name')}
-                    className="w-full rounded-[var(--radius-lg)] border-2 border-[var(--color-border-medium)] bg-[var(--color-bg-raised)] pl-11 pr-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-border-focus)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(196,145,92,0.12)] transition-all"
-                    disabled={isUpdating}
-                  />
-                </div>
-                {errors.full_name && (
-                  <p className="mt-2 text-sm font-ui text-[var(--color-danger-text)] font-medium">{errors.full_name.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="phone_number" className="block font-ui text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--color-text-secondary)] mb-2.5">Phone Number</label>
-                <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]">
-                    <Phone className="w-5 h-5" />
-                  </div>
-                  <input
-                    id="phone_number"
-                    type="tel"
-                    {...register('phone_number')}
-                    className="w-full rounded-[var(--radius-lg)] border-2 border-[var(--color-border-medium)] bg-[var(--color-bg-raised)] pl-11 pr-4 py-3 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-border-focus)] focus:outline-none focus:shadow-[0_0_0_3px_rgba(196,145,92,0.12)] transition-all"
-                    disabled={isUpdating}
-                  />
-                </div>
-                {errors.phone_number && (
-                  <p className="mt-2 text-sm font-ui text-[var(--color-danger-text)] font-medium">{errors.phone_number.message}</p>
-                )}
-              </div>
-
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-[var(--color-border-light)] mt-8">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(ROUTES.PROFILE)}
-                  disabled={isUpdating}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isUpdating}
-                  isLoading={isUpdating}
-                  className="w-full sm:w-auto shadow-[var(--shadow-gold)]"
-                >
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
-                </Button>
-              </div>
-            </form>
-          </FormProvider>
-        </div>
-      </div>
-    </div>
+    <AccountShell title="Edit profile">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Card className="grid gap-4 p-6 sm:grid-cols-2">
+          <Input label="Full name" {...register('full_name')} error={errors.full_name?.message} />
+          <Input label="Phone" inputMode="tel" placeholder="0712 345 678" {...register('phone_number')} error={errors.phone_number?.message} />
+          <div className="sm:col-span-2"><Input label="Street address" {...register('address_line1')} /></div>
+          <div className="sm:col-span-2"><Input label="Apartment / landmark" {...register('address_line2')} /></div>
+          <Input label="Town / city" {...register('city')} />
+          <Select label="County" {...register('state')}><option value="">Select county</option>{KENYA_COUNTIES.map((c) => <option key={c}>{c}</option>)}</Select>
+          <Input label="Postal code" {...register('postal_code')} />
+        </Card>
+        <div className="mt-5 flex gap-3"><Button type="submit" loading={isLoading}>Save changes</Button><Button variant="outline" onClick={() => navigate(ROUTES.PROFILE)}>Cancel</Button></div>
+      </form>
+    </AccountShell>
   );
 };
+
+export default EditProfilePage;

@@ -1,5 +1,7 @@
 from django.db import migrations, models
 
+from ._safe import AddFieldIfMissing
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -7,7 +9,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        AddFieldIfMissing(
             model_name='orderitem',
             name='product_image',
             field=models.URLField(default=''),

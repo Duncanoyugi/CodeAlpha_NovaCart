@@ -1,140 +1,56 @@
 import React from 'react';
-import { Search, Users, ChevronDown } from 'lucide-react';
-import { UserTableRow } from '../components/UserTableRow';
-import { useGetAdminUsersQuery } from '../api/adminApi';
-import { Pagination } from '../../../components/common/Pagination';
+import toast from 'react-hot-toast';
+import { useGetAdminUsersQuery, useToggleUserStatusMutation, useUpdateUserRoleMutation, useVerifyUserMutation } from '../api/adminApi';
+import { PageTitle, Pager, SearchInput, TableShell, Td, Th } from '../components/AdminBits';
+import { Badge, Skeleton } from '../../../components/ui';
+import { useAppSelector } from '../../../redux/hooks';
 
 export const UsersManagementPage: React.FC = () => {
+  const me = useAppSelector((s) => s.auth.user);
   const [page, setPage] = React.useState(1);
   const [search, setSearch] = React.useState('');
-  const [roleFilter, setRoleFilter] = React.useState('');
-  const [verificationFilter, setVerificationFilter] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState('');
-  const { data, isLoading, refetch } = useGetAdminUsersQuery({
-    page,
-    page_size: 20,
-    search: search || undefined,
-    role: roleFilter || undefined,
-    is_verified: verificationFilter === 'verified' ? true : verificationFilter === 'unverified' ? false : undefined,
-    is_active: statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
-  });
-
-  const users = data?.users || [];
-  const pagination = data?.pagination;
-
-  React.useEffect(() => { setPage(1); }, [search, roleFilter, verificationFilter, statusFilter]);
+  const [role, setRole] = React.useState('');
+  const { data, isLoading, isFetching } = useGetAdminUsersQuery({ page, page_size: 20, search: search || undefined, role: role || undefined });
+  const [changeRole] = useUpdateUserRoleMutation();
+  const [toggle] = useToggleUserStatusMutation();
+  const [verify] = useVerifyUserMutation();
+  const onSearch = React.useCallback((v: string) => { setSearch(v); setPage(1); }, []);
+  const run = async (p: Promise<unknown>, ok: string) => { try { await p; toast.success(ok); } catch (e) { toast.error((e as { message?: string }).message ?? 'Action failed'); } };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--color-accent)]">
-          Management
-        </span>
-        <h1 className="font-display text-3xl font-bold text-[var(--color-text-primary)] tracking-tight mt-1">
-          Customers
-        </h1>
-        <p className="font-ui text-sm text-[var(--color-text-secondary)] mt-1">
-          Manage customer and staff accounts
-        </p>
+    <div>
+      <PageTitle title="Customers" subtitle="Manage accounts, roles and access." />
+      <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_200px]">
+        <SearchInput value={search} onChange={onSearch} placeholder="Search name or email…" />
+        <select value={role} onChange={(e) => { setRole(e.target.value); setPage(1); }} aria-label="Role" className="h-11 rounded-xl border border-ink-200 bg-white px-3 text-sm font-medium"><option value="">All roles</option><option value="CUSTOMER">Customers</option><option value="STAFF">Staff</option><option value="ADMIN">Admins</option></select>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] pl-11 pr-4 py-2.5 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 transition-all"
-          />
-        </div>
-        <div className="relative">
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 appearance-none transition-all cursor-pointer"
-          >
-            <option value="">All Roles</option>
-            <option value="CUSTOMER">Customers</option>
-            <option value="STAFF">Staff</option>
-            <option value="ADMIN">Admins</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4 pointer-events-none" />
-        </div>
-        <div className="relative">
-          <select
-            value={verificationFilter}
-            onChange={(e) => setVerificationFilter(e.target.value)}
-            className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 appearance-none transition-all cursor-pointer"
-          >
-            <option value="">All</option>
-            <option value="verified">Verified Only</option>
-            <option value="unverified">Unverified Only</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4 pointer-events-none" />
-        </div>
-        <div className="relative">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full rounded-[var(--radius-lg)] border border-[var(--color-border-light)] bg-[var(--color-bg-surface)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2 appearance-none transition-all cursor-pointer"
-          >
-            <option value="">All</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-4 h-4 pointer-events-none" />
-        </div>
-      </div>
-
-      <div className="bg-[var(--color-bg-raised)] border border-[var(--color-border-light)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-sm)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[var(--color-border-light)]">
-                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">User</th>
-                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Role</th>
-                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Joined</th>
-                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Status</th>
-                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Verification</th>
-                <th className="text-left py-3.5 px-4 font-ui text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">Actions</th>
-              </tr>
-            </thead>
+      {isLoading ? <Skeleton className="h-96" /> : (
+        <div className={isFetching ? 'opacity-70' : ''}>
+          <TableShell>
+            <thead><tr><Th>User</Th><Th>Role</Th><Th>Status</Th><Th>Joined</Th><Th /></tr></thead>
             <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-16 text-center">
-                    <div className="space-y-3">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="h-12 bg-[var(--color-bg-muted)] rounded-[var(--radius-lg)] animate-pulse" />
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-16 text-center">
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-bg-muted)] mb-3">
-                        <Users className="w-6 h-6 text-[var(--color-text-muted)]" />
-                      </div>
-                      <p className="font-ui text-sm text-[var(--color-text-muted)]">No users found</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => <UserTableRow key={user.id} user={user} onRefresh={refetch} />)
-              )}
+              {data?.users.map((u) => {
+                const self = u.id === me?.id;
+                return (
+                  <tr key={u.id}>
+                    <Td><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-800">{u.full_name?.[0]?.toUpperCase()}</span><div><p className="font-semibold">{u.full_name}{self && ' (you)'}</p><p className="text-xs text-ink-500">{u.email}</p></div></div></Td>
+                    <Td><select value={u.role} disabled={self} aria-label={`Role for ${u.full_name}`} onChange={(e) => run(changeRole({ userId: u.id, role: e.target.value }).unwrap(), 'Role updated')} className="h-9 rounded-lg border border-ink-200 bg-white px-2 text-sm disabled:opacity-60"><option value="CUSTOMER">Customer</option><option value="STAFF">Staff</option><option value="ADMIN">Admin</option></select></Td>
+                    <Td><div className="flex flex-wrap gap-1.5">{u.is_active ? <Badge tone="brand">Active</Badge> : <Badge tone="danger">Disabled</Badge>}{u.is_verified ? <Badge>Verified</Badge> : <Badge tone="warning">Unverified</Badge>}</div></Td>
+                    <Td className="whitespace-nowrap text-ink-500">{new Date(u.created_at).toLocaleDateString('en-KE', { dateStyle: 'medium' })}</Td>
+                    <Td className="whitespace-nowrap text-right">
+                      {!u.is_verified && <button onClick={() => run(verify({ userId: u.id, is_verified: true }).unwrap(), 'User verified')} className="mr-2 text-xs font-bold text-brand-700 hover:underline">Verify</button>}
+                      {!self && <button onClick={() => run(toggle({ userId: u.id, is_active: !u.is_active }).unwrap(), u.is_active ? 'Account disabled' : 'Account enabled')} className={`text-xs font-bold hover:underline ${u.is_active ? 'text-red-600' : 'text-brand-700'}`}>{u.is_active ? 'Disable' : 'Enable'}</button>}
+                    </Td>
+                  </tr>
+                );
+              })}
             </tbody>
-          </table>
+          </TableShell>
+          <Pager page={page} totalPages={data?.pagination?.total_pages ?? 1} onChange={setPage} />
         </div>
-        {pagination && pagination.total_pages > 1 && (
-          <div className="px-6 py-5 border-t border-[var(--color-border-light)] bg-[var(--color-bg-surface)]">
-            <Pagination currentPage={page} totalPages={pagination.total_pages} onPageChange={setPage} />
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
+
+export default UsersManagementPage;

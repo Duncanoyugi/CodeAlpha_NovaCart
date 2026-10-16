@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 
 from django.db import transaction
 from django.utils import timezone
@@ -83,6 +84,16 @@ class MPesaCallbackService:
                 return {"success": True, "message": "Callback already processed", "payment_id": str(payment.id)}
 
             if result_code == MPesaCallbackService.SUCCESS_RESULT_CODE:
+                paid_amount = metadata.get("Amount")
+                if paid_amount is not None and Decimal(str(paid_amount)) != Decimal(str(payment.amount)):
+                    # Never mark an order paid for the wrong amount; surface it to staff instead.
+                    PaymentFinalizationService.mark_payment_failed(
+                        payment,
+                        Payment.PaymentStatus.FAILED,
+                        payload,
+                        error_message=f"Amount mismatch: expected {payment.amount}, received {paid_amount}",
+                    )
+                    return {"success": False, "error": "Amount mismatch"}
                 payment.mpesa_receipt_number = metadata.get("MpesaReceiptNumber") or payment.mpesa_receipt_number
                 payment.transaction_id = metadata.get("MpesaReceiptNumber") or payment.transaction_id
                 payment.transaction_date = (

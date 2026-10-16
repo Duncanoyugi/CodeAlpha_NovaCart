@@ -16,15 +16,11 @@ class WishlistService:
         wishlist = WishlistService.get_or_create_wishlist(user)
         
         # Check if already exists
-        if WishlistItem.objects.filter(wishlist=wishlist, product_id=product_id).exists():
-            raise ValueError("Product already in wishlist")
-        
-        wishlist_item = WishlistItem.objects.create(
+        wishlist_item, _ = WishlistItem.objects.get_or_create(
             wishlist=wishlist,
-            product_id=product_id
+            product_id=product_id,
         )
-        
-        return wishlist_item
+        return wishlist_item  # adding twice is a no-op, not an error
     
     @staticmethod
     def remove_from_wishlist(user, product_id):

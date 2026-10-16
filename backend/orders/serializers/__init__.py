@@ -17,14 +17,16 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderListSerializer(serializers.ModelSerializer):
     """Serializer for listing orders (minimal fields)"""
     total_items = serializers.IntegerField(read_only=True)
+    can_cancel = serializers.BooleanField(read_only=True)
+    is_payable = serializers.BooleanField(read_only=True)
     items_summary = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Order
         fields = [
             'id', 'order_number', 'total_amount', 'status', 'payment_status',
-            'placed_at', 'total_items', 'items_summary',
-            'shipping_full_name', 'shipping_email',
+            'placed_at', 'total_items', 'items_summary', 'payment_method',
+            'shipping_full_name', 'shipping_email', 'can_cancel', 'is_payable',
         ]
 
     def get_items_summary(self, obj):
@@ -40,16 +42,57 @@ class OrderListSerializer(serializers.ModelSerializer):
             for item in items
         ]
 
+CUSTOMER_ORDER_FIELDS = [
+    'id', 'order_number', 'status', 'payment_status', 'payment_method',
+    'subtotal', 'discount_amount', 'shipping_cost', 'tax_amount', 'total_amount',
+    'coupon_code', 'coupon_discount',
+    'shipping_full_name', 'shipping_email', 'shipping_phone', 'shipping_address_line1',
+    'shipping_address_line2', 'shipping_city', 'shipping_state', 'shipping_postal_code',
+    'shipping_country', 'billing_same_as_shipping', 'billing_full_name', 'billing_address_line1',
+    'billing_address_line2', 'billing_city', 'billing_state', 'billing_postal_code', 'billing_country',
+    'tracking_number', 'carrier', 'estimated_delivery', 'customer_notes',
+    'placed_at', 'updated_at', 'processed_at', 'shipped_at', 'delivered_at', 'cancelled_at',
+]
+
+
 class OrderDetailSerializer(serializers.ModelSerializer):
-    """Serializer for single order (full details)"""
+    """What a *customer* may see about their own order (no internal notes or gateway payloads)."""
     items = OrderItemSerializer(many=True, read_only=True)
     total_items = serializers.IntegerField(read_only=True)
     can_cancel = serializers.BooleanField(read_only=True)
     can_refund = serializers.BooleanField(read_only=True)
-    
+    is_payable = serializers.BooleanField(read_only=True)
+    latest_payment = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = CUSTOMER_ORDER_FIELDS + ['items', 'total_items', 'can_cancel', 'can_refund', 'is_payable', 'latest_payment']
+        read_only_fields = fields
+
+    def get_latest_payment(self, obj):
+        payment = obj.payments.order_by('-created_at').first()
+        if not payment:
+            return None
+        return {
+            'id': str(payment.id),
+            'provider': payment.provider,
+            'status': payment.payment_status,
+            'receipt_number': payment.mpesa_receipt_number,
+            'paid_at': payment.paid_at,
+        }
+
+
+class AdminOrderSerializer(OrderDetailSerializer):
+    """Full order for the admin dashboard."""
+    customer = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = '__all__'
+
+    def get_customer(self, obj):
+        return {'id': str(obj.user_id), 'email': obj.user.email, 'full_name': obj.user.full_name}
+
 
 class CheckoutSerializer(serializers.Serializer):
     """Serializer for checkout process.
@@ -73,7 +116,7 @@ class CheckoutSerializer(serializers.Serializer):
     shipping_city = serializers.CharField(max_length=100)
     shipping_state = serializers.CharField(max_length=100)
     shipping_postal_code = serializers.CharField(max_length=50)
-    shipping_country = serializers.CharField(max_length=100, default='US')
+    shipping_country = serializers.CharField(max_length=100, default='Kenya')
 
     billing_same_as_shipping = serializers.BooleanField(default=True)
     billing_full_name = serializers.CharField(max_length=255, required=False, allow_blank=True)
@@ -84,7 +127,7 @@ class CheckoutSerializer(serializers.Serializer):
     billing_postal_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
     billing_country = serializers.CharField(max_length=100, required=False, allow_blank=True)
 
-    payment_method = serializers.CharField(max_length=50, default='mpesa')
+    payment_method = serializers.ChoiceField(choices=['mpesa', 'stripe'], default='mpesa')
     customer_notes = serializers.CharField(required=False, allow_blank=True)
     coupon_code = serializers.CharField(max_length=50, required=False, allow_blank=True)
 
@@ -109,7 +152,7 @@ class CheckoutSerializer(serializers.Serializer):
         data['shipping_city'] = shipping.get('city', '')
         data['shipping_state'] = shipping.get('state', '')
         data['shipping_postal_code'] = shipping.get('postal_code', '')
-        data['shipping_country'] = shipping.get('country', 'US')
+        data['shipping_country'] = shipping.get('country') or 'Kenya'
 
         data['billing_same_as_shipping'] = billing.get('same_as_shipping', True)
         if not data['billing_same_as_shipping']:
@@ -122,6 +165,12 @@ class CheckoutSerializer(serializers.Serializer):
             data['billing_country'] = billing.get('country', '')
 
         return super().to_internal_value(data)
+
+    def validate_shipping_phone(self, value):
+        digits = ''.join(ch for ch in value if ch.isdigit())
+        if len(digits) < 9 or len(digits) > 15:
+            raise serializers.ValidationError('Enter a valid phone number.')
+        return value
 
     def validate(self, attrs):
         # Enforce required billing fields only when billing differs.

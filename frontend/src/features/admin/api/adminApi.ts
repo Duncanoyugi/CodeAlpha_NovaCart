@@ -71,16 +71,16 @@ export const adminApi = apiSlice.injectEndpoints({
       transformResponse: (response: any) => response.data,
       providesTags: ['Product'],
     }),
-    createProduct: builder.mutation<Product, FormData>({
-      query: (formData) => ({
-        url: '/products/admin/products/',
+    createProduct: builder.mutation<Product, Record<string, unknown> | FormData>({
+      query: (body) => ({
+        url: '/products/admin/products/create/',
         method: 'POST',
-        body: formData,
+        body,
       }),
       transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
-    updateProduct: builder.mutation<Product, { id: string; data: FormData }>({
+    updateProduct: builder.mutation<Product, { id: string; data: Record<string, unknown> | FormData }>({
       query: ({ id, data }) => ({
         url: `/products/admin/products/${id}/`,
         method: 'PUT',

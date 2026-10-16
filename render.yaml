@@ -1,0 +1,26 @@
+# Render blueprint: API + a cron job that frees stock held by unpaid orders.
+services:
+  - type: web
+    name: novacart-api
+    runtime: python
+    rootDir: backend
+    buildCommand: ./build.sh
+    startCommand: gunicorn config.wsgi:application --workers 3 --timeout 60
+    healthCheckPath: /health/
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - fromGroup: novacart-secrets
+  - type: cron
+    name: novacart-expire-unpaid-orders
+    runtime: python
+    rootDir: backend
+    schedule: "*/10 * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py expire_unpaid_orders
+    envVars:
+      - key: DJANGO_ENV
+        value: production
+      - fromGroup: novacart-secrets

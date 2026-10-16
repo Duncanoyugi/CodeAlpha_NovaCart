@@ -1,84 +1,75 @@
-import { axiosInstance } from './axios';
+import axios from 'axios';
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { axiosInstance, API_BASE_URL } from './axios';
 import { tokenService } from './tokenService';
+import { sessionService } from './session';
 import { API_ENDPOINTS } from '../utils/constants';
-import toast from 'react-hot-toast';
 
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: unknown) => void;
-}> = [];
+type Retriable = InternalAxiosRequestConfig & { _retry?: boolean };
 
-const processQueue = (error: Error | null, token: string | null = null) => {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error);
-    } else {
-      promise.resolve(token);
-    }
-  });
-  failedQueue = [];
+let refreshing: Promise<string> | null = null;
+let onSessionExpired: (() => void) | null = null;
+
+/** Registered once at startup so axios can tell Redux the session is gone. */
+export const setSessionExpiredHandler = (handler: () => void) => {
+  onSessionExpired = handler;
+};
+
+const AUTH_URLS = [
+  API_ENDPOINTS.AUTH.LOGIN,
+  API_ENDPOINTS.AUTH.REGISTER,
+  API_ENDPOINTS.AUTH.REFRESH,
+  API_ENDPOINTS.AUTH.VERIFY_OTP,
+  API_ENDPOINTS.AUTH.FORGOT_PASSWORD,
+  API_ENDPOINTS.AUTH.RESET_PASSWORD,
+];
+
+/** One shared refresh request, no matter how many calls hit 401 at once. */
+const refreshAccessToken = (): Promise<string> => {
+  if (!refreshing) {
+    const refresh = tokenService.getRefreshToken();
+    if (!refresh) return Promise.reject(new Error('No refresh token'));
+    // Plain axios: bypass our own interceptors to avoid loops.
+    refreshing = axios
+      .post(`${API_BASE_URL}${API_ENDPOINTS.AUTH.REFRESH}`, { refresh }, { withCredentials: true })
+      .then(({ data }) => {
+        if (!data?.access) throw new Error('Refresh failed');
+        // Refresh-token rotation: the server returns a NEW refresh token; the old one is dead.
+        tokenService.setTokens(data.access, data.refresh || refresh);
+        return data.access as string;
+      })
+      .finally(() => {
+        refreshing = null;
+      });
+  }
+  return refreshing;
 };
 
 export const setupInterceptors = () => {
-  // Response interceptor for token refresh
   axiosInstance.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      const originalRequest = error.config;
+    (response) => {
+      const key = response.headers?.['x-session-key'];
+      if (key) sessionService.set(String(key));
+      return response;
+    },
+    async (error: AxiosError) => {
+      const original = error.config as Retriable | undefined;
+      const key = error.response?.headers?.['x-session-key'];
+      if (key) sessionService.set(String(key));
 
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then((token) => {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-              return axiosInstance(originalRequest);
-            })
-            .catch((err) => Promise.reject(err));
-        }
-
-        originalRequest._retry = true;
-        isRefreshing = true;
-
+      const isAuthCall = AUTH_URLS.some((url) => original?.url?.includes(url));
+      if (error.response?.status === 401 && original && !original._retry && !isAuthCall) {
+        original._retry = true;
         try {
-          const refreshToken = tokenService.getRefreshToken();
-          if (!refreshToken) {
-            throw new Error('No refresh token available');
-          }
-
-          const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH, {
-            refresh: refreshToken,
-          });
-
-          if (response.data.success) {
-            const { access } = response.data;
-            tokenService.setTokens(access, refreshToken);
-            
-            processQueue(null, access);
-            originalRequest.headers.Authorization = `Bearer ${access}`;
-            return axiosInstance(originalRequest);
-          } else {
-            throw new Error('Token refresh failed');
-          }
-        } catch (refreshError) {
-          processQueue(refreshError as Error, null);
+          const access = await refreshAccessToken();
+          original.headers.Authorization = `Bearer ${access}`;
+          return axiosInstance(original);
+        } catch {
           tokenService.removeTokens();
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
+          onSessionExpired?.();
         }
       }
-
-      // Show error toast for non-auth errors
-      const message = error.response?.data?.message || error.response?.data?.error || 'Something went wrong';
-      if (error.response?.status !== 401) {
-        toast.error(message);
-      }
-
       return Promise.reject(error);
-    }
+    },
   );
 };

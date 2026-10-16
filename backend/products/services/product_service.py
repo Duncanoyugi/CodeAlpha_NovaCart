@@ -3,6 +3,7 @@ from django.db.models import Q, F, Count, Avg
 from django.core.paginator import Paginator
 from ..models.base import Product, Category
 import uuid
+from decimal import Decimal, InvalidOperation
 
 class ProductService:
     """Business logic for products"""
@@ -12,7 +13,7 @@ class ProductService:
         """
         Get products with filters, search, and pagination
         """
-        queryset = Product.objects.filter(is_available=True)
+        queryset = Product.objects.filter(is_available=True).select_related('category')
         
         # Search by name or description
         search = request_data.get('search')
@@ -52,10 +53,13 @@ class ProductService:
         # Filter by price range
         min_price = request_data.get('min_price')
         max_price = request_data.get('max_price')
-        if min_price:
-            queryset = queryset.filter(price__gte=min_price)
-        if max_price:
-            queryset = queryset.filter(price__lte=max_price)
+        try:
+            if min_price:
+                queryset = queryset.filter(price__gte=Decimal(str(min_price)))
+            if max_price:
+                queryset = queryset.filter(price__lte=Decimal(str(max_price)))
+        except (InvalidOperation, ValueError):
+            pass
         
         # Filter by discount
         on_sale = request_data.get('on_sale')
@@ -78,22 +82,34 @@ class ProductService:
         # Filter by rating
         min_rating = request_data.get('min_rating')
         if min_rating:
-            queryset = queryset.filter(rating__gte=min_rating)
+            try:
+                queryset = queryset.filter(rating__gte=Decimal(str(min_rating)))
+            except (InvalidOperation, ValueError):
+                pass
         
         # Sort options
         sort_by = request_data.get('sort_by', '-created_at')
         allowed_sorts = ['price', '-price', 'created_at', '-created_at', 
                         'name', '-name', 'rating', '-rating', 'sold_count', '-sold_count']
         if sort_by in allowed_sorts:
-            queryset = queryset.order_by(sort_by)
+            queryset = queryset.order_by(sort_by, 'id')
         
-        # Pagination
-        page = int(request_data.get('page', 1))
-        page_size = int(request_data.get('page_size', 20))
+        # Pagination (bad/oversized input is clamped instead of raising a 500)
+        def _int(value, default, minimum=1, maximum=None):
+            try:
+                number = int(value)
+            except (TypeError, ValueError):
+                return default
+            number = max(number, minimum)
+            return min(number, maximum) if maximum else number
+
+        page = _int(request_data.get('page', 1), 1)
+        page_size = _int(request_data.get('page_size', 20), 20, maximum=100)
         
         paginator = Paginator(queryset, page_size)
         total_pages = paginator.num_pages
-        current_page = paginator.page(page)
+        current_page = paginator.get_page(page)
+        page = current_page.number
         
         return {
             'products': list(current_page.object_list),
@@ -121,7 +137,7 @@ class ProductService:
             total_reviews=Count('id')
         )
         
-        product.rating = rating_data['avg_rating'] or 0
+        product.rating = round(rating_data['avg_rating'] or 0, 2)
         product.num_reviews = rating_data['total_reviews'] or 0
         product.save(update_fields=['rating', 'num_reviews'])
 

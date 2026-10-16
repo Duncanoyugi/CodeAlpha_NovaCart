@@ -1,106 +1,77 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import toast from 'react-hot-toast';
 import { axiosInstance } from '../../services/axios';
+import { sessionService } from '../../services/session';
+import { getErrorMessage } from '../../services/errorHandler';
 import { API_ENDPOINTS } from '../../utils/constants';
 import type { Cart, AddToCartData, UpdateCartData, CartState } from '../../types';
-import toast from 'react-hot-toast';
 
-const initialState: CartState = {
+const initialState: CartState & { drawerOpen: boolean; pendingItemId: string | null } = {
   cart: null,
   isLoading: false,
   error: null,
   isAddingToCart: false,
   isUpdatingCart: false,
+  drawerOpen: false,
+  pendingItemId: null,
 };
 
-// Async Thunks
-export const fetchCart = createAsyncThunk(
-  'cart/fetchCart',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.get(API_ENDPOINTS.CART.GET);
-      return response.data.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch cart');
-    }
-  }
-);
+/** Every cart mutation returns the fresh cart, so the UI never needs a second round trip. */
+const cartFrom = (data: { data?: Cart; cart?: Cart }): Cart | undefined => data.cart ?? data.data;
 
-export const addToCart = createAsyncThunk(
-  'cart/addToCart',
-  async (data: AddToCartData, { rejectWithValue, dispatch }) => {
-    try {
-      const response = await axiosInstance.post(API_ENDPOINTS.CART.ADD, data);
-      toast.success('Item added to cart');
-      dispatch(fetchCart()); // Refresh cart after adding
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to add item to cart';
-      toast.error(message);
-      return rejectWithValue(message);
-    }
+export const fetchCart = createAsyncThunk<Cart, void, { rejectValue: string }>('cart/fetch', async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await axiosInstance.get(API_ENDPOINTS.CART.GET);
+    if (data.data?.session_key && !localStorage.getItem('access_token')) sessionService.set(data.data.session_key);
+    return data.data as Cart;
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error, 'Could not load your cart'));
   }
-);
+});
 
-export const updateCartItem = createAsyncThunk(
-  'cart/updateCartItem',
-  async ({ id, quantity }: UpdateCartData, { rejectWithValue, dispatch }) => {
-    try {
-      const response = await axiosInstance.put(API_ENDPOINTS.CART.UPDATE(id), { quantity });
-      dispatch(fetchCart()); // Refresh cart after update
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to update cart';
-      toast.error(message);
-      return rejectWithValue(message);
-    }
+export const addToCart = createAsyncThunk<Cart, AddToCartData, { rejectValue: string }>('cart/add', async (payload, { rejectWithValue }) => {
+  try {
+    const { data } = await axiosInstance.post(API_ENDPOINTS.CART.ADD, payload);
+    toast.success('Added to your cart');
+    return cartFrom(data) as Cart;
+  } catch (error) {
+    const message = getErrorMessage(error, 'Could not add this item');
+    toast.error(message);
+    return rejectWithValue(message);
   }
-);
+});
 
-export const removeFromCart = createAsyncThunk(
-  'cart/removeFromCart',
-  async (id: string, { rejectWithValue, dispatch }) => {
-    try {
-      await axiosInstance.delete(API_ENDPOINTS.CART.REMOVE(id));
-      toast.success('Item removed from cart');
-      dispatch(fetchCart()); // Refresh cart after removal
-      return id;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to remove item';
-      toast.error(message);
-      return rejectWithValue(message);
-    }
+export const updateCartItem = createAsyncThunk<Cart, UpdateCartData, { rejectValue: string }>('cart/update', async ({ id, quantity }, { rejectWithValue }) => {
+  try {
+    const { data } = await axiosInstance.put(API_ENDPOINTS.CART.UPDATE(id), { quantity });
+    return cartFrom(data) as Cart;
+  } catch (error) {
+    const message = getErrorMessage(error, 'Could not update the quantity');
+    toast.error(message);
+    return rejectWithValue(message);
   }
-);
+});
 
-export const clearCart = createAsyncThunk(
-  'cart/clearCart',
-  async (_, { rejectWithValue, dispatch }) => {
-    try {
-      await axiosInstance.delete(API_ENDPOINTS.CART.CLEAR);
-      toast.success('Cart cleared');
-      dispatch(fetchCart()); // Refresh cart after clearing
-      return true;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to clear cart';
-      toast.error(message);
-      return rejectWithValue(message);
-    }
+export const removeFromCart = createAsyncThunk<Cart, string, { rejectValue: string }>('cart/remove', async (id, { rejectWithValue }) => {
+  try {
+    const { data } = await axiosInstance.delete(API_ENDPOINTS.CART.REMOVE(id));
+    return cartFrom(data) as Cart;
+  } catch (error) {
+    const message = getErrorMessage(error, 'Could not remove this item');
+    toast.error(message);
+    return rejectWithValue(message);
   }
-);
+});
 
-export const mergeCart = createAsyncThunk(
-  'cart/mergeCart',
-  async (sessionKey: string, { rejectWithValue, dispatch }) => {
-    try {
-      const response = await axiosInstance.post(API_ENDPOINTS.CART.MERGE, { session_key: sessionKey });
-      dispatch(fetchCart()); // Refresh cart after merge
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to merge cart');
-    }
+export const clearCart = createAsyncThunk<Cart, void, { rejectValue: string }>('cart/clear', async (_, { rejectWithValue }) => {
+  try {
+    const { data } = await axiosInstance.delete(API_ENDPOINTS.CART.CLEAR);
+    return cartFrom(data) as Cart;
+  } catch (error) {
+    return rejectWithValue(getErrorMessage(error, 'Could not clear your cart'));
   }
-);
+});
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -109,62 +80,72 @@ const cartSlice = createSlice({
     clearCartState: (state) => {
       state.cart = null;
       state.error = null;
-      state.isLoading = false;
     },
     clearError: (state) => {
       state.error = null;
     },
+    openCartDrawer: (state) => {
+      state.drawerOpen = true;
+    },
+    closeCartDrawer: (state) => {
+      state.drawerOpen = false;
+    },
   },
   extraReducers: (builder) => {
+    const setCart = (state: typeof initialState, action: PayloadAction<Cart>) => {
+      if (action.payload) state.cart = action.payload;
+    };
     builder
-      // Fetch Cart
       .addCase(fetchCart.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
+        state.isLoading = !state.cart;
       })
-      .addCase(fetchCart.fulfilled, (state, action: PayloadAction<Cart>) => {
+      .addCase(fetchCart.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.cart = action.payload;
+        setCart(state, action);
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload as string;
+        state.error = action.payload ?? 'Could not load your cart';
       })
-      
-      // Add to Cart
       .addCase(addToCart.pending, (state) => {
         state.isAddingToCart = true;
       })
-      .addCase(addToCart.fulfilled, (state) => {
+      .addCase(addToCart.fulfilled, (state, action) => {
         state.isAddingToCart = false;
+        setCart(state, action);
       })
       .addCase(addToCart.rejected, (state) => {
         state.isAddingToCart = false;
       })
-      
-      // Update Cart Item
-      .addCase(updateCartItem.pending, (state) => {
+      .addCase(updateCartItem.pending, (state, action) => {
         state.isUpdatingCart = true;
+        state.pendingItemId = action.meta.arg.id;
       })
-      .addCase(updateCartItem.fulfilled, (state) => {
+      .addCase(updateCartItem.fulfilled, (state, action) => {
         state.isUpdatingCart = false;
+        state.pendingItemId = null;
+        setCart(state, action);
       })
       .addCase(updateCartItem.rejected, (state) => {
         state.isUpdatingCart = false;
+        state.pendingItemId = null;
       })
-      
-      // Remove from Cart
-      .addCase(removeFromCart.pending, (state) => {
+      .addCase(removeFromCart.pending, (state, action) => {
         state.isUpdatingCart = true;
+        state.pendingItemId = action.meta.arg;
       })
-      .addCase(removeFromCart.fulfilled, (state) => {
+      .addCase(removeFromCart.fulfilled, (state, action) => {
         state.isUpdatingCart = false;
+        state.pendingItemId = null;
+        setCart(state, action);
       })
       .addCase(removeFromCart.rejected, (state) => {
         state.isUpdatingCart = false;
-      });
+        state.pendingItemId = null;
+      })
+      .addCase(clearCart.fulfilled, (state, action) => setCart(state, action));
   },
 });
 
-export const { clearCartState, clearError } = cartSlice.actions;
+export const { clearCartState, clearError, openCartDrawer, closeCartDrawer } = cartSlice.actions;
 export default cartSlice.reducer;
