@@ -10,7 +10,7 @@ interface GoogleButtonProps {
   onSuccess?: () => void;
 }
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
 
 const TEXT_MAP: Record<NonNullable<GoogleButtonProps['intent']>, 'signin_with' | 'signup_with'> = {
   signin: 'signin_with',
@@ -32,8 +32,8 @@ export const GoogleButton: React.FC<GoogleButtonProps> = ({
 }) => {
   const dispatch = useAppDispatch();
 
-  if (!GOOGLE_CLIENT_ID) {
-    console.warn('VITE_GOOGLE_CLIENT_ID is not set — Google button is disabled.');
+  if (!GOOGLE_CLIENT_ID.endsWith('.apps.googleusercontent.com')) {
+    console.warn('Set a valid VITE_GOOGLE_CLIENT_ID to enable Google sign-in.');
     return null;
   }
 

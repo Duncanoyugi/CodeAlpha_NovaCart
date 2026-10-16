@@ -89,6 +89,22 @@ export const adminApi = apiSlice.injectEndpoints({
       transformResponse: (response: any) => response.data,
       invalidatesTags: ['Product'],
     }),
+    uploadProductImage: builder.mutation<unknown, { id: string; body: FormData }>({
+      query: ({ id, body }) => ({
+        url: API_ENDPOINTS.ADMIN.PRODUCT_IMAGE(id),
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Product'],
+    }),
+    uploadProductImages: builder.mutation<unknown, { id: string; body: FormData }>({
+      query: ({ id, body }) => ({
+        url: API_ENDPOINTS.ADMIN.PRODUCT_IMAGES(id),
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Product'],
+    }),
     deleteProduct: builder.mutation<void, string>({
       query: (id) => ({
         url: `/products/admin/products/${id}/delete/`,
@@ -278,6 +294,8 @@ export const {
   useGetAdminProductsQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
+  useUploadProductImageMutation,
+  useUploadProductImagesMutation,
   useDeleteProductMutation,
   useUpdateInventoryMutation,
 

@@ -5,8 +5,25 @@ import cloudinary.api
 from django.conf import settings
 
 
+class CloudinaryConfigurationError(RuntimeError):
+    """Raised when the required Cloudinary credentials are unavailable."""
+
+
 def configure_cloudinary():
     """Configure Cloudinary with settings from Django config."""
+    missing = [
+        name for name, value in (
+            ('CLOUDINARY_CLOUD_NAME', settings.CLOUDINARY_CLOUD_NAME),
+            ('CLOUDINARY_API_KEY', settings.CLOUDINARY_API_KEY),
+            ('CLOUDINARY_API_SECRET', settings.CLOUDINARY_API_SECRET),
+        )
+        if not value
+    ]
+    if missing:
+        raise CloudinaryConfigurationError(
+            f'Cloudinary is not configured. Set: {", ".join(missing)}.'
+        )
+
     cloudinary.config(
         cloud_name=settings.CLOUDINARY_CLOUD_NAME,
         api_key=settings.CLOUDINARY_API_KEY,
@@ -155,9 +172,8 @@ class CloudinaryImageService:
         """Upload multiple product images."""
         folder = f"{CloudinaryImageService.PRODUCT_FOLDER}/{product_id}"
         results = []
-        for i, file in enumerate(files):
-            public_id = f"product_{product_id}_{i}"
-            result = upload_image(file, folder=folder, public_id=public_id)
+        for file in files:
+            result = upload_image(file, folder=folder)
             results.append(result)
         return results
     

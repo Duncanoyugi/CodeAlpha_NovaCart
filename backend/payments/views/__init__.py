@@ -1,6 +1,7 @@
 # backend/payments/views/__init__.py
 import hmac
 import logging
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponse
@@ -34,11 +35,25 @@ def _bad(serializer):
 @permission_classes([AllowAny])
 def payment_config(request):
     """Public, non-secret settings the checkout needs."""
+    callback_url = settings.MPESA_CALLBACK_URL.strip()
+    callback = urlparse(callback_url)
+    mpesa_enabled = all((
+        settings.MPESA_ENVIRONMENT in {'sandbox', 'production'},
+        settings.MPESA_CONSUMER_KEY.strip(),
+        settings.MPESA_CONSUMER_SECRET.strip(),
+        (settings.MPESA_BUSINESS_SHORTCODE or settings.MPESA_SHORTCODE).strip(),
+        settings.MPESA_PASSKEY.strip(),
+        callback.scheme == 'https',
+        bool(callback.netloc),
+    ))
+    if settings.MPESA_ENVIRONMENT == 'production':
+        mpesa_enabled = mpesa_enabled and bool(settings.MPESA_CALLBACK_TOKEN.strip())
+
     return Response({'success': True, 'data': {
         'currency': settings.STORE_CURRENCY,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         'card_enabled': bool(settings.STRIPE_PUBLIC_KEY and settings.STRIPE_SECRET_KEY),
-        'mpesa_enabled': bool(settings.MPESA_CONSUMER_KEY and settings.MPESA_PASSKEY and settings.MPESA_CALLBACK_URL),
+        'mpesa_enabled': mpesa_enabled,
     }})
 
 

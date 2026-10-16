@@ -83,6 +83,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating products (admin only)"""
+    slug = serializers.SlugField(required=False, allow_blank=True)
+    image_url = serializers.URLField(required=False, allow_blank=True)
     variants = ProductVariantSerializer(many=True, required=False)
     
     class Meta:

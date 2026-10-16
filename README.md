@@ -29,13 +29,19 @@ Tests: `cd backend && DJANGO_SETTINGS_MODULE=config.settings.testing python mana
 * `render.yaml` provisions the API (gunicorn, `/health/` check) and a cron job running
   `python manage.py expire_unpaid_orders` every 10 min (frees stock held by unpaid orders).
 * Set the variables from `backend/.env.example` (`DJANGO_ENV=production`, strong `SECRET_KEY`, `ALLOWED_HOSTS`,
-  `CORS_ALLOWED_ORIGINS`, `DATABASE_URL`, Resend, Stripe, Daraja).
+  `CORS_ALLOWED_ORIGINS`, `DATABASE_URL`, email, Stripe, Daraja and Cloudinary credentials).
+* Configure one Google OAuth Web client. Set its client ID as `VITE_GOOGLE_CLIENT_ID` in Vercel and the same
+  value as `GOOGLE_CLIENT_ID` in Render. Add both `localhost` development origins and the deployed Vercel
+  origin to the OAuth client's authorized JavaScript origins. Vite embeds its value at build time, so
+  redeploy the frontend after changing it; do not use a placeholder client ID.
 * **Stripe webhook:** `https://<api>/api/payments/webhook/stripe/` (events: `payment_intent.succeeded`,
   `payment_intent.payment_failed`, `charge.refunded`) → copy the signing secret to `STRIPE_WEBHOOK_SECRET`.
 * **M-Pesa callback:** set `MPESA_CALLBACK_URL=https://<api>/api/payments/mpesa/callback/` and a random
   `MPESA_CALLBACK_TOKEN` (the API appends `?token=…`; callbacks without it are rejected). Switch
-  `MPESA_ENVIRONMENT=production` with live Daraja credentials when going live.
-* Frontend: set `VITE_API_URL=https://<api>/api` on Vercel (SPA rewrite already in `vercel.json`).
+  `MPESA_ENVIRONMENT=production` with the live Daraja consumer key/secret, business shortcode and passkey
+  when going live. Keep sandbox credentials paired with `MPESA_ENVIRONMENT=sandbox`.
+* Frontend: set `VITE_API_URL=https://<api>/api` and a valid `VITE_GOOGLE_CLIENT_ID` on Vercel (SPA rewrite
+  already in `vercel.json`). The checkout only offers M-Pesa when all required server-side settings are present.
 
 ## Business rules enforced by the API
 * One money module (`cart/pricing.py`): whole-shilling rounding, VAT-inclusive prices (16%), flat KES 300

@@ -1,0 +1,20 @@
+Welcome to NovaCart!
+
+Hello {{ user_name }},
+
+Thank you for verifying your email and joining NovaCart. We're excited to have you on board.
+
+You can now:
+- Browse products
+- Add items to your cart
+- Save your favorite products
+- Track your orders
+- Get exclusive offers and discounts
+
+Start shopping: {{ frontend_url }}
+
+Happy shopping,
+NovaCart Team
+
+© {{ year }} NovaCart. All rights reserved.
+You're receiving this email because you verified your NovaCart account.

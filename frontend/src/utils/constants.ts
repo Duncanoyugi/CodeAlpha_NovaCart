@@ -63,6 +63,8 @@ export const API_ENDPOINTS = {
     DASHBOARD: '/analytics/dashboard/',
     SALES_OVERVIEW: '/analytics/sales-overview/',
     TOP_PRODUCTS: '/analytics/top-products/',
+    PRODUCT_IMAGE: (id: string) => `/products/admin/products/${id}/image/`,
+    PRODUCT_IMAGES: (id: string) => `/products/admin/products/${id}/images/`,
     ORDERS: '/orders/admin/orders/',
     UPDATE_ORDER_STATUS: (id: string) => `/orders/admin/orders/${id}/status/`,
   },

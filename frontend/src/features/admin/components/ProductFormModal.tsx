@@ -2,10 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useForm, type Resolver, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { X, Plus, Trash2, Upload, Image, Loader2 } from 'lucide-react';
+import { X, Plus, Trash2, Upload } from 'lucide-react';
 import type { Product, Category } from '../../../types';
-import type { ProductFormData } from '../../../types/admin.types';
-import { useCreateProductMutation, useUpdateProductMutation, useGetCategoriesQuery } from '../api/adminApi';
+import { getErrorMessage } from '../../../services/errorHandler';
+import {
+  useCreateProductMutation,
+  useUpdateProductMutation,
+  useUploadProductImageMutation,
+  useUploadProductImagesMutation,
+  useGetCategoriesQuery,
+} from '../api/adminApi';
 import toast from 'react-hot-toast';
 
 const productSchema = z.object({
@@ -49,6 +55,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const { data: categories = [] } = useGetCategoriesQuery();
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  const [uploadProductImage] = useUploadProductImageMutation();
+  const [uploadProductImages] = useUploadProductImagesMutation();
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(productSchema) as Resolver<FormValues>,
@@ -140,12 +148,6 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   };
 
-  const removeImage = (index: number) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setValue('images', newImages);
-  };
-
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -192,132 +194,69 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     const newImages = [...images];
     const removedUrl = newImages.splice(index, 1)[0];
     setValue('images', newImages);
-    // Also remove from file list if it's a blob URL (uploaded file)
     if (removedUrl.startsWith('blob:')) {
+      const fileIndex = images.slice(0, index).filter((url) => url.startsWith('blob:')).length;
       setAdditionalImageFiles(prev => {
         const newFiles = [...prev];
-        newFiles.splice(index, 1);
+        newFiles.splice(fileIndex, 1);
         return newFiles;
       });
     }
   };
 
-  const uploadImages = async (): Promise<{ mainImageUrl?: string; additionalImageUrls: string[] }> => {
+  const uploadImages = async (productId: string): Promise<void> => {
     if (!mainImageFile && additionalImageFiles.length === 0) {
-      return { additionalImageUrls: [] };
+      return;
     }
 
     setUploadingImages(true);
-    const formData = new FormData();
-    let mainImageUrl: string | undefined;
-    const additionalImageUrls: string[] = [];
-
     try {
-      // Upload main image if provided
       if (mainImageFile) {
-        formData.append('image', mainImageFile);
-        formData.append('is_main', 'true');
-        
-        const productId = product?.id || 'new';
-        const response = await fetch(`/api/products/admin/products/${productId}/image/`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          },
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Failed to upload main image');
-        }
-
-        const result = await response.json();
-        mainImageUrl = result.data.url;
+        const body = new FormData();
+        body.append('image', mainImageFile);
+        body.append('is_main', 'true');
+        await uploadProductImage({ id: productId, body }).unwrap();
       }
 
-      // Upload additional images if provided
       if (additionalImageFiles.length > 0) {
-        const additionalFormData = new FormData();
+        const body = new FormData();
         additionalImageFiles.forEach(file => {
-          additionalFormData.append('images', file);
+          body.append('images', file);
         });
-
-        const productId = product?.id || 'new';
-        const response = await fetch(`/api/products/admin/products/${productId}/images/`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          },
-          body: additionalFormData,
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Failed to upload additional images');
-        }
-
-        const result = await response.json();
-        result.data.forEach((img: { url: string }) => {
-          additionalImageUrls.push(img.url);
-        });
+        await uploadProductImages({ id: productId, body }).unwrap();
       }
-
-      return { mainImageUrl, additionalImageUrls };
     } finally {
       setUploadingImages(false);
     }
   };
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    let savedProduct: Product;
     try {
-      // Upload images first if there are new files
-      let finalImageUrl = data.image_url;
-      let finalImages = data.images;
-
-      if (mainImageFile || additionalImageFiles.length > 0) {
-        const { mainImageUrl, additionalImageUrls } = await uploadImages();
-        if (mainImageUrl) finalImageUrl = mainImageUrl;
-        if (additionalImageUrls.length > 0) finalImages = [...data.images.filter(url => !url.startsWith('blob:')), ...additionalImageUrls];
-      }
-
-      const formData = new FormData();
-
-      const append = (key: string, value: any) => {
-        if (value !== undefined && value !== null && value !== '') {
-          formData.append(key, value);
-        }
+      const payload = {
+        ...data,
+        image_url: mainImageFile ? product?.image_url ?? '' : data.image_url,
+        images: data.images.filter((url) => !url.startsWith('blob:')),
+        tags: data.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
       };
-
-      append('name', data.name);
-      append('short_description', data.short_description);
-      append('description', data.description);
-      append('price', String(data.price));
-      append('compare_price', data.compare_price !== null && data.compare_price !== undefined ? String(data.compare_price) : null);
-      append('category', data.category);
-      append('image_url', finalImageUrl);
-      append('stock_quantity', String(data.stock_quantity));
-      append('sku', data.sku);
-      append('tags', JSON.stringify(data.tags.split(',').map(t => t.trim()).filter(Boolean)));
-      append('images', JSON.stringify(finalImages));
-      append('discount_percentage', String(data.discount_percentage));
-      append('is_available', String(data.is_available));
-      append('is_featured', String(data.is_featured));
-      append('is_best_seller', String(data.is_best_seller));
-      append('is_new_arrival', String(data.is_new_arrival));
-
       if (product) {
-        await updateProduct({ id: product.id, data: formData }).unwrap();
-        toast.success('Product updated successfully');
+        savedProduct = await updateProduct({ id: product.id, data: payload }).unwrap();
       } else {
-        await createProduct(formData).unwrap();
-        toast.success('Product created successfully');
+        savedProduct = await createProduct(payload).unwrap();
       }
-      onSuccess();
-      onClose();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to save product');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Failed to save product'));
+      return;
     }
+
+    try {
+      await uploadImages(savedProduct.id);
+      toast.success(product ? 'Product updated successfully' : 'Product created successfully');
+    } catch (error: unknown) {
+      toast.error(`Product saved, but image upload failed: ${getErrorMessage(error, 'Please edit the product and try again.')}`);
+    }
+    onSuccess();
+    onClose();
   };
 
   if (!isOpen) return null;

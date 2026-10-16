@@ -3,7 +3,6 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from rest_framework_simplejwt.tokens import RefreshToken
 from users.models.base import User
 from authentication.models.base import LoginHistory
@@ -58,7 +57,7 @@ class AuthService:
         }
         
         html_message = render_to_string('emails/otp_verification.html', context)
-        plain_message = strip_tags(html_message)
+        plain_message = render_to_string('emails/otp_verification.txt', context).strip()
         
         send_mail(
             subject=subject,
@@ -82,7 +81,7 @@ class AuthService:
         }
         
         html_message = render_to_string('emails/welcome.html', context)
-        plain_message = strip_tags(html_message)
+        plain_message = render_to_string('emails/welcome.txt', context).strip()
         
         send_mail(
             subject=subject,
