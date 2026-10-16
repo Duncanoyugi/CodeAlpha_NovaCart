@@ -2,8 +2,8 @@ import React from 'react';
 import { Clock, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 
 const items = [
-  { icon: Phone, t: 'Call us', d: '+254 700 000 000', href: 'tel:+254700000000' },
-  { icon: MessageCircle, t: 'WhatsApp', d: 'Chat with support', href: 'https://wa.me/254700000000' },
+  { icon: Phone, t: 'Call us', d: '+254 795 946 288', href: 'tel:+254795946288' },
+  { icon: MessageCircle, t: 'WhatsApp', d: 'Chat with support', href: 'https://wa.me/254795946288' },
   { icon: Mail, t: 'Email', d: 'support@novacart.co.ke', href: 'mailto:support@novacart.co.ke' },
   { icon: MapPin, t: 'Visit', d: 'Nairobi, Kenya', href: undefined },
 ];
