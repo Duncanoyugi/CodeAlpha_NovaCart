@@ -7,7 +7,7 @@ import requests
 from django.conf import settings
 from django.utils import timezone
 
-from .auth import MPesaAuthService, MPesaConfigurationError
+from .auth import MPesaAuthService, MPesaConfigurationError, MPesaProviderError, get_provider_error
 
 logger = logging.getLogger(__name__)
 
@@ -103,13 +103,11 @@ class MPesaSTKPushService:
             timeout=getattr(settings, "MPESA_REQUEST_TIMEOUT", 30),
         )
         if response.status_code >= 400:
-            # Daraja returns JSON bodies like {"errorCode": "400.002.02",
-            # "errorMessage": "Bad Request - Invalid CallBackURL"}.
             logger.error(
-                'M-Pesa STK push rejected: HTTP %s %s',
-                response.status_code, response.text[:500],
+                'M-Pesa STK push rejected: HTTP %s: %s',
+                response.status_code, get_provider_error(response),
             )
-            response.raise_for_status()
+            raise MPesaProviderError(get_provider_error(response))
         payload = response.json()
         payload["normalized_phone"] = normalized_phone
         payload["expires_at"] = (timezone.now() + timedelta(minutes=2)).isoformat()

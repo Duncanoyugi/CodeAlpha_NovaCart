@@ -11,6 +11,24 @@ class MPesaConfigurationError(Exception):
     pass
 
 
+class MPesaProviderError(Exception):
+    """A Daraja rejection with a non-sensitive message safe to show the caller."""
+
+
+def get_provider_error(response):
+    """Extract a useful provider error without returning its raw response body."""
+    try:
+        payload = response.json()
+    except ValueError:
+        payload = {}
+
+    message = payload.get('errorMessage') or payload.get('message')
+    code = payload.get('errorCode')
+    if message:
+        return f'{message} (Daraja error {code})' if code else str(message)
+    return f'M-Pesa provider returned HTTP {response.status_code}.'
+
+
 class MPesaAuthService:
     """OAuth token generation with cache-aware refresh."""
 
@@ -54,7 +72,8 @@ class MPesaAuthService:
             headers={"Authorization": f"Basic {encoded_credentials}"},
             timeout=getattr(settings, "MPESA_REQUEST_TIMEOUT", 30),
         )
-        response.raise_for_status()
+        if response.status_code >= 400:
+            raise MPesaProviderError(get_provider_error(response))
         payload = response.json()
 
         access_token = payload.get("access_token")

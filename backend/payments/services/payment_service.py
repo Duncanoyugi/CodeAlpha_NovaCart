@@ -10,7 +10,7 @@ from orders.models.base import Order
 
 from ..models.base import Payment, PaymentAttempt, ProcessedWebhookEvent
 from .payment_finalization import PaymentFinalizationService as Finalizer
-from .providers.mpesa.auth import MPesaConfigurationError
+from .providers.mpesa.auth import MPesaConfigurationError, MPesaProviderError
 from .providers.mpesa.callback import MPesaCallbackService
 from .providers.mpesa.stk_push import MPesaSTKPushService
 from .stripe_service import StripeService, from_minor_units
@@ -192,6 +192,10 @@ class PaymentService:
             logger.error('M-Pesa misconfigured: %s', exc)
             Finalizer.mark_payment_failed(payment, Payment.PaymentStatus.FAILED, {'error': str(exc)}, str(exc))
             return {'success': False, 'error': 'M-Pesa is temporarily unavailable. Please try again or pay by card.', 'payment_id': str(payment.id)}
+        except MPesaProviderError as exc:
+            logger.warning('Daraja rejected STK push for order %s: %s', order.order_number, exc)
+            Finalizer.mark_payment_failed(payment, Payment.PaymentStatus.FAILED, {'error': str(exc)}, str(exc))
+            return {'success': False, 'error': f'M-Pesa could not start the payment: {exc}', 'payment_id': str(payment.id)}
         except Exception as exc:  # network / Daraja errors
             logger.exception('STK push failed for order %s', order.order_number)
             Finalizer.mark_payment_failed(payment, Payment.PaymentStatus.FAILED, {'error': str(exc)}, str(exc))

@@ -1,10 +1,10 @@
 import React from 'react';
 import toast from 'react-hot-toast';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateProductMutation, useDeleteProductMutation, useGetAdminProductsQuery, useUpdateInventoryMutation, useUpdateProductMutation } from '../api/adminApi';
+import { useCreateProductMutation, useDeleteProductMutation, useGetAdminProductsQuery, useUpdateInventoryMutation, useUpdateProductMutation, useUploadProductImageMutation, useUploadProductImagesMutation } from '../api/adminApi';
 import { useGetCategoryTreeQuery } from '../../../redux/api/storeApi';
 import { PageTitle, Pager, SearchInput, TableShell, Td, Th } from '../components/AdminBits';
 import { Badge, Button, Input, Modal, Select, Skeleton, Textarea } from '../../../components/ui';
@@ -19,7 +19,7 @@ const schema = z.object({
   short_description: z.string().trim().min(5, 'Add a short description'),
   description: z.string().trim().min(10, 'Add a full description'),
   category: z.string().min(1, 'Choose a category'),
-  image_url: z.string().trim().url('Enter a valid image URL'),
+  image_url: z.string().trim().url('Enter a valid image URL').or(z.literal('')),
   price: num('Price', 1),
   compare_price: z.coerce.number().min(0).optional(),
   discount_percentage: z.coerce.number().min(0).max(90).optional(),
@@ -38,6 +38,11 @@ const ProductForm: React.FC<{ product?: Product; onClose: () => void }> = ({ pro
   const { data: tree = [] } = useGetCategoryTreeQuery();
   const [create, { isLoading: creating }] = useCreateProductMutation();
   const [update, { isLoading: updating }] = useUpdateProductMutation();
+  const [uploadMainImage] = useUploadProductImageMutation();
+  const [uploadAdditionalImages] = useUploadProductImagesMutation();
+  const [mainImage, setMainImage] = React.useState<File | null>(null);
+  const [additionalImages, setAdditionalImages] = React.useState<File[]>([]);
+  const [uploading, setUploading] = React.useState(false);
   const cats = flatten(tree).filter((c) => c.slug !== 'brands');
   const catId = (product as unknown as { category?: string })?.category ?? '';
   const { register, handleSubmit, formState: { errors } } = useForm<Values>({
@@ -51,14 +56,57 @@ const ProductForm: React.FC<{ product?: Product; onClose: () => void }> = ({ pro
   });
 
   const onSubmit = async (v: Values) => {
-    const body = { ...v, tags: (v.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean), compare_price: v.compare_price || null };
+    setUploading(true);
+    let saved = false;
     try {
-      if (product) await update({ id: product.id, data: body }).unwrap(); else await create(body).unwrap();
+      const body = {
+        ...v,
+        image_url: mainImage ? product?.image_url ?? '' : v.image_url,
+        tags: (v.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean),
+        compare_price: v.compare_price || null,
+      };
+      const savedProduct = product
+        ? await update({ id: product.id, data: body }).unwrap()
+        : await create(body).unwrap();
+      saved = true;
+
+      if (mainImage) {
+        const data = new FormData();
+        data.append('image', mainImage);
+        data.append('is_main', 'true');
+        await uploadMainImage({ id: savedProduct.id, body: data }).unwrap();
+      }
+      if (additionalImages.length) {
+        const data = new FormData();
+        additionalImages.forEach((file) => data.append('images', file));
+        await uploadAdditionalImages({ id: savedProduct.id, body: data }).unwrap();
+      }
       toast.success(product ? 'Product updated' : 'Product created');
       onClose();
     } catch (err) {
-      toast.error((err as { message?: string }).message ?? 'Could not save the product');
+      const message = (err as { message?: string }).message ?? 'Please try again.';
+      toast.error(saved ? `Product saved, but image upload failed: ${message}` : `Could not save the product: ${message}`);
+      if (saved && !product) onClose();
+    } finally {
+      setUploading(false);
     }
+  };
+
+  const chooseImages = (files: FileList | null, main: boolean) => {
+    if (!files?.length) return;
+    const valid = Array.from(files).filter((file) => {
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+        toast.error(`${file.name}: choose a JPEG, PNG, WebP, or GIF image`);
+        return false;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name}: image must be 10 MB or smaller`);
+        return false;
+      }
+      return true;
+    });
+    if (main) setMainImage(valid[0] ?? null);
+    else setAdditionalImages((current) => [...current, ...valid]);
   };
 
   const check = (name: keyof Values, label: string) => (<label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" {...register(name)} className="h-4 w-4 accent-[#0b5d46]" /> {label}</label>);
@@ -69,17 +117,42 @@ const ProductForm: React.FC<{ product?: Product; onClose: () => void }> = ({ pro
         <Input label="Name" {...register('name')} error={errors.name?.message} />
         <Input label="SKU" {...register('sku')} error={errors.sku?.message} />
         <Select label="Category" {...register('category')} error={errors.category?.message}><option value="">Select…</option>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Select>
-        <Input label="Image URL" {...register('image_url')} error={errors.image_url?.message} />
+        <Input label="Image URL (optional)" {...register('image_url')} error={errors.image_url?.message} />
         <Input label="Price (KES)" type="number" step="1" {...register('price')} error={errors.price?.message} />
         <Input label="Compare-at price" type="number" step="1" {...register('compare_price')} />
         <Input label="Discount %" type="number" step="1" {...register('discount_percentage')} error={errors.discount_percentage?.message} />
         <Input label="Stock" type="number" step="1" {...register('stock_quantity')} error={errors.stock_quantity?.message} />
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block text-sm font-medium">
+          Main product image
+          <span className="mt-1 block text-xs font-normal text-ink-500">Upload from your device (JPEG, PNG, WebP, or GIF; max 10 MB).</span>
+          <span className="mt-2 flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2.5">
+            <ImagePlus className="h-5 w-5 text-brand-700" />
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => chooseImages(event.target.files, true)} disabled={uploading} className="min-w-0 flex-1 text-sm" />
+          </span>
+          {mainImage && <span className="mt-1 block truncate text-xs text-ink-500">{mainImage.name}</span>}
+        </label>
+        <label className="block text-sm font-medium">
+          Additional product images
+          <span className="mt-1 block text-xs font-normal text-ink-500">Select one or more images to add to this product.</span>
+          <span className="mt-2 flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2.5">
+            <ImagePlus className="h-5 w-5 text-brand-700" />
+            <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => chooseImages(event.target.files, false)} disabled={uploading} className="min-w-0 flex-1 text-sm" />
+          </span>
+          {additionalImages.map((file, index) => (
+            <span key={`${file.name}-${file.lastModified}`} className="mt-1 flex items-center justify-between gap-2 text-xs text-ink-500">
+              <span className="truncate">{file.name}</span>
+              <button type="button" aria-label={`Remove ${file.name}`} onClick={() => setAdditionalImages((current) => current.filter((_, i) => i !== index))}><X className="h-4 w-4" /></button>
+            </span>
+          ))}
+        </label>
+      </div>
       <Input label="Short description" {...register('short_description')} error={errors.short_description?.message} />
       <Textarea label="Description" {...register('description')} error={errors.description?.message} />
       <Input label="Tags (comma separated)" {...register('tags')} />
       <div className="flex flex-wrap gap-x-6 gap-y-2">{check('is_available', 'Available')}{check('is_featured', 'Featured')}{check('is_best_seller', 'Best seller')}{check('is_new_arrival', 'New arrival')}</div>
-      <Button type="submit" block loading={creating || updating}>{product ? 'Save changes' : 'Create product'}</Button>
+      <Button type="submit" block loading={creating || updating || uploading}>{uploading ? 'Saving product and uploading images…' : product ? 'Save changes' : 'Create product'}</Button>
     </form>
   );
 };
